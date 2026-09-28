@@ -32,7 +32,6 @@ node_modules/
 .auth-state.*.json
 
 # The address of the most recent signup.
-.last-registered-email.json
 
 # Stray artefact of a shell redirect on Windows. A file literally named "nul"
 # cannot be checked out on Windows, so it must never enter the index.
@@ -42,11 +41,18 @@ nul
 !.env.example
 
 # Account list with REAL passwords — kept locally, shared via accounts.example.json.
-config/accounts.json
 
 # Registry of accounts a run registered, and per-run regression output.
-registered-accounts.xlsx
 regression-results/
 
 # Copies of the last-signup record ("… copy.json" etc).
-.last-registered-email*.json
+
+# ── Account ledgers ARE tracked, deliberately ──────────────────────────
+# These record the throwaway @yopmail.com accounts the suite creates. They are
+# kept in git on purpose so the team shares one history of which accounts exist
+# on which environment. yopmail inboxes are readable by anyone who knows the
+# address, so the password adds little; real secrets (API tokens, SMTP, the
+# portal admin credentials) stay in .env, which is still ignored.
+
+# Stray duplicates left by a file-manager copy, not records worth keeping.
+*copy*.json

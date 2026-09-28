@@ -1,0 +1,1169 @@
+<title>Course Completion Script Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#17283C; --navy-400:#18293D; --navy-300:#2D3E54; --navy-100:#7E8A9A; --navy-50:#BEC5CE;
+    --teal:#1E8F8E; --teal-600:#186E6E; --teal-700:#135858; --teal-50:#E3F7F6; --teal-100:#B8ECE9;
+    --gold:#F0A500; --gold-600:#C88800; --gold-700:#9A6800; --gold-50:#FEF6E0;
+    --offwhite:#F6F7F9; --line:#D8DEE5; --mid:#7C8696; --ink:#0D1218;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7; --err:#B91C1C; --err-bg:#FEE2E2;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Open Sans",Segoe UI,Arial,sans-serif;
+    font-size:9.9pt; line-height:1.47; color:var(--ink); background:#fff;
+    margin:0;
+  }
+  .page{ padding:0 16mm; }
+
+  h1{font-size:20pt;font-weight:700;color:var(--navy);margin:0 0 6px;letter-spacing:-.2px;}
+  h2{font-size:14.5pt;font-weight:700;color:var(--navy);margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid var(--teal);}
+  h3{font-size:11.5pt;font-weight:600;color:var(--navy);margin:15px 0 6px;}
+  h4{font-size:10.5pt;font-weight:600;color:var(--navy-300);margin:12px 0 5px;}
+  p{margin:0 0 8px;}
+  .lead{font-size:10.4pt;color:var(--navy-300);}
+  .cap{font-family:Lato,Arial,sans-serif;font-size:8.2pt;color:var(--mid);margin:4px 0 0;}
+  code,.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:8.8pt;}
+  code{background:var(--offwhite);border:1px solid var(--line);border-radius:4px;padding:1px 4px;color:var(--navy);}
+  a{color:var(--teal-600);}
+
+  .cover{height:247mm;display:flex;flex-direction:column;justify-content:center;background:var(--navy);color:#fff;padding:0 20mm;margin:-14mm 0 0;}
+  .cover .kicker{font-family:Lato;font-size:10pt;letter-spacing:3px;text-transform:uppercase;color:var(--teal-100);margin-bottom:18px;}
+  .cover h1{font-size:34pt;color:#fff;line-height:1.15;margin-bottom:14px;}
+  .cover .sub{font-size:13pt;color:var(--navy-50);max-width:150mm;line-height:1.5;}
+  .cover .rule{width:72px;height:5px;background:var(--gold);margin:26px 0;border-radius:3px;}
+  .cover .meta{font-family:Lato;font-size:9.5pt;color:var(--navy-50);line-height:1.9;}
+  .cover .meta b{color:#fff;font-weight:700;}
+
+  .sec{page-break-before:always;padding-top:1mm;}
+  .nobreak{page-break-inside:avoid;}
+
+  .callout{border-left:4px solid var(--teal);background:var(--teal-50);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;font-size:9.5pt;}
+  .callout.gold{border-left-color:var(--gold);background:var(--gold-50);}
+  .callout.red{border-left-color:var(--err);background:var(--err-bg);}
+  .callout .t{font-weight:700;color:var(--navy);display:block;margin-bottom:2px;}
+
+  table{width:100%;border-collapse:collapse;margin:8px 0 11px;font-size:8.6pt;page-break-inside:auto;}
+  thead{display:table-header-group;}
+  th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:6px 8px;border:.5pt solid var(--navy);font-size:8.6pt;}
+  td{padding:5px 8px;border:.5pt solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--offwhite);}
+  tr{page-break-inside:avoid;}
+  td.n{width:24px;text-align:center;font-weight:700;color:var(--teal-700);background:var(--teal-50)!important;}
+  .t-sel td:nth-child(3){font-family:"JetBrains Mono",Consolas,monospace;font-size:7.9pt;line-height:1.45;word-break:break-word;}
+
+  .pill{display:inline-block;padding:1px 8px;border-radius:9999px;font-size:8pt;font-weight:600;font-family:Lato;}
+  .p-ok{background:var(--ok-bg);color:var(--ok);}
+  .p-warn{background:var(--warn-bg);color:var(--warn);}
+  .p-err{background:var(--err-bg);color:var(--err);}
+  .p-teal{background:var(--teal-50);color:var(--teal-700);}
+  .p-gold{background:var(--gold-50);color:var(--gold-700);}
+
+  .grid2{display:flex;gap:12px;margin:10px 0;}
+  .card{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff;}
+  .card .h{font-weight:700;color:var(--navy);font-size:9.8pt;margin-bottom:5px;}
+  .card ul{margin:0;padding-left:15px;}
+  .card li{margin-bottom:3px;font-size:9.2pt;}
+
+  .fig{margin:12px 0 4px;page-break-inside:avoid;}
+  .fig svg{width:100%;height:auto;display:block;}
+
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:9px 0;}
+  ol.steps li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px;font-size:9.4pt;page-break-inside:avoid;}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:9999px;background:var(--navy);color:#fff;font-size:8pt;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  ol.steps li b{color:var(--navy);}
+
+  .toc{margin:12px 0;}
+  .toc div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:5px 2px;font-size:9.6pt;}
+  .toc div span:first-child{color:var(--navy);font-weight:600;}
+  .toc div span:last-child{color:var(--mid);font-family:Lato;font-size:9pt;}
+
+  pre{background:var(--navy);color:#E8EDF3;border-radius:8px;padding:9px 12px;font-family:"JetBrains Mono",Consolas,monospace;font-size:8pt;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;}
+  pre .c{color:#7E9AB8;}
+  pre .k{color:#6FD7D5;}
+  pre .g{color:#F2C14E;}
+  pre .r{color:#FF9A9A;}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════ COVER ══ -->
+<div class="cover">
+  <div class="kicker">Sphere Web Automation</div>
+  <h1>Course Completion Script<br>Step-by-Step Walkthrough</h1>
+  <div class="rule"></div>
+  <div class="sub">How <span class="mono">tests/CourseComplete.spec.ts</span> drives a whole course to completion — the sidebar loop that decides what to open next, the three-tier answer strategy behind its assessments, and the single assertion that decides whether any of it worked.</div>
+  <div class="rule" style="width:40px;height:2px;background:#2D3E54;"></div>
+  <div class="meta">
+    <b>Script</b> &nbsp; tests/CourseComplete.spec.ts &nbsp;·&nbsp; 3,195 lines &nbsp;·&nbsp; <b>1 test</b>, 46 helpers, <b>1 expect()</b><br>
+    <b>Target</b> &nbsp; any course on the target environment &nbsp;<span style="color:#F0A500;">(login + COURSE_NAME required)</span><br>
+    <b>Run</b> &nbsp;&nbsp;&nbsp;&nbsp; npm run run:course<br>
+    <b>Date</b> &nbsp;&nbsp;&nbsp; 12 September 2026
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CONTENTS ══ -->
+<div class="page sec">
+  <h2>Contents</h2>
+  <div class="toc">
+    <div><span>1 &nbsp; What this script does</span><span>Purpose, scope, entry points</span></div>
+    <div><span>2 &nbsp; The shape of the file</span><span>Diagram — seven subsystems, 46 helpers</span></div>
+    <div><span>3 &nbsp; The eight steps</span><span>Diagram — the orchestrator, end to end</span></div>
+    <div><span>4 &nbsp; Configuration and inputs</span><span>Seven constants, three env vars</span></div>
+    <div><span>5 &nbsp; The sidebar-driven loop</span><span>How it picks what to open next</span></div>
+    <div><span>6 &nbsp; Module detection and the handlers</span><span>Video · PDF · content · assessment</span></div>
+    <div><span>7 &nbsp; Answering an assessment</span><span>Diagram — the three-tier strategy ladder</span></div>
+    <div><span>8 &nbsp; The answer-key plumbing</span><span>Interceptor, artifact fetch, poison rule</span></div>
+    <div><span>9 &nbsp; The Gemini fallback</span><span>Batching, quota, caching, model fallback</span></div>
+    <div><span>10 &nbsp; Completion, certificate, report</span><span>Five signals and what follows them</span></div>
+    <div><span>11 &nbsp; What green actually proves</span><span>One assertion, and what it does not cover</span></div>
+    <div><span>12 &nbsp; Artifacts, run variants, failure modes</span><span>Troubleshooting reference</span></div>
+  </div>
+
+  <h3>How to read this document</h3>
+  <p>This is a different kind of script from the others in the series. Those are element sweeps: many small tests, each asserting one thing. This one is a <b>robot learner</b> — a single test that opens a course and works through it until the platform says it is finished. Almost all of its 3,195 lines are the machinery that makes that possible.</p>
+  <p>So the structure follows the machinery rather than a list of tests. Section 3 diagrams the eight steps the one test takes; Sections 5 to 10 open up the interesting ones. Section 11 is the honest accounting: what a green run does and does not prove.</p>
+
+  <div class="callout">
+    <span class="t">Line numbers in this document are live</span>
+    Every reference points at <code>tests/CourseComplete.spec.ts</code> as it stands today — 3,195 lines, including the per-line explanatory comments carried across the suite. They are safe to click through to.
+  </div>
+
+  <div class="callout gold">
+    <span class="t">A note on scale</span>
+    At 3,195 lines this is the largest file in the suite by a wide margin — roughly six times the size of the Course TOC spec, for a twentieth of the test count. That ratio <i>is</i> the story: driving a course to completion means handling every module type, every assessment shape, and every way the platform can stall, and none of that can be expressed as an assertion.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 1. WHAT IT DOES ══ -->
+<div class="page sec">
+  <h2>1 &nbsp; What this script does</h2>
+  <p class="lead">It behaves like a learner who is determined to finish. It searches for a course, opens it, and then works through every module — watching videos, paging PDFs, scrolling content, and <i>answering assessments correctly</i> — until the platform shows the Congratulations screen.</p>
+
+  <p>Everything else in the suite checks that a page renders. This one checks that <b>the product actually works end to end</b>, which is a different and much harder question. A course only marks a module complete when the platform's own progress calls say so, and a graded assessment only completes when the pass mark is met. There is no way to fake either.</p>
+
+  <h3>The four things that make it hard</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="h">Modules are gated</div>
+      <ul>
+        <li>Later modules stay locked until earlier ones register as complete</li>
+        <li>So the order of work is decided by the platform, not the script</li>
+        <li>Clicking "Next" repeatedly just loops through the same units</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Assessments must be passed</div>
+      <ul>
+        <li>Answering "A" every time fails the pass mark</li>
+        <li>A failed assessment never marks its module complete</li>
+        <li>So the script has to know the right answers</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Nothing is uniform</div>
+      <ul>
+        <li>Four module types, detected rather than declared</li>
+        <li>Radio and checkbox questions, mixed within one quiz</li>
+        <li>Option order is shuffled on every render</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Where it gets the answers</h3>
+  <p>This is the part of the script people ask about first. Sphere prefetches a JSON file for each assessment, and that file carries an <code>isCorrect</code> flag on every option. The script listens for those responses and files them by resource id. Where the copy the browser receives has had its flags stripped — which graded assessments do deliberately — it goes to the <b>published artifact on S3</b>, which still carries them. Only when neither source yields a usable key does it fall back to asking Gemini.</p>
+  <p>Section 7 diagrams that ladder and Section 8 covers the plumbing. The short version is that <b>the AI is the last resort, not the mechanism</b> — on a normal published course it is never called at all.</p>
+
+  <div class="callout gold">
+    <span class="t">This is a test account doing coursework, not a person</span>
+    Worth being explicit, because the script does real things to real data: it enrols, completes modules, submits assessment answers and generates a certificate on whichever account it is pointed at. It is meant for a test learner on a test environment. The one place it deliberately holds back is the ratings popup — <code>handleCompletionPopups()</code> closes it with the X rather than submitting a rating, so a run never leaves a fabricated review on a real course.
+  </div>
+
+  <h3>Entry points</h3>
+  <table>
+    <thead><tr><th style="width:36%">Command</th><th>What it runs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:course</td><td>The interactive runner (<code>scripts/run-course.mjs</code>) — prompts for the account and the course, then launches this spec. The normal way in.</td></tr>
+      <tr><td class="mono">npm run courses:list</td><td>Lists the courses the runner knows about, so you can pick a name that will actually match.</td></tr>
+      <tr><td class="mono">npm run run:course:env</td><td>Runs it directly against staging using whatever <code>COURSE_NAME</code> is already set.</td></tr>
+      <tr><td class="mono">npm run run:course-fresh</td><td>Mints a brand-new account first (<code>create-account</code>, Step 5), then completes the course as that user. The only way to exercise a <i>first</i> completion rather than a re-run.</td></tr>
+      <tr><td class="mono">npm run report:course</td><td>Headless, pinned to one course, writing a blob report. What CI uses.</td></tr>
+    </tbody>
+  </table>
+
+  <pre><span class="c"># PowerShell — the direct form from the file header</span>
+$env:COURSE_NAME="Normal Labour &amp; Birth and AMTSL"
+$env:GEMINI_API_KEY="…"            <span class="c"># optional — only used if a key is unusable</span>
+npx playwright test tests/CourseComplete.spec.ts --headed</pre>
+
+  <div class="callout">
+    <span class="t">One hour, one test</span>
+    <code>test.setTimeout(60 * 60 * 1000)</code> — a full course with several assessments genuinely takes tens of minutes, and the script would rather run long than abandon a course halfway. Section 12 covers what to look at when a run hits that ceiling.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ 2. SHAPE OF THE FILE ══ -->
+<div class="page sec">
+  <h2>2 &nbsp; The shape of the file</h2>
+  <p class="lead">One test, 46 helpers, seven subsystems. The test itself is only the last 390 lines; everything before it is the machinery it calls.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 596" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="m1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#17283C"/>
+        </marker>
+        <marker id="m2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#1E8F8E"/>
+        </marker>
+        <marker id="m3" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#B45309"/>
+        </marker>
+      </defs>
+
+      <!-- A — GETTING IN -->
+      <rect x="40" y="34" width="390" height="62" rx="8" fill="#FFFFFF" stroke="#17283C" stroke-width="1.5"/>
+      <rect x="40" y="34" width="390" height="20" rx="8" fill="#17283C"/>
+      <rect x="40" y="46" width="390" height="8" fill="#17283C"/>
+      <text x="54" y="48" font-size="10" font-weight="700" fill="#FFF">A &#183; GETTING IN</text>
+      <text x="416" y="48" font-size="9" fill="#BEC5CE" text-anchor="end">4 helpers</text>
+      <text x="54" y="70" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">searchAndOpenCourse &#183; normalizeTitle</text>
+      <text x="54" y="86" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">startOrResume &#183; completeProfileIfNeeded</text>
+
+      <!-- B — NAVIGATION -->
+      <rect x="40" y="114" width="390" height="76" rx="8" fill="#FFFFFF" stroke="#1E8F8E" stroke-width="1.8"/>
+      <rect x="40" y="114" width="390" height="20" rx="8" fill="#1E8F8E"/>
+      <rect x="40" y="126" width="390" height="8" fill="#1E8F8E"/>
+      <text x="54" y="128" font-size="10" font-weight="700" fill="#FFF">B &#183; NAVIGATION &#8212; the sidebar is the map</text>
+      <text x="416" y="128" font-size="9" fill="#E3F7F6" text-anchor="end">5</text>
+      <text x="54" y="150" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">readModules &#183; openModule &#183; readProgress</text>
+      <text x="54" y="166" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">advanceToNextModule &#183; activeModuleSignature</text>
+      <text x="54" y="182" font-size="8" fill="#7C8696">done / locked / active, read off each mat-tree-node</text>
+
+      <!-- C — CLASSIFY -->
+      <rect x="40" y="208" width="390" height="52" rx="8" fill="#FFFFFF" stroke="#17283C" stroke-width="1.5"/>
+      <rect x="40" y="208" width="390" height="20" rx="8" fill="#17283C"/>
+      <rect x="40" y="220" width="390" height="8" fill="#17283C"/>
+      <text x="54" y="222" font-size="10" font-weight="700" fill="#FFF">C &#183; CLASSIFY</text>
+      <text x="416" y="222" font-size="9" fill="#BEC5CE" text-anchor="end">1</text>
+      <text x="54" y="244" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">detectModuleType</text>
+      <text x="200" y="244" font-size="8" fill="#7C8696">&#8212; URL, then seven DOM signals</text>
+
+      <!-- D — HANDLERS -->
+      <rect x="40" y="278" width="390" height="76" rx="8" fill="#FFFFFF" stroke="#17283C" stroke-width="1.5"/>
+      <rect x="40" y="278" width="390" height="20" rx="8" fill="#17283C"/>
+      <rect x="40" y="290" width="390" height="8" fill="#17283C"/>
+      <text x="54" y="292" font-size="10" font-weight="700" fill="#FFF">D &#183; HANDLERS &#8212; one per module type</text>
+      <text x="416" y="292" font-size="9" fill="#BEC5CE" text-anchor="end">6</text>
+      <text x="54" y="314" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">handleVideo &#183; handlePdf &#183; handleContent</text>
+      <text x="54" y="330" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">handleAssessment &#183; readAssessmentVerdict</text>
+      <text x="54" y="346" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">clickReattempt</text>
+
+      <!-- spine arrows -->
+      <line x1="235" y1="96" x2="235" y2="110" stroke="#17283C" stroke-width="1.4" marker-end="url(#m1)"/>
+      <line x1="235" y1="190" x2="235" y2="204" stroke="#17283C" stroke-width="1.4" marker-end="url(#m1)"/>
+      <line x1="235" y1="260" x2="235" y2="274" stroke="#17283C" stroke-width="1.4" marker-end="url(#m1)"/>
+
+      <!-- loop back D → B -->
+      <path d="M40,316 H22 V152 H36" fill="none" stroke="#1E8F8E" stroke-width="1.6" marker-end="url(#m2)"/>
+      <text x="16" y="238" font-size="8.2" fill="#135858" text-anchor="middle" transform="rotate(-90 16 238)">up to 50 steps</text>
+
+      <!-- E — ANSWERING -->
+      <rect x="470" y="34" width="390" height="150" rx="8" fill="#FFFFFF" stroke="#F0A500" stroke-width="1.8"/>
+      <rect x="470" y="34" width="390" height="20" rx="8" fill="#F0A500"/>
+      <rect x="470" y="46" width="390" height="8" fill="#F0A500"/>
+      <text x="484" y="48" font-size="10" font-weight="700" fill="#17283C">E &#183; ANSWERING &#8212; only for assessments</text>
+      <text x="846" y="48" font-size="9" fill="#9A6800" text-anchor="end">14</text>
+      <text x="484" y="70" font-size="8" font-weight="700" fill="#9A6800">strategies</text>
+      <text x="484" y="84" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">answerWithKey &#183; answerWithGeminiFromKey</text>
+      <text x="484" y="98" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">answerWithGeminiPerQuestion &#183; getGeminiAnswersFromKey</text>
+      <text x="484" y="116" font-size="8" font-weight="700" fill="#9A6800">read the screen</text>
+      <text x="484" y="130" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">waitForQuestionReady &#183; scrapeCurrentQuestion</text>
+      <text x="484" y="148" font-size="8" font-weight="700" fill="#9A6800">act on it</text>
+      <text x="484" y="162" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">selectAnswer &#183; selectRadioOption &#183; selectCheckboxOption</text>
+      <text x="484" y="176" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">clickNextQuestion &#183; finishAssessment &#183; findBestOptionMatch</text>
+
+      <!-- F — ANSWER SOURCES -->
+      <rect x="470" y="202" width="390" height="128" rx="8" fill="#FFFFFF" stroke="#17283C" stroke-width="1.5"/>
+      <rect x="470" y="202" width="390" height="20" rx="8" fill="#17283C"/>
+      <rect x="470" y="214" width="390" height="8" fill="#17283C"/>
+      <text x="484" y="216" font-size="10" font-weight="700" fill="#FFF">F &#183; ANSWER SOURCES</text>
+      <text x="846" y="216" font-size="9" fill="#BEC5CE" text-anchor="end">10</text>
+      <text x="484" y="238" font-size="8" font-weight="700" fill="#135858">the key &#8212; tried first</text>
+      <text x="484" y="252" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">setupQuizKeyInterceptor &#183; getAnswerKeyForUrl</text>
+      <text x="484" y="266" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">fetchAnswerKeyFromArtifact &#183; isAnswerKeyPoisoned</text>
+      <text x="484" y="280" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">extractResourceId</text>
+      <text x="484" y="298" font-size="8" font-weight="700" fill="#B45309">the AI &#8212; last resort</text>
+      <text x="484" y="312" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">geminiAsk &#183; askGeminiBatch &#183; askGeminiOne</text>
+      <text x="484" y="326" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">callGemini &#183; throttleGemini</text>
+
+      <!-- arrows D→E and F→E -->
+      <path d="M430,306 H450 V110 H466" fill="none" stroke="#B45309" stroke-width="1.5" marker-end="url(#m3)"/>
+      <text x="443" y="200" font-size="7.4" fill="#B45309" text-anchor="middle" transform="rotate(-90 443 200)">assessment only</text>
+      <line x1="665" y1="202" x2="665" y2="190" stroke="#17283C" stroke-width="1.4" marker-end="url(#m1)"/>
+
+      <!-- G — FINISHING -->
+      <rect x="40" y="376" width="820" height="96" rx="8" fill="#FFFFFF" stroke="#15803D" stroke-width="1.8"/>
+      <rect x="40" y="376" width="820" height="20" rx="8" fill="#15803D"/>
+      <rect x="40" y="388" width="820" height="8" fill="#15803D"/>
+      <text x="54" y="390" font-size="10" font-weight="700" fill="#FFF">G &#183; FINISHING &#8212; runs once, after the loop</text>
+      <text x="846" y="390" font-size="9" fill="#DCFCE7" text-anchor="end">6</text>
+      <text x="54" y="412" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">isCourseComplete &#183; handleCompletionPopups &#183; readProgress</text>
+      <text x="470" y="412" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">hasCertificate &#183; generateCertificate</text>
+      <text x="54" y="428" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">exploreCourseOverview &#183; closeAnyPopup</text>
+      <text x="470" y="428" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">generateCourseReport &#160;<tspan font-family="Open Sans, Arial" font-size="8" fill="#7C8696">(imported)</tspan></text>
+      <text x="54" y="452" font-size="8.6" fill="#7C8696">Five independent completion signals are gathered here; any one of them is enough. Section 10.</text>
+      <text x="54" y="465" font-size="8.6" fill="#7C8696">The certificate is only fetched when the course actually completed AND one is attached.</text>
+
+      <line x1="235" y1="354" x2="235" y2="372" stroke="#17283C" stroke-width="1.4" marker-end="url(#m1)"/>
+      <text x="248" y="368" font-size="8.2" fill="#7C8696">loop ends</text>
+
+      <!-- assertion -->
+      <rect x="40" y="494" width="820" height="42" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="1.6"/>
+      <text x="450" y="512" font-size="10.5" font-weight="700" fill="#15803D" text-anchor="middle">expect(completionMarker).toBe(true)</text>
+      <text x="450" y="528" font-size="8.6" fill="#15803D" text-anchor="middle">The only assertion in 3,195 lines. Everything above exists to make this line meaningful.</text>
+      <line x1="450" y1="472" x2="450" y2="490" stroke="#15803D" stroke-width="1.6" marker-end="url(#m1)"/>
+
+      <text x="40" y="562" font-size="8.4" fill="#7C8696">Helper counts exclude the single test function. Boxes A&#8211;D and G run in file order; E and F are called from D.</text>
+      <text x="40" y="578" font-size="8.4" fill="#7C8696">The teal loop is the heart of the script: Sections 3 and 5 open it up.</text>
+    </svg>
+    <p class="cap">Figure 1 — the seven subsystems, and how the single test threads through them. The loop on the left runs once per module; the gold box on the right runs only when that module is an assessment.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 3. THE EIGHT STEPS ══ -->
+<div class="page sec">
+  <h2>3 &nbsp; The eight steps</h2>
+  <p class="lead">The test body is a numbered sequence, and the source labels it that way. Seven of the eight steps are short. Step 5 is the script.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 664" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="s1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#17283C"/>
+        </marker>
+        <marker id="s2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#B91C1C"/>
+        </marker>
+        <marker id="s3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#1E8F8E"/>
+        </marker>
+      </defs>
+
+      <!-- ── LEFT: the eight steps ── -->
+      <text x="30" y="26" font-size="11" font-weight="700" fill="#17283C">test('Complete course end-to-end')  &#183;  line 2808</text>
+
+      <g font-size="9">
+        <rect x="30" y="40" width="286" height="38" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <circle cx="48" cy="59" r="11" fill="#17283C"/><text x="48" y="63" font-size="9.5" font-weight="700" fill="#FFF" text-anchor="middle">1</text>
+        <text x="66" y="56" font-weight="600" fill="#17283C">Login</text>
+        <text x="66" y="69" font-size="8.2" fill="#7C8696">handled by the authedTest fixture</text>
+
+        <rect x="30" y="88" width="286" height="38" rx="6" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.4"/>
+        <circle cx="48" cy="107" r="11" fill="#1E8F8E"/><text x="48" y="111" font-size="9.5" font-weight="700" fill="#FFF" text-anchor="middle">2</text>
+        <text x="66" y="104" font-weight="600" fill="#135858">Attach the key interceptor</text>
+        <text x="66" y="117" font-size="8.2" fill="#135858">BEFORE any course opens &#8212; order matters</text>
+
+        <rect x="30" y="136" width="286" height="38" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <circle cx="48" cy="155" r="11" fill="#17283C"/><text x="48" y="159" font-size="9.5" font-weight="700" fill="#FFF" text-anchor="middle">3</text>
+        <text x="66" y="152" font-weight="600" fill="#17283C">Search and open the course</text>
+        <text x="66" y="165" font-size="8.2" fill="#7C8696">onboarding first, if this user is new</text>
+
+        <rect x="30" y="184" width="286" height="34" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <circle cx="48" cy="201" r="11" fill="#7C8696"/><text x="48" y="205" font-size="8" font-weight="700" fill="#FFF" text-anchor="middle">3b</text>
+        <text x="66" y="198" font-weight="600" fill="#17283C">Note whether a certificate exists</text>
+        <text x="66" y="210" font-size="8.2" fill="#7C8696">looked at, not clicked &#8212; Resume must survive</text>
+
+        <rect x="30" y="228" width="286" height="34" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <circle cx="48" cy="245" r="11" fill="#17283C"/><text x="48" y="249" font-size="9.5" font-weight="700" fill="#FFF" text-anchor="middle">4</text>
+        <text x="66" y="242" font-weight="600" fill="#17283C">Start or Resume</text>
+        <text x="66" y="254" font-size="8.2" fill="#7C8696">retries once through onboarding</text>
+
+        <rect x="30" y="272" width="286" height="56" rx="6" fill="#FEF6E0" stroke="#F0A500" stroke-width="2"/>
+        <circle cx="48" cy="300" r="11" fill="#F0A500"/><text x="48" y="304" font-size="9.5" font-weight="700" fill="#17283C" text-anchor="middle">5</text>
+        <text x="66" y="292" font-weight="700" fill="#17283C">Complete every module</text>
+        <text x="66" y="305" font-size="8.2" fill="#9A6800">sidebar-driven &#183; up to MAX_MODULES = 50 steps</text>
+        <text x="66" y="319" font-size="8.2" fill="#9A6800">the panel on the right is ONE iteration</text>
+
+        <rect x="30" y="338" width="286" height="32" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <circle cx="48" cy="354" r="11" fill="#17283C"/><text x="48" y="358" font-size="9.5" font-weight="700" fill="#FFF" text-anchor="middle">6</text>
+        <text x="66" y="351" font-weight="600" fill="#17283C">Summary</text>
+        <text x="66" y="363" font-size="8.2" fill="#7C8696">module counts by type, printed</text>
+
+        <rect x="30" y="380" width="286" height="38" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <circle cx="48" cy="399" r="11" fill="#17283C"/><text x="48" y="403" font-size="9.5" font-weight="700" fill="#FFF" text-anchor="middle">7</text>
+        <text x="66" y="396" font-weight="600" fill="#17283C">Certificate</text>
+        <text x="66" y="409" font-size="8.2" fill="#7C8696">only if complete AND one is attached</text>
+
+        <rect x="30" y="428" width="286" height="34" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <circle cx="48" cy="445" r="11" fill="#17283C"/><text x="48" y="449" font-size="9.5" font-weight="700" fill="#FFF" text-anchor="middle">8</text>
+        <text x="66" y="442" font-weight="600" fill="#17283C">Write the HTML course report</text>
+        <text x="66" y="454" font-size="8.2" fill="#7C8696">wrapped &#8212; never fails a passing run</text>
+
+        <rect x="30" y="472" width="286" height="40" rx="6" fill="#DCFCE7" stroke="#15803D" stroke-width="1.6"/>
+        <text x="173" y="489" font-size="9.4" font-weight="700" fill="#15803D" text-anchor="middle">expect(completionMarker).toBe(true)</text>
+        <text x="173" y="503" font-size="8" fill="#15803D" text-anchor="middle">the whole run, reduced to one boolean</text>
+      </g>
+
+      <g stroke="#17283C" stroke-width="1.2" marker-end="url(#s1)">
+        <line x1="173" y1="78" x2="173" y2="84"/>
+        <line x1="173" y1="126" x2="173" y2="132"/>
+        <line x1="173" y1="174" x2="173" y2="180"/>
+        <line x1="173" y1="218" x2="173" y2="224"/>
+        <line x1="173" y1="262" x2="173" y2="268"/>
+        <line x1="173" y1="328" x2="173" y2="334"/>
+        <line x1="173" y1="370" x2="173" y2="376"/>
+        <line x1="173" y1="418" x2="173" y2="424"/>
+        <line x1="173" y1="462" x2="173" y2="468"/>
+      </g>
+
+      <text x="30" y="536" font-size="8.4" fill="#7C8696">Steps 1&#8211;4 take under a minute on a healthy environment. Step 5 is</text>
+      <text x="30" y="549" font-size="8.4" fill="#7C8696">everything else &#8212; typically tens of minutes.</text>
+
+      <!-- ── RIGHT: one iteration of step 5 ── -->
+      <rect x="352" y="40" width="518" height="536" rx="9" fill="#FFFFFF" stroke="#F0A500" stroke-width="1.6"/>
+      <rect x="352" y="40" width="518" height="24" rx="9" fill="#FEF6E0"/>
+      <rect x="352" y="54" width="518" height="10" fill="#FEF6E0"/>
+      <text x="368" y="57" font-size="10" font-weight="700" fill="#17283C">STEP 5 &#8212; one iteration of the loop  &#183;  line 2905</text>
+
+      <g font-size="8.6">
+        <rect x="370" y="76" width="420" height="28" rx="5" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.1"/>
+        <text x="382" y="94" fill="#B91C1C">page closed, or a completion marker on screen?</text>
+        <line x1="790" y1="90" x2="828" y2="90" stroke="#B91C1C" stroke-width="1.2" marker-end="url(#s2)"/>
+        <text x="834" y="87" font-size="7.6" fill="#B91C1C">break</text>
+        
+
+        <rect x="370" y="114" width="420" height="26" rx="5" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.2"/>
+        <text x="382" y="131" fill="#135858">mods = readModules()   &#8212; done / locked / active per node</text>
+
+        <rect x="370" y="150" width="420" height="26" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <text x="382" y="167" fill="#17283C">every module shows a check?</text>
+        <line x1="790" y1="163" x2="828" y2="163" stroke="#15803D" stroke-width="1.2" marker-end="url(#s3)"/>
+        <text x="834" y="160" font-size="7.6" fill="#15803D">done</text>
+        
+
+        <rect x="370" y="186" width="420" height="26" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <text x="382" y="203" fill="#17283C">pick the first unlocked module with fewer than 2 attempts</text>
+
+        <rect x="370" y="222" width="420" height="40" rx="5" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.1"/>
+        <text x="382" y="238" fill="#9A6800">none, but unlocked ones remain &#8594; name them, stop</text>
+        <text x="382" y="252" fill="#9A6800">none, and all are locked &#8594; nudge Next + reload, up to 4&#215;</text>
+
+        <rect x="370" y="272" width="420" height="28" rx="5" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.2"/>
+        <text x="382" y="290" fill="#135858">openModule() &#8212; click, then WAIT for the URL to name it</text>
+        <line x1="790" y1="286" x2="828" y2="286" stroke="#B45309" stroke-width="1.2" marker-end="url(#s2)"/>
+        <text x="834" y="283" font-size="7.6" fill="#B45309">fail:</text>
+        <text x="834" y="293" font-size="7.6" fill="#B45309">+1 try</text>
+
+        <rect x="370" y="310" width="420" height="26" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <text x="382" y="327" fill="#17283C">type = detectModuleType()   &#8212; URL, then seven DOM signals</text>
+
+        <rect x="370" y="346" width="420" height="44" rx="5" fill="#17283C"/>
+        <text x="382" y="363" fill="#FFFFFF" font-weight="600">dispatch the handler</text>
+        <text x="382" y="379" fill="#BEC5CE" font-size="8.2">video &#183; pdf &#183; content &#183; assessment &#8212; Sections 6 and 7</text>
+
+        <rect x="370" y="400" width="420" height="26" rx="5" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.2"/>
+        <text x="382" y="417" fill="#135858">re-read the sidebar &#8212; did the completed count rise?</text>
+
+        <rect x="370" y="436" width="200" height="52" rx="5" fill="#FEF3C7" stroke="#B45309" stroke-width="1.1"/>
+        <text x="382" y="452" fill="#B45309" font-weight="600">no &#8212; a stall</text>
+        <text x="382" y="465" fill="#B45309" font-size="8.2">charge an attempt to THIS</text>
+        <text x="382" y="477" fill="#B45309" font-size="8.2">module, then nudge Next</text>
+
+        <rect x="590" y="436" width="200" height="52" rx="5" fill="#DCFCE7" stroke="#15803D" stroke-width="1.1"/>
+        <text x="602" y="452" fill="#15803D" font-weight="600">yes &#8212; progress</text>
+        <text x="602" y="465" fill="#15803D" font-size="8.2">reset the stall counter</text>
+        <text x="602" y="477" fill="#15803D" font-size="8.2">and take the next step</text>
+      </g>
+
+      <g stroke="#17283C" stroke-width="1.1" marker-end="url(#s1)">
+        <line x1="580" y1="104" x2="580" y2="110"/>
+        <line x1="580" y1="140" x2="580" y2="146"/>
+        <line x1="580" y1="176" x2="580" y2="182"/>
+        <line x1="580" y1="212" x2="580" y2="218"/>
+        <line x1="580" y1="262" x2="580" y2="268"/>
+        <line x1="580" y1="300" x2="580" y2="306"/>
+        <line x1="580" y1="336" x2="580" y2="342"/>
+        <line x1="580" y1="390" x2="580" y2="396"/>
+        <line x1="580" y1="426" x2="580" y2="432"/>
+      </g>
+      <path d="M470,488 V500 H690 V488" fill="none" stroke="#F0A500" stroke-width="1.4"/>
+      <path d="M580,500 V516" fill="none" stroke="#F0A500" stroke-width="1.4" marker-end="url(#s1)"/>
+      <rect x="370" y="518" width="420" height="26" rx="5" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.3"/>
+      <text x="580" y="535" font-size="8.8" font-weight="600" fill="#9A6800" text-anchor="middle">next step &#8212; back to the top, up to 50 times</text>
+      <text x="368" y="562" font-size="8" fill="#7C8696">Note: 50 STEPS, not 50 modules. A retry on a stuck module costs a step.</text>
+
+      <!-- link left step 5 to the right panel -->
+      <path d="M316,300 H336 V300" fill="none" stroke="#F0A500" stroke-width="1.6"/>
+      <path d="M336,300 H348" fill="none" stroke="#F0A500" stroke-width="1.6" marker-end="url(#s1)"/>
+
+      <text x="30" y="600" font-size="8.4" fill="#7C8696">The loop is the reason this script can finish a course at all: it never assumes what comes next, it re-reads</text>
+      <text x="30" y="613" font-size="8.4" fill="#7C8696">the sidebar every time and asks the platform which module is now open and unlocked.</text>
+    </svg>
+    <p class="cap">Figure 2 — the eight steps of the single test, with one iteration of the module loop expanded. Red exits end the loop; amber ones cost the current module an attempt.</p>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════ 4. CONFIG AND INPUTS ══ -->
+<div class="page sec">
+  <h2>4 &nbsp; Configuration and inputs</h2>
+  <p class="lead">Seven tuning constants and three environment variables. Two of the three inputs are optional; the third decides whether the test runs at all.</p>
+
+  <h3>Inputs</h3>
+  <table>
+    <thead><tr><th style="width:24%">Variable</th><th style="width:12%">Required</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">COURSE_NAME<br><span style="font-size:7.6pt;color:#7C8696;">line 87</span></td>
+        <td><span class="pill p-err">yes</span></td>
+        <td>Which course to complete. There is no default, and unlike the Course TOC spec this one <b>throws rather than skips</b> — the error names both ways to set it, including the interactive runner.</td>
+      </tr>
+      <tr>
+        <td class="mono">GEMINI_API_KEY<br><span style="font-size:7.6pt;color:#7C8696;">line 89</span></td>
+        <td><span class="pill p-warn">optional</span></td>
+        <td>Enables the AI fallback. Without it, an assessment whose key is missing or poisoned cannot be answered reliably. The run prints <code>⚠️ No GEMINI_API_KEY</code> at the top so this is visible before the failure rather than after.</td>
+      </tr>
+      <tr>
+        <td class="mono">BASE_URL<br><span style="font-size:7.6pt;color:#7C8696;">line 43</span></td>
+        <td><span class="pill p-teal">defaulted</span></td>
+        <td>Which environment. Defaults to staging.</td>
+      </tr>
+      <tr>
+        <td class="mono">USE_FRESH_USER</td>
+        <td><span class="pill p-warn">optional</span></td>
+        <td>Reuse the session of an account just minted by the create-account suite, so the run exercises a genuine <i>first</i> completion rather than re-walking a finished course.</td>
+      </tr>
+      <tr>
+        <td class="mono">VERBOSE_CHECKBOX</td>
+        <td><span class="pill p-warn">optional</span></td>
+        <td>Logs every strategy the checkbox clicker tries. Only useful when a multi-select question will not tick.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">It reads <code>.env</code> itself, without a library</span>
+    Lines 66&#8211;84 are a small immediately-invoked function that parses <code>.env</code> by hand. Two details are deliberate: it splits on the <b>first</b> <code>=</code> only, so a value containing <code>=</code> (an API key, typically) survives intact; and it <b>never overwrites a variable already set in the real environment</b>, so a value passed on the command line always beats the file. Writing it out rather than importing <code>dotenv</code> keeps the spec runnable on its own.
+  </div>
+
+  <h3>The seven constants</h3>
+  <table>
+    <thead><tr><th style="width:28%">Constant</th><th style="width:12%">Value</th><th>What it governs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">MAX_MODULES<br><span style="font-size:7.6pt;color:#7C8696;">line 51</span></td><td><b>50</b></td><td>The ceiling on loop <i>steps</i>. Not a module count — a retry on a stuck module spends one. It exists so a course that never registers progress ends rather than running for an hour.</td></tr>
+      <tr><td class="mono">VIDEO_WATCH_MS<br><span style="font-size:7.6pt;color:#7C8696;">line 52</span></td><td><b>5 s</b></td><td>The settle after a video finishes, giving the platform's progress call time to land. Also the fallback wait when no <code>&lt;video&gt;</code> element ever appears.</td></tr>
+      <tr><td class="mono">PDF_MAX_PAGES<br><span style="font-size:7.6pt;color:#7C8696;">line 53</span></td><td><b>60</b></td><td>How many times the PDF viewer's own chevron is clicked before giving up. The outer Next button stays disabled until every page has been turned.</td></tr>
+      <tr><td class="mono">ASSESSMENT_MAX_RETRIES<br><span style="font-size:7.6pt;color:#7C8696;">line 54</span></td><td><b>2</b></td><td>Re-attempts when the results screen says the pass mark was missed. Without this, a failed graded assessment would leave its module permanently incomplete.</td></tr>
+      <tr><td class="mono">GEMINI_RPM_DELAY<br><span style="font-size:7.6pt;color:#7C8696;">line 55</span></td><td><b>6.5 s</b></td><td>Self-throttle between AI calls, sized for the free tier's 10-requests-per-minute limit.</td></tr>
+      <tr><td class="mono">GEMINI_RETRY_WAIT_MS<br><span style="font-size:7.6pt;color:#7C8696;">line 56</span></td><td><b>20 s</b></td><td>How long to wait out a rate-limit response that does not say how long to wait.</td></tr>
+      <tr><td class="mono">GEMINI_MAX_RETRY_WAIT_MS<br><span style="font-size:7.6pt;color:#7C8696;">line 57</span></td><td><b>65 s</b></td><td>A ceiling on any single rate-limit wait, so a server-suggested delay of ten minutes cannot stall the run.</td></tr>
+    </tbody>
+  </table>
+
+  <p>Two model names sit alongside them: <code>gemini-2.5-flash</code> as the primary and <code>gemini-2.5-flash-lite</code> as the higher-quota fallback (lines 60 and 62). Section 9 covers when the script moves between them.</p>
+
+  <div class="callout gold">
+    <span class="t">None of the seven read the environment</span>
+    Unlike the Course TOC spec, where every timeout is overridable, these are compiled-in. In practice that has been fine — they are tuned to platform behaviour rather than to machine speed — but it does mean that adapting to a slower environment means editing the file. The four Gemini values are the ones most likely to need it, since they encode a specific vendor's free-tier limits.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ 5. THE SIDEBAR-DRIVEN LOOP ══ -->
+<div class="page sec">
+  <h2>5 &nbsp; The sidebar-driven loop</h2>
+  <p class="lead">The single most important design decision in the file, and the source says why in one line: <i>"Blindly clicking Next just loops through the units."</i></p>
+
+  <p>A course player has a Next button, and the obvious way to complete a course is to keep pressing it. That does not work here. Sphere's player advances within a unit, so pressing Next walks the same handful of screens forever while the module list stays untouched. Worse, it gives no way to know when you are done.</p>
+
+  <p>So the script drives from the <b>sidebar</b> instead — the module tree that is the platform's own statement of what exists, what is finished, and what is still locked. Every iteration re-reads it, decides what to open, opens it, and then re-reads it again to ask whether anything actually changed.</p>
+
+  <h3>What one sidebar node tells you</h3>
+  <p><code>readModules()</code> (line 2653) runs inside the browser and turns every <code>mat-tree-node</code> into a plain object. Four of its fields are read from markup that was never designed to be read this way:</p>
+  <table>
+    <thead><tr><th style="width:16%">Field</th><th style="width:42%">How it is derived</th><th>Why that way</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">done</td>
+        <td class="mono">/check/.test(iconTxt)<br>&amp;&amp; !/outline/.test(iconTxt)</td>
+        <td>Material icons render their name as ligature text, so the icon <i>is</i> readable — but <code>check_circle_outline</code> means "not done" and contains the word "check". <b>Excluding the outline variant is the whole correctness of the completion check.</b></td>
+      </tr>
+      <tr>
+        <td class="mono">locked</td>
+        <td class="mono">/\block\b/.test(iconTxt)<br>|| /\bdisabled\b/.test(cls)</td>
+        <td>A lock icon or a disabled class. Either can carry the state depending on build.</td>
+      </tr>
+      <tr>
+        <td class="mono">active</td>
+        <td class="mono">/content-active|li-active/</td>
+        <td>Two class names, because the player has shipped both.</td>
+      </tr>
+      <tr>
+        <td class="mono">resourceId</td>
+        <td class="mono">extractResourceId(href)</td>
+        <td>The <code>do_…</code> id parsed out of the node's router link. This is the ground truth for "did we land on the module we clicked" — see below.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Note that the class list is built from <b>both</b> the node and its inner anchor (<code>`${el.className} ${a?.className}`</code>), because the state lives on one or the other depending on version. And the whole thing ends in <code>.catch(() =&gt; [])</code>: an unreadable sidebar yields an empty list, which the loop treats as "no sidebar" and falls back to processing whatever is on screen.</p>
+
+  <div class="callout red">
+    <span class="t">The bug that made <code>openModule()</code> necessary</span>
+    Clicking a sidebar link is not enough. The player is a single-page app, so the previous viewer stays mounted for a beat after the click. The original code would click a quiz, immediately detect the still-showing video, <b>complete that video a second time, credit it to the quiz, and then blame the quiz for never registering</b>. The doc comment above it, at line 2699, records exactly this.
+    <br><br>
+    The fix is to treat the URL as the arbiter. <code>openModule()</code> reads the target <code>do_…</code> id from the node's href, clicks, then polls for up to six seconds for the URL to actually name that resource. If the click did not navigate it goes to the href directly, polls again, and only then gives up — returning <code>false</code> so the caller can charge an attempt rather than process the wrong module.
+  </div>
+
+  <h3>Three ways the loop can get stuck, and what it does about each</h3>
+  <table>
+    <thead><tr><th style="width:26%">Situation</th><th style="width:30%">Response</th><th>Why not just stop</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>A module opens but never registers as complete</b></td>
+        <td>Charge an attempt to <i>that module by name</i>. After 2 attempts the picker skips it and moves to the next unfinished one.</td>
+        <td>A single stuck module used to end the whole run. Now the run continues and only stops once <b>every</b> remaining module is exhausted — so one broken video no longer hides the state of the other fifteen.</td>
+      </tr>
+      <tr>
+        <td><b>Everything left is locked</b></td>
+        <td>Nudge Next, reload if the page drifted off the overview, re-read the sidebar. Up to 4 times.</td>
+        <td>The final gated unit often unlocks a beat after its prerequisites register, or needs a Next nudge to enter. Conceding immediately would fail a course that was about to finish.</td>
+      </tr>
+      <tr>
+        <td><b>No sidebar at all</b></td>
+        <td>Process whatever is on screen; give up after 3 consecutive steps with no progress.</td>
+        <td>With no module list there is nothing to attribute a stall to, so the old global rule is the only one available.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Each of these writes a line into <code>reportWarnings</code> as well as the console, so the HTML report at the end names the modules that would not complete rather than just saying the course did not finish.</p>
+
+  <pre><span class="c">// line 2939 — when unlocked modules remain but all have hit the cap</span>
+console.log(`\n🛑 These modules would not register as complete after ${MODULE_MAX_ATTEMPTS} attempts each:`);
+unlocked.forEach((m) =&gt; console.log(`     • ${m.text}`));</pre>
+
+  <div class="callout">
+    <span class="t">Why the loop counts steps rather than modules</span>
+    <code>for (let step = 1; step &lt;= MAX_MODULES; step++)</code> — the comment on line 2904 is explicit that these are steps, not modules. A retry spends one, a lock nudge spends one, an open failure spends one. Fifty is therefore comfortably more than any real course needs while still being a hard stop: the worst case is fifty iterations, not fifty modules each retried twice.
+  </div>
+</div>
+
+<!-- ═══════════════════════ 6. DETECTION AND THE HANDLERS ══ -->
+<div class="page sec">
+  <h2>6 &nbsp; Module detection and the handlers</h2>
+  <p class="lead">Sphere does not tell the script what kind of module it just opened. <code>detectModuleType()</code> works it out, and gets it wrong at some cost — a video handled as content is never watched, and never completes.</p>
+
+  <h3>Why the URL is not enough</h3>
+  <p>Three routes are unambiguous: <code>/viewer/pdf</code> means PDF, <code>/viewer/video</code> means video, <code>/viewer/html</code> means content. The problem is the fourth. <b>Sphere serves course intro pages from <code>/viewer/quiz/</code> too</b>, so the quiz route is the one route that has to be verified rather than trusted.</p>
+
+  <p>For that case the function does three things in order of confidence:</p>
+  <ol class="steps">
+    <li><b>Check the captured answer keys first.</b> If the interceptor filed a quiz JSON under this exact resource id, the module <i>is</i> an assessment — the platform fetched its questions. This is the strongest possible signal and it short-circuits everything below.</li>
+    <li><b>Gather seven DOM signals in one round trip.</b> A "Start Now" button, the radio count, the checkbox count, a "N Questions" + "N Minutes" pair, a canvas count, a PDF iframe, and whether the only heading is "Introduction" or "Overview".</li>
+    <li><b>Let content beat the route.</b> PDF markers win outright — a canvas or a PDF iframe on a quiz URL is treated as a PDF, and the run logs that it did so. An Intro heading with <i>no</i> quiz controls at all is treated as content. Any single quiz signal is enough to call it an assessment.</li>
+  </ol>
+
+  <p>If none of that resolves — a quiz URL with no quiz indicators anywhere — it returns <code>content</code> and says so in the log. Content is the safe default: handling it just scrolls the page, which is harmless if the guess was wrong.</p>
+
+  <h3>The four handlers</h3>
+  <table>
+    <thead><tr><th style="width:18%">Handler</th><th style="width:10%">Line</th><th>What it does, and what it is really trying to trigger</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">handleVideo</td><td class="mono">520</td>
+        <td>Six stages, and every one of them exists to make the platform record a view. Wait for the <code>&lt;video&gt;</code> element (30 s) → wait for metadata so the duration is known, calling <code>.load()</code> if the browser is being lazy (60 s) → wait for enough buffer to play → <b>mute and play</b>, because muting is what makes browsers permit programmatic autoplay → <b>seek to half a second before the end</b> so the <code>ended</code> event still fires naturally → await that event, with a 15-second safety net. Returns whether the metadata ever loaded; a false becomes a report warning, not a failure.</td>
+      </tr>
+      <tr>
+        <td class="mono">handlePdf</td><td class="mono">619</td>
+        <td>Clicks the viewer's <i>own</i> <code>chevron_right</code> up to 60 times, stopping when it disappears or goes disabled. The outer module Next button stays disabled until every page has been turned, so this is not cosmetic — it is the completion condition. Clicks are <code>force</code>d because the viewer overlay intercepts them.</td>
+      </tr>
+      <tr>
+        <td class="mono">handleContent</td><td class="mono">642</td>
+        <td>Scrolls to the bottom (which is what registers the page as read), back to the top so inner controls are in view, then flips up to 30 inner page-turn chevrons if the content has them.</td>
+      </tr>
+      <tr>
+        <td class="mono">handleAssessment</td><td class="mono">669</td>
+        <td>The large one — Section 7.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">The video handler is the clearest example of the script's whole approach</span>
+    It would be far simpler to call <code>video.currentTime = video.duration</code> and move on. That does not work: the platform listens for real playback events, so the script has to mute the element (to get autoplay permission), start it, seek to just short of the end (so <code>ended</code> fires naturally rather than being skipped past), and then wait for the event. Every one of those steps is a workaround for how browsers and the platform actually behave, and none of it would be discoverable from the DOM alone.
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ 7. ANSWERING AN ASSESSMENT ══ -->
+<div class="page sec">
+  <h2>7 &nbsp; Answering an assessment</h2>
+  <p class="lead">A graded assessment only marks its module complete when the pass mark is met, so guessing is not an option. The script has three ways to answer, and it always takes the most accurate one available.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 626" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="t1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#17283C"/>
+        </marker>
+        <marker id="t2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#B45309"/>
+        </marker>
+      </defs>
+
+      <!-- sources -->
+      <text x="30" y="24" font-size="11" font-weight="700" fill="#17283C">handleAssessment()  &#183;  line 669</text>
+      <text x="30" y="40" font-size="8.6" fill="#7C8696">Both sources are fetched before a single question is read.</text>
+
+      <rect x="44" y="52" width="380" height="70" rx="8" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.6"/>
+      <text x="58" y="72" font-size="10" font-weight="700" fill="#135858">The published artifact &#8212; on S3</text>
+      <text x="58" y="88" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">fetchAnswerKeyFromArtifact()</text>
+      <text x="58" y="103" font-size="8.4" fill="#135858">hierarchy &#8594; artifactUrl &#8594; the real JSON,</text>
+      <text x="58" y="115" font-size="8.4" fill="#135858">with its isCorrect flags still intact</text>
+
+      <rect x="476" y="52" width="380" height="70" rx="8" fill="#F6F7F9" stroke="#7C8696" stroke-width="1.4"/>
+      <text x="490" y="72" font-size="10" font-weight="700" fill="#2D3E54">The copy the player fetched</text>
+      <text x="490" y="88" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">getAnswerKeyForUrl()</text>
+      <text x="490" y="103" font-size="8.4" fill="#7C8696">captured off the wire by the interceptor &#8212;</text>
+      <text x="490" y="115" font-size="8.4" fill="#7C8696">often has its isCorrect flags stripped</text>
+
+      <!-- filter -->
+      <path d="M234,122 V142 H450" fill="none" stroke="#17283C" stroke-width="1.3"/>
+      <path d="M666,122 V142 H450" fill="none" stroke="#17283C" stroke-width="1.3"/>
+      <line x1="450" y1="142" x2="450" y2="156" stroke="#17283C" stroke-width="1.3" marker-end="url(#t1)"/>
+
+      <rect x="200" y="158" width="500" height="46" rx="8" fill="#FFFFFF" stroke="#17283C" stroke-width="1.6"/>
+      <text x="450" y="177" font-size="9.6" font-weight="700" fill="#17283C" text-anchor="middle">usable(k) &#8212; has questions AND is not poisoned</text>
+      <text x="450" y="193" font-size="8.4" fill="#7C8696" text-anchor="middle">poisoned = 80&#37; or more of its questions flag nothing correct</text>
+
+      <line x1="450" y1="204" x2="450" y2="216" stroke="#17283C" stroke-width="1.3" marker-end="url(#t1)"/>
+
+      <!-- TIER 1 -->
+      <rect x="70" y="220" width="786" height="76" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="1.8"/>
+      <circle cx="98" cy="246" r="13" fill="#15803D"/><text x="98" y="251" font-size="11" font-weight="700" fill="#FFF" text-anchor="middle">1</text>
+      <text x="124" y="243" font-size="10.5" font-weight="700" fill="#15803D">A usable key &#8212; answerWithKey()</text>
+      <text x="124" y="257" font-size="8.6" fill="#15803D">Artifact first, the intercepted copy second. Accurate, free, and needs no network beyond the page.</text>
+      <text x="124" y="273" font-size="8.4" fill="#2D3E54">For each question: match the stem against the key, take every option flagged correct, then find each one</text>
+      <text x="124" y="285" font-size="8.4" fill="#2D3E54">on screen <tspan font-weight="700">by text</tspan> &#8212; never by position, because Sphere shuffles the options on every render.</text>
+      <text x="846" y="243" font-size="8.6" font-weight="700" fill="#15803D" text-anchor="end">the normal path</text>
+
+      <!-- TIER 2 -->
+      <rect x="70" y="308" width="786" height="76" rx="8" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.8"/>
+      <circle cx="98" cy="334" r="13" fill="#F0A500"/><text x="98" y="339" font-size="11" font-weight="700" fill="#17283C" text-anchor="middle">2</text>
+      <text x="124" y="331" font-size="10.5" font-weight="700" fill="#9A6800">A poisoned key &#8212; answerWithGeminiFromKey()</text>
+      <text x="124" y="345" font-size="8.6" fill="#9A6800">The flags are gone but every question and option is still there &#8212; so the whole assessment goes to</text>
+      <text x="124" y="357" font-size="8.6" fill="#9A6800">Gemini in <tspan font-weight="700">ONE</tspan> request, and the answers come back as option TEXTS rather than letters.</text>
+      <text x="124" y="375" font-size="8.4" fill="#2D3E54">Texts, not letters, is what makes a re-attempt free: the order will have changed by then.</text>
+      <text x="846" y="331" font-size="8.6" font-weight="700" fill="#9A6800" text-anchor="end">graded assessments</text>
+
+      <!-- TIER 3 -->
+      <rect x="70" y="396" width="786" height="64" rx="8" fill="#F6F7F9" stroke="#7C8696" stroke-width="1.5"/>
+      <circle cx="98" cy="420" r="13" fill="#7C8696"/><text x="98" y="425" font-size="11" font-weight="700" fill="#FFF" text-anchor="middle">3</text>
+      <text x="124" y="417" font-size="10.5" font-weight="700" fill="#2D3E54">No key at all &#8212; answerWithGeminiPerQuestion()</text>
+      <text x="124" y="431" font-size="8.6" fill="#7C8696">One request per question. More accurate than a batch, and quota is not a concern here because</text>
+      <text x="124" y="443" font-size="8.6" fill="#7C8696">an assessment with no key at all is rare.</text>
+      <text x="846" y="417" font-size="8.6" font-weight="700" fill="#7C8696" text-anchor="end">rare</text>
+
+      <!-- per-question escape -->
+      <path d="M856,258 H874 V340" fill="none" stroke="#B45309" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <path d="M874,340 H858" fill="none" stroke="#B45309" stroke-width="1.3" marker-end="url(#t2)"/>
+      <text x="886" y="300" font-size="7.4" fill="#B45309" text-anchor="middle" transform="rotate(-90 886 300)">per question, if the key cannot answer it</text>
+
+      <!-- finish -->
+      <line x1="450" y1="460" x2="450" y2="472" stroke="#17283C" stroke-width="1.3" marker-end="url(#t1)"/>
+      <rect x="200" y="474" width="500" height="30" rx="7" fill="#17283C"/>
+      <text x="450" y="494" font-size="9.6" font-weight="600" fill="#FFF" text-anchor="middle">finishAssessment() &#8212; Submit &#8594; results screen &#8594; Continue</text>
+
+      <line x1="450" y1="504" x2="450" y2="516" stroke="#17283C" stroke-width="1.3" marker-end="url(#t1)"/>
+      <rect x="200" y="518" width="500" height="30" rx="7" fill="#FFFFFF" stroke="#17283C" stroke-width="1.5"/>
+      <text x="450" y="538" font-size="9.4" fill="#17283C" text-anchor="middle">readAssessmentVerdict() &#8212; passed / failed / unknown</text>
+
+      <!-- retry loop -->
+      <path d="M200,533 H38 V246 H60" fill="none" stroke="#B45309" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <path d="M50,246 H66" fill="none" stroke="#B45309" stroke-width="1.5" marker-end="url(#t2)"/>
+      <text x="30" y="400" font-size="7.8" fill="#B45309" text-anchor="middle" transform="rotate(-90 30 400)">failed &#8594; clickReattempt() &#8594; answer again  (up to 2&#215;)</text>
+
+      <line x1="450" y1="548" x2="450" y2="560" stroke="#15803D" stroke-width="1.5" marker-end="url(#t1)"/>
+      <rect x="290" y="562" width="320" height="28" rx="7" fill="#DCFCE7" stroke="#15803D" stroke-width="1.4"/>
+      <text x="450" y="581" font-size="9.4" font-weight="700" fill="#15803D" text-anchor="middle">module registers complete</text>
+
+      <text x="44" y="612" font-size="8.4" fill="#7C8696">Cached Gemini answers are reused across re-attempts, so tiers 2 and 3 cost their quota only once per assessment.</text>
+    </svg>
+    <p class="cap">Figure 3 — the three-tier answer strategy. Tier 1 is the normal path on a published course; the AI is reached only when the key is missing or has been deliberately stripped.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ 7b. ANSWERING, IN PROSE ══ -->
+<div class="page sec">
+  <h2>7 &nbsp; Answering an assessment <span style="font-weight:400;color:#7C8696;font-size:11pt;">(continued)</span></h2>
+
+  <h3>The line that tells you which tier a run took</h3>
+  <p><code>handleAssessment()</code> announces its strategy before it reads a single question, and this is the most useful line in a run's log:</p>
+  <pre><span class="c">📝 ASSESSMENT — using answer key from the published artifact for do_1134204940…</span>
+<span class="g">📝 ASSESSMENT — every key for do_1134204940… is POISONED (all isCorrect: false) — using Gemini AI</span>
+<span class="r">📝 ASSESSMENT — no answer key for do_1134204940…, will use Gemini AI</span></pre>
+  <p>If every assessment in a run prints the first form, the AI was never called and the run cost nothing but time. If any prints the second or third, the run depended on <code>GEMINI_API_KEY</code>, and Section 9's quota limits apply.</p>
+
+  <h3>Counting the questions is harder than it looks</h3>
+  <p>The obvious source is the on-screen "3 / 12" counter. The source rejects it, and the reason is worth quoting: the regex <code>/\d+\/\d+/</code> <b>can match a value inside the question itself</b> — a blood-pressure reading of "100/70" makes the script believe there are 70 questions, and it then walks off the end of the assessment.</p>
+  <p>So the count comes from the key when there is one, <i>even a poisoned one</i> — a poisoned key has lost its answers but still knows exactly how many questions this assessment holds. The counter is only the fallback, and a hard-coded 5 the fallback's fallback:</p>
+  <pre><span class="k">const</span> total = capturedKey &amp;&amp; capturedKey.questions.length &gt; 0
+  ? capturedKey.questions.length
+  : counterN || 5;</pre>
+  <p>There is a safety net for the other direction too. If the answering loop reaches a question with no text <i>and</i> no options, it concludes the assessment really has ended and stops, rather than clicking Next into nothing.</p>
+
+  <h3>When the key cannot answer one question</h3>
+  <p>Three things can go wrong for a single question even with a good key: the matcher finds no entry for this stem, the matched entry flags nothing correct, or none of its correct options can be found on screen. The script's response to all three is the same, and it is a deliberate change from how it used to behave:</p>
+  <div class="callout gold">
+    <span class="t">Ask the AI rather than defaulting to A</span>
+    "A wrong answer costs the pass mark, and the module only completes when the assessment is passed." Falling back to option A is free but actively harmful — it turns a recoverable gap into a failed assessment and an incomplete module. So <code>answerWithKey()</code> carries a small <code>askGemini()</code> closure and calls it in all three cases, logging why. Option A remains the fallback only when nothing at all could be scraped from the screen.
+  </div>
+
+  <h3>Mapping an answer onto the screen</h3>
+  <p>The key gives answers as option <i>text</i>. Sphere shuffles option order on every render, so position is meaningless and text is all there is. Three helpers do the work:</p>
+  <table>
+    <thead><tr><th style="width:24%">Helper</th><th style="width:10%">Line</th><th>What it contributes</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">stripHtml</td><td class="mono">1177</td><td>The key's option text is HTML; the screen's is plain. This levels them.</td></tr>
+      <tr><td class="mono">normalizeText</td><td class="mono">1183</td><td>Collapses case, spacing and punctuation, which differ between the JSON and the rendered DOM.</td></tr>
+      <tr><td class="mono">findBestOptionMatch</td><td class="mono">1194</td><td>Fuzzy-matches one key option against the list on screen and returns its index, or <code>-1</code>.</td></tr>
+    </tbody>
+  </table>
+  <p>Anything the key claims but the screen does not show is <b>reported rather than silently dropped</b> — the log prints the JSON's text verbatim, so a mismatch between the published artifact and the rendered quiz is visible instead of becoming a mystery wrong answer.</p>
+
+  <h3>Radio, checkbox, and the field that settles it</h3>
+  <p>A radio question takes exactly one answer; a checkbox question needs <b>every</b> correct option ticked or the mark is lost. Usually the DOM makes the type obvious. When it does not, the script trusts the artifact's own <code>multiSelection</code> field:</p>
+  <pre><span class="c">// the artifact says whether this is select-all-that-apply</span>
+<span class="k">if</span> (scraped.inputType === <span class="g">'unknown'</span> &amp;&amp; match.multiSelection) questionType = <span class="g">'checkbox'</span>;</pre>
+  <p>The type comment at lines 102&#8211;103 calls this "the AUTHORITATIVE answer to how many options should I tick — far more reliable than guessing from the on-screen control type", and that is right: the control can render ambiguously, but the content model cannot.</p>
+</div>
+
+<!-- ══════════════════════════════════ 8. THE ANSWER-KEY PLUMBING ══ -->
+<div class="page sec">
+  <h2>8 &nbsp; The answer-key plumbing</h2>
+  <p class="lead">Five small functions and two Maps. Together they are the reason the AI is usually never called.</p>
+
+  <h3>The interceptor</h3>
+  <p>Sphere prefetches a JSON file for every assessment in a course, in bulk, as soon as the course opens. <code>setupQuizKeyInterceptor()</code> (line 282) attaches a <code>page.on('response')</code> listener that watches for them:</p>
+  <pre><span class="c">// only artifact JSON, of either naming convention</span>
+<span class="k">if</span> (!/\/content\/[^/]+\/artifact\/.*_(quiz|assessment)\.json/i.test(url)) <span class="k">return</span>;
+<span class="k">if</span> (!res.ok()) <span class="k">return</span>;
+<span class="c">// file it under its own resource id, but only if it actually holds questions</span>
+<span class="k">if</span> (Array.isArray(json?.questions) &amp;&amp; json.questions.length &gt; 0) capturedKeys.set(resourceId, json);</pre>
+  <p>Two design points are worth drawing out. It is a <b>Map keyed by resource id, not a single slot</b> — a course has many assessments and they arrive together, so each has to be filed under its own id or they overwrite one another. And the whole body is wrapped in a <code>try</code> that swallows parse errors silently: this is an opportunistic capture running inside a response handler, and a malformed body must not break the page.</p>
+
+  <div class="callout">
+    <span class="t">This is why Step 2 comes before Step 3</span>
+    The interceptor is attached <i>before</i> the course is opened. Attach it afterwards and the prefetch has already happened — the responses are gone, and every assessment falls through to the AI. It is one line in the test body and the comment beside it says only "Order matters", which is exactly right.
+  </div>
+
+  <h3>One regex, two jobs</h3>
+  <p><code>extractResourceId()</code> (line 272) pulls a <code>do_…</code> id out of a URL:</p>
+  <pre>url.match(/(?:viewer\/\w+\/|content\/)(do_\w+)/)</pre>
+  <p>The <code>\w+</code> in <code>viewer/\w+/</code> is doing quiet work. Matching <i>every</i> viewer type rather than just <code>quiz</code> is what lets <code>openModule()</code> confirm it landed on a video or a PDF, not only on an assessment — the same function serves both the answer-key lookup and the navigation check.</p>
+
+  <h3>Going around the stripped copy</h3>
+  <p>Graded assessments are served to the browser with their <code>isCorrect</code> flags removed. The published artifact on S3 still has them, and <code>fetchAnswerKeyFromArtifact()</code> (line 334) goes and gets it:</p>
+  <pre><span class="c">GET /apis/proxies/v8/action/content/v3/hierarchy/&lt;do_id&gt;?hierarchyType=detail</span>
+  <span class="c">→ result.content.artifactUrl → { timeLimit, isAssessment, questions[] }</span></pre>
+  <p>It runs <b>inside the page</b> rather than from Node, so the session cookies ride along without the script having to reconstruct them. Results are cached in <code>hierarchyKeys</code> — and that cache stores <code>null</code> as well as keys, which is why the code checks <code>.has()</code> rather than reading the value: an assessment with no artifact should be looked up once, not once per re-attempt.</p>
+
+  <h3>The poison rule</h3>
+  <p><code>isAnswerKeyPoisoned()</code> (line 414) is four lines of logic with one judgement call in it:</p>
+  <pre><span class="k">const</span> poisoned = key.questions.filter((q) =&gt; q.options.every((o) =&gt; o.isCorrect === <span class="k">false</span>)).length;
+<span class="k">return</span> poisoned / total &gt;= 0.8;</pre>
+  <table>
+    <thead><tr><th style="width:30%">Choice</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Count questions where <b>every</b> option is false</td><td>That is the signature of a stripped key: the questions and options survive, only the flags are gone.</td></tr>
+      <tr><td><b>80&#37;</b>, not 100&#37;</td><td>A threshold rather than "all", so a handful of genuinely-unflagged questions does not throw away an otherwise perfectly good key. The same rule is used in the competency suite.</td></tr>
+      <tr><td>An <b>empty</b> key counts as poisoned</td><td>A key with no questions is exactly as useless as one with no answers, and treating them alike means the caller has one condition to check rather than two.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Keeping the questions even when the answers are gone</h3>
+  <p>The subtlest part of <code>handleAssessment()</code> is what it does with a key it has just rejected. A poisoned key is useless for answering but still holds every question and option — so it is kept anyway, under a different name:</p>
+  <pre><span class="k">const</span> answerKey = usable(artifactKey) ?? usable(interceptedKey);
+<span class="c">// even a stripped key still knows the questions — keep the richer of the two</span>
+<span class="k">const</span> capturedKey = answerKey ?? (artifactKey.questions.length &gt;= interceptedKey.questions.length
+  ? artifactKey : interceptedKey);</pre>
+  <p><code>capturedKey</code> is what makes Tier 2 possible: it supplies the question count, and it supplies the text of every question and option for the single batched request to Gemini. Without it the script would be back to scraping questions one screen at a time.</p>
+</div>
+
+<!-- ════════════════════════════════════════ 9. THE GEMINI FALLBACK ══ -->
+<div class="page sec">
+  <h2>9 &nbsp; The Gemini fallback</h2>
+  <p class="lead">Five functions and two pieces of state, all of them shaped by one constraint: the free tier allows <b>20 requests per day per model</b>.</p>
+
+  <p>That number is what dictates the whole design. A single twenty-question assessment answered one question at a time would exhaust the day's quota by itself. So when a key is poisoned — the common case — the entire assessment goes out in <b>one</b> request, built from the key's own question and option text.</p>
+
+  <h3>The call</h3>
+  <p><code>callGemini()</code> (line 1815) makes one REST call and <b>returns a result object rather than throwing</b>, because a network failure here is a normal outcome, not an exception. Three details in the request body:</p>
+  <table>
+    <thead><tr><th style="width:28%">Setting</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">temperature: 0</td><td>Deterministic. The same assessment should produce the same answers on a re-run.</td></tr>
+      <tr><td class="mono">topP: 1</td><td>Keeps the full distribution available, so temperature 0 picks the genuinely most likely token rather than one from a truncated set.</td></tr>
+      <tr><td class="mono">thinkingBudget: 0</td><td>Applied to the main flash model only. The reasoning in the source is exact: <i>"These are recall questions, not reasoning puzzles, so the budget is wasted latency."</i></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Telling the two kinds of 429 apart</h3>
+  <p>A rate-limit response can mean two very different things, and the script distinguishes them from the error body:</p>
+  <div class="grid2">
+    <div class="card" style="border-color:#B45309;">
+      <div class="h" style="color:#B45309;">Per-minute — worth waiting out</div>
+      <ul>
+        <li>The API usually reports the delay; the script parses it from either <code>retry in Ns</code> or <code>"retryDelay": "Ns"</code></li>
+        <li>No delay given? Wait <code>GEMINI_RETRY_WAIT_MS</code> (20 s)</li>
+        <li>Capped at <code>GEMINI_MAX_RETRY_WAIT_MS</code> (65 s) so a long suggested delay cannot stall the run</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:#B91C1C;">
+      <div class="h" style="color:#B91C1C;">Per-day — waiting cannot help</div>
+      <ul>
+        <li>Detected by <code>/PerDay/i</code> in the quota id</li>
+        <li>Sets the module-level flag <code>geminiDailyExhausted</code> (line 1861)</li>
+        <li>Every later request is skipped outright, with a plain message — rather than the run spending minutes discovering the same thing repeatedly</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Model fallback and throttle</h3>
+  <p><code>geminiAsk()</code> (line 1867) wraps the call with the retry policy and a model fallback: <code>gemini-2.5-flash</code> first, <code>gemini-2.5-flash-lite</code> when the primary is rate-limited. Because the two models have separate quotas, that fallback effectively doubles the day's budget. In front of all of it, <code>throttleGemini()</code> (line 1803) simply sleeps so that no two calls are closer than 6.5 seconds — sized for 10 requests per minute, and skipped on the very first call.</p>
+
+  <h3>The cache is what makes re-attempts free</h3>
+  <p><code>geminiAnswerCache</code> (line 977) maps a resource id to a map of <i>normalized question stem → correct option texts</i>. Both halves of that shape matter:</p>
+  <ol class="steps">
+    <li><b>Keyed by resource id</b>, so a second attempt at the same assessment reuses the answers instead of spending quota again. The log says so explicitly: <code>♻️ Reusing cached Gemini answers … (no extra quota)</code>.</li>
+    <li><b>Values are option TEXTS, not letters.</b> Sphere shuffles the options between attempts, so a cached "B" would be wrong the second time round. Texts survive the shuffle and are re-matched onto the screen by the same fuzzy matcher Tier 1 uses.</li>
+  </ol>
+
+  <div class="callout gold">
+    <span class="t">The honest position on using an AI inside a test</span>
+    It is a fallback for a deliberate obstacle, not a shortcut. On a normal published course the answer key is intact and Gemini is never called; the log makes which path was taken unambiguous. Where it <i>is</i> called, the run's correctness depends on a third-party model being right about clinical multiple-choice questions — which is worth knowing when reading a green result. Section 11 puts that in the list of things green does not prove.
+  </div>
+</div>
+
+<!-- ═══════════════════════ 10. COMPLETION, CERTIFICATE, REPORT ══ -->
+<div class="page sec">
+  <h2>10 &nbsp; Completion, certificate, report</h2>
+  <p class="lead">The loop ends. Now the script has to decide whether the course is actually finished — and it asks the question five different ways.</p>
+
+  <h3>Five signals, any one of which counts</h3>
+  <pre><span class="k">const</span> completionMarker =
+  pageClosed ||
+  sawPopups ||
+  allModulesComplete ||
+  progressPct === 100 ||
+  (<span class="k">await</span> isCourseComplete(page).catch(() =&gt; <span class="k">false</span>));</pre>
+  <table>
+    <thead><tr><th style="width:24%">Signal</th><th>Where it comes from</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">pageClosed</td><td>The completion popup sometimes closes the tab outright. A dead page is therefore taken as success rather than as a crash.</td></tr>
+      <tr><td class="mono">sawPopups</td><td><code>handleCompletionPopups()</code> found the Congratulations message or the Ratings prompt.</td></tr>
+      <tr><td class="mono">allModulesComplete</td><td>The loop exited because every sidebar node showed a check.</td></tr>
+      <tr><td class="mono">progressPct === 100</td><td><code>readProgress()</code> read exactly 100 off the TOC progress bar.</td></tr>
+      <tr><td class="mono">isCourseComplete()</td><td>One of fourteen completion wordings is visible on screen.</td></tr>
+    </tbody>
+  </table>
+  <p>The source calls this generosity deliberate: <i>"the app surfaces completion differently by course type."</i> Some courses show a popup, some just fill the progress bar, some close the tab. Requiring one specific signal would fail courses that had genuinely completed.</p>
+
+  <h3>Fourteen ways to say "you finished"</h3>
+  <p><code>isCourseComplete()</code> (line 2205) tries fourteen regexes, in English and Hindi, each with a 300&#8239;ms timeout — it runs on <i>every</i> loop iteration, so it has to stay cheap. Two of them show the care that went into the list:</p>
+  <table>
+    <thead><tr><th style="width:34%">Pattern</th><th>The detail</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">/congratulations[\s!,]/i</td><td>The trailing character class is deliberate — it stops the word matching inside a longer sentence in a module description.</td></tr>
+      <tr><td class="mono">/your\s+certificate/i</td><td>Matches "Your certificate is ready" but <b>not</b> "Earn a certificate", which appears on every course page before you start.</td></tr>
+      <tr><td class="mono">/rate\s+(this|the)\s+course/i</td><td>A rating prompt only ever appears after completion, which makes it a reliable marker even though it says nothing about completion directly.</td></tr>
+      <tr><td class="mono">/बधाई/i</td><td>Hindi. The platform is bilingual and so is the completion screen.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">It closes the ratings popup instead of using it</span>
+    <code>handleCompletionPopups()</code> reads the popup, logs every button it offers, and then dismisses it with the X — with a comment that says why: <i>"the run must not leave a fake review on a real course."</i> Submitting a rating would be the easier path and would arguably exercise more of the product. Not doing it is the right call, and it is the kind of decision worth making explicitly rather than by omission.
+  </div>
+
+  <h3>The certificate, and when it is not attempted</h3>
+  <p>Step 7 has two gates, and both must pass: the course must have completed, <b>and</b> a certificate must have been detected back at Step 3b. Failing either just prints a line.</p>
+  <table>
+    <thead><tr><th style="width:30%">State</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td>Not complete</td><td>Skipped with <code>⏭️ needs Congratulations/Ratings first</code> — the control will not be there, so trying would only add noise.</td></tr>
+      <tr><td>Complete, certificate attached</td><td><code>generateCertificate()</code> runs in its own tab. Up to three attempts; the first uses the TOC already open, retries re-search the course.</td></tr>
+      <tr><td>Complete, no certificate</td><td>A single informational line. Not every course has one.</td></tr>
+    </tbody>
+  </table>
+  <p>The generation flow itself is the fiddliest code in the file. The dialog draws the certificate onto a <code>&lt;canvas&gt;</code> before the download becomes available, so the script waits for that canvas, then registers the download listener and clicks <b>at the same time</b> via <code>Promise.all</code>, with a 25-second window because generating and streaming a certificate is genuinely slow. If the app answers with "certificate is taking time to generate" — one of six wordings it recognises — it closes the tab, waits twenty seconds, and starts the whole attempt again.</p>
+  <p>Downloads are saved as <code>test-reports/certificates/Certificate_&lt;CourseSlug&gt;.&lt;ext&gt;</code>, with <code>jfif</code> and <code>jpeg</code> both normalised to <code>jpg</code>. A failure anywhere in Step 7 is caught and logged — <b>never thrown</b>, because the course still completed and that is what the test is about.</p>
+
+  <h3>The report</h3>
+  <p>Step 8 writes <code>test-reports/course-reports/CourseReport_&lt;slug&gt;_&lt;timestamp&gt;.html</code> through <code>generateCourseReport()</code>. It carries the wall time, the module types in order, every warning the loop collected, the assessment table, the completion verdict, the certificate outcome and the final URL. Like Step 7 it is wrapped in a <code>try</code>: a report-writing failure must not fail a run that actually passed.</p>
+</div>
+
+<!-- ═════════════════════════════════ 11. WHAT GREEN ACTUALLY PROVES ══ -->
+<div class="page sec">
+  <h2>11 &nbsp; What green actually proves</h2>
+  <p class="lead">One <code>expect()</code> in 3,195 lines. It is worth being precise about what it does and does not cover.</p>
+
+  <pre>expect(
+  completionMarker,
+  `Course did not reach the Congratulations/Ratings completion popup (touched ${log.length} modules).
+   See the course report for where it stopped.`,
+).toBe(<span class="k">true</span>);</pre>
+
+  <p>The failure message is doing real work. It names <b>how many modules were touched</b> and points at the report, so a red run can be diagnosed without re-running an hour-long test — which matters more here than in any other spec in the suite.</p>
+
+  <div class="grid2">
+    <div class="card" style="border-color:#15803D;">
+      <div class="h" style="color:#15803D;">Green means this</div>
+      <ul>
+        <li>The course was found by name and opened</li>
+        <li>Start or Resume worked</li>
+        <li>Modules were opened in the platform's own order, respecting gating</li>
+        <li>Videos played to their <code>ended</code> event</li>
+        <li>PDFs were paged to the last page</li>
+        <li><b>Every graded assessment was passed</b> — a failed one never marks its module complete</li>
+        <li>The platform reached a completion state by at least one of five signals</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:#B45309;">
+      <div class="h" style="color:#B45309;">Green does <i>not</i> mean this</div>
+      <ul>
+        <li>That the certificate downloaded — Step 7 never throws</li>
+        <li>That the report was written — Step 8 never throws</li>
+        <li>That every answer was <i>correct</i>, only that the pass mark was met</li>
+        <li>That AI-sourced answers were right, where Tier 2 or 3 was used</li>
+        <li>That no module was skipped after exhausting its attempts — that is a warning, not a failure</li>
+        <li>That the run was quick, or that a learner would have had a good time</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout red">
+    <span class="t">A closed page counts as success</span>
+    <code>pageClosed</code> is the first of the five signals, and it is <code>true</code> whenever the tab is gone. That is right for the common case — the completion popup really does close the tab on some courses — but it means <b>a browser crash at the wrong moment reads as a completed course</b>. Nothing distinguishes "the popup closed us" from "the renderer died".
+    <br><br>
+    It is a narrow window and the other four signals usually corroborate, but if this run is being used as a release gate it is worth tightening: requiring <code>pageClosed</code> to be accompanied by <code>allModulesComplete</code>, or by a progress read taken before the tab went away, would close it without weakening the generosity that the five-signal design is there to provide.
+  </div>
+
+  <h3>How this compares with the rest of the suite</h3>
+  <table>
+    <thead><tr><th style="width:26%">Suite</th><th style="width:12%">Tests</th><th style="width:16%">Assertions</th><th>What a green run is evidence of</th></tr></thead>
+    <tbody>
+      <tr><td><b>Course Completion</b> <span class="pill p-ok">this one</span></td><td>1</td><td>1</td><td>The product worked end to end for one learner on one course. Broad, deep, and slow.</td></tr>
+      <tr><td>Course TOC</td><td>21</td><td>15 + 3</td><td>Every control on one page renders and responds. Narrow, precise, and fast.</td></tr>
+      <tr><td>Public Page</td><td>64</td><td>42</td><td>The marketing surface renders in two languages.</td></tr>
+      <tr><td>My Courses</td><td>49</td><td>17 + 1</td><td>The learner's home page renders whatever that account happens to have.</td></tr>
+    </tbody>
+  </table>
+  <p>The two ends of that table are complements, not competitors. The element sweeps tell you <i>what</i> broke; this one tells you <i>whether a learner could finish</i>. A suite with only the first kind can be entirely green while the product is unusable, and a suite with only this one can tell you something is wrong without telling you where.</p>
+</div>
+
+<!-- ═════════════════ 12. ARTIFACTS, RUN VARIANTS, FAILURE MODES ══ -->
+<div class="page sec">
+  <h2>12 &nbsp; Artifacts, run variants, failure modes</h2>
+  <p class="lead">A run of this spec produces more than a pass or a fail: it produces a record of what a learner would have experienced.</p>
+
+  <h3>What a run leaves behind</h3>
+  <table>
+    <thead><tr><th style="width:34%">Artifact</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">test-reports/course-reports/<br>CourseReport_&lt;slug&gt;_&lt;ts&gt;.html</td><td><b>The one to open first.</b> Wall time, the module types in order, every warning the loop collected, the assessment table with question counts, the completion verdict, the certificate outcome and the final URL.</td></tr>
+      <tr><td class="mono">test-reports/certificates/<br>Certificate_&lt;CourseSlug&gt;.&lt;ext&gt;</td><td>The generated certificate, if one was attached and generation succeeded.</td></tr>
+      <tr><td class="mono">brand-reports/</td><td>The branded HTML report, written on every run by the shared reporter.</td></tr>
+      <tr><td class="mono">test-reports/run-reports/</td><td>The full run report, HTML and PDF, carrying every step and every console line.</td></tr>
+      <tr><td>Screenshots &#183; video &#183; trace</td><td><code>screenshot: 'on'</code> for every test, video retained on failure, trace on first retry.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Reading the console</h3>
+  <p>This is the one spec where the log matters more than the result line, because the result line is a single boolean. The markers worth grepping for:</p>
+  <table class="t-sel">
+    <thead><tr><th style="width:8%">Mark</th><th style="width:32%">Line</th><th>What it tells you</th></tr></thead>
+    <tbody>
+      <tr><td style="font-size:12pt;text-align:center;">🔑</td><td>Captured answer key for do_… (13 questions)</td><td>The interceptor is working. One per assessment in the course, printed early, before any module opens.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">📝</td><td>ASSESSMENT — using answer key from the published artifact</td><td>Which tier this assessment took. If every one of these says "published artifact", the AI was never called.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">📚</td><td>Step 7 — 4/11 modules done</td><td>The progress banner, one per loop iteration. The fastest way to see where a run stalled.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">⚠️</td><td>No new completion (4/11) — "…" attempt 1/2</td><td>A module opened but did not register. The module is named, so this points straight at the defect.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">🔒</td><td>All remaining locked — nudging to unlock (retry 2/4)</td><td>Gating did not release. Four of these in a row ends the run.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">🛑</td><td>These modules would not register as complete…</td><td>The run gave up, and this line names every module it gave up on.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">♻️</td><td>Reusing cached Gemini answers (no extra quota)</td><td>A re-attempt cost nothing. Good news, and confirmation the cache is working.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Run variants</h3>
+  <table>
+    <thead><tr><th style="width:38%">Command</th><th>Use it when</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:course</td><td>Normal use. Prompts for account and course.</td></tr>
+      <tr><td class="mono">npm run courses:list</td><td>You need a course name that will actually match.</td></tr>
+      <tr><td class="mono">npm run run:course-fresh</td><td>Testing a <i>first</i> completion. Mints a new account, then completes as that user — the only variant that exercises enrolment and onboarding for real.</td></tr>
+      <tr><td class="mono">npm run report:course</td><td>Headless, one fixed course, blob report. The CI form.</td></tr>
+      <tr><td class="mono">VERBOSE_CHECKBOX=1 …</td><td>A multi-select question will not tick and you need to see which of the click strategies is failing.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Failure modes</h3>
+  <table>
+    <thead><tr><th style="width:28%">Symptom</th><th style="width:32%">Cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>No course selected</code>, immediately</td>
+        <td><code>COURSE_NAME</code> is unset. Unlike the TOC spec this throws rather than skipping.</td>
+        <td>Use <code>npm run run:course</code>, or set it. The error text names both routes.</td>
+      </tr>
+      <tr>
+        <td><code>Could not find course "…"</code></td>
+        <td>The title did not match anything on this environment.</td>
+        <td><code>npm run courses:list</code>. The matcher compares whole result titles, not prefixes, precisely so that a near-miss fails loudly rather than opening the wrong course.</td>
+      </tr>
+      <tr>
+        <td><b>No 🔑 lines at all</b>, and every assessment uses Gemini</td>
+        <td>The interceptor was attached after the prefetch, or the artifact URL pattern changed.</td>
+        <td>Confirm Step 2 still runs before Step 3. If the URLs have changed, the regex at line 287 is the single place to update.</td>
+      </tr>
+      <tr>
+        <td>An assessment loops, re-attempting and failing</td>
+        <td>Answers are wrong. Either the key mapped badly onto the screen, or the AI answered incorrectly.</td>
+        <td>The log prints every option lettered and every pick — compare them by eye. Watch for the <code>⚠️ N/M not found on screen</code> line, which means the key's text no longer matches the rendered options.</td>
+      </tr>
+      <tr>
+        <td><code>🛑 These modules would not register</code></td>
+        <td>Those modules genuinely did not complete after two attempts each.</td>
+        <td>The most valuable failure this spec produces. Open the named module by hand and watch whether its progress call fires.</td>
+      </tr>
+      <tr>
+        <td><code>🔒 Remaining modules stay LOCKED</code></td>
+        <td>Gating never released after four nudges.</td>
+        <td>Usually a genuine prerequisite that never registered — check the modules <i>before</i> the locked ones, not the locked ones themselves.</td>
+      </tr>
+      <tr>
+        <td>Gemini stops answering mid-run</td>
+        <td>The per-day quota is gone. <code>geminiDailyExhausted</code> is set and later requests are skipped rather than retried.</td>
+        <td>Wait for the quota to reset, or run against a course whose key is not poisoned. The model fallback already gives two separate daily budgets.</td>
+      </tr>
+      <tr>
+        <td>The run hits the 60-minute timeout</td>
+        <td>Usually a module that opens but never completes, spending its attempts slowly.</td>
+        <td>Read the 📚 banners: the last one names the step and the done count, which brackets the problem to one module.</td>
+      </tr>
+      <tr>
+        <td>Certificate never appears</td>
+        <td>Generation is genuinely slow, or the course has none.</td>
+        <td>Not a failure — Step 7 only logs. The summary line distinguishes "attached but generation not confirmed" from "none".</td>
+      </tr>
+      <tr>
+        <td>A video module warns <code>load timeout</code></td>
+        <td>The metadata never loaded within 60 s.</td>
+        <td>Recorded as a report warning, not a failure. Repeated across runs it is a CDN or encoding problem worth raising.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Where to start when a run goes red</span>
+    Open the course report first, not the Playwright report. It carries the warnings, the module timeline and the assessment table in one page — and the assertion message points you there by design, because re-running to investigate costs an hour.
+  </div>
+</div>

@@ -1,0 +1,976 @@
+<title>Account Page Script Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#17283C; --navy-400:#18293D; --navy-300:#2D3E54; --navy-100:#7E8A9A; --navy-50:#BEC5CE;
+    --teal:#1E8F8E; --teal-600:#186E6E; --teal-700:#135858; --teal-50:#E3F7F6; --teal-100:#B8ECE9;
+    --gold:#F0A500; --gold-600:#C88800; --gold-700:#9A6800; --gold-50:#FEF6E0;
+    --offwhite:#F6F7F9; --line:#D8DEE5; --mid:#7C8696; --ink:#0D1218;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7; --err:#B91C1C; --err-bg:#FEE2E2;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Open Sans",Segoe UI,Arial,sans-serif;
+    font-size:9.9pt; line-height:1.47; color:var(--ink); background:#fff;
+    margin:0;
+  }
+  .page{ padding:0 16mm; }
+
+  h1{font-size:20pt;font-weight:700;color:var(--navy);margin:0 0 6px;letter-spacing:-.2px;}
+  h2{font-size:14.5pt;font-weight:700;color:var(--navy);margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid var(--teal);}
+  h3{font-size:11.5pt;font-weight:600;color:var(--navy);margin:15px 0 6px;}
+  h4{font-size:10.5pt;font-weight:600;color:var(--navy-300);margin:12px 0 5px;}
+  p{margin:0 0 8px;}
+  .lead{font-size:10.4pt;color:var(--navy-300);}
+  .cap{font-family:Lato,Arial,sans-serif;font-size:8.2pt;color:var(--mid);margin:4px 0 0;}
+  code,.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:8.8pt;}
+  code{background:var(--offwhite);border:1px solid var(--line);border-radius:4px;padding:1px 4px;color:var(--navy);}
+  a{color:var(--teal-600);}
+
+  .cover{height:247mm;display:flex;flex-direction:column;justify-content:center;background:var(--navy);color:#fff;padding:0 20mm;margin:-14mm 0 0;}
+  .cover .kicker{font-family:Lato;font-size:10pt;letter-spacing:3px;text-transform:uppercase;color:var(--teal-100);margin-bottom:18px;}
+  .cover h1{font-size:34pt;color:#fff;line-height:1.15;margin-bottom:14px;}
+  .cover .sub{font-size:13pt;color:var(--navy-50);max-width:150mm;line-height:1.5;}
+  .cover .rule{width:72px;height:5px;background:var(--gold);margin:26px 0;border-radius:3px;}
+  .cover .meta{font-family:Lato;font-size:9.5pt;color:var(--navy-50);line-height:1.9;}
+  .cover .meta b{color:#fff;font-weight:700;}
+
+  .sec{page-break-before:always;padding-top:1mm;}
+  .nobreak{page-break-inside:avoid;}
+
+  .callout{border-left:4px solid var(--teal);background:var(--teal-50);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;font-size:9.5pt;}
+  .callout.gold{border-left-color:var(--gold);background:var(--gold-50);}
+  .callout.red{border-left-color:var(--err);background:var(--err-bg);}
+  .callout .t{font-weight:700;color:var(--navy);display:block;margin-bottom:2px;}
+
+  table{width:100%;border-collapse:collapse;margin:8px 0 11px;font-size:8.6pt;page-break-inside:auto;}
+  thead{display:table-header-group;}
+  th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:6px 8px;border:.5pt solid var(--navy);font-size:8.6pt;}
+  td{padding:5px 8px;border:.5pt solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--offwhite);}
+  tr{page-break-inside:avoid;}
+  td.n{width:24px;text-align:center;font-weight:700;color:var(--teal-700);background:var(--teal-50)!important;}
+  .t-sel td:nth-child(3){font-family:"JetBrains Mono",Consolas,monospace;font-size:7.9pt;line-height:1.45;word-break:break-word;}
+
+  .pill{display:inline-block;padding:1px 8px;border-radius:9999px;font-size:8pt;font-weight:600;font-family:Lato;}
+  .p-ok{background:var(--ok-bg);color:var(--ok);}
+  .p-warn{background:var(--warn-bg);color:var(--warn);}
+  .p-err{background:var(--err-bg);color:var(--err);}
+  .p-teal{background:var(--teal-50);color:var(--teal-700);}
+  .p-gold{background:var(--gold-50);color:var(--gold-700);}
+
+  .grid2{display:flex;gap:12px;margin:10px 0;}
+  .card{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff;}
+  .card .h{font-weight:700;color:var(--navy);font-size:9.8pt;margin-bottom:5px;}
+  .card ul{margin:0;padding-left:15px;}
+  .card li{margin-bottom:3px;font-size:9.2pt;}
+
+  .fig{margin:12px 0 4px;page-break-inside:avoid;}
+  .fig svg{width:100%;height:auto;display:block;}
+
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:9px 0;}
+  ol.steps li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px;font-size:9.4pt;page-break-inside:avoid;}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:9999px;background:var(--navy);color:#fff;font-size:8pt;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  ol.steps li b{color:var(--navy);}
+
+  .toc{margin:12px 0;}
+  .toc div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:5px 2px;font-size:9.6pt;}
+  .toc div span:first-child{color:var(--navy);font-weight:600;}
+  .toc div span:last-child{color:var(--mid);font-family:Lato;font-size:9pt;}
+
+  pre{background:var(--navy);color:#E8EDF3;border-radius:8px;padding:9px 12px;font-family:"JetBrains Mono",Consolas,monospace;font-size:8pt;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;}
+  pre .c{color:#7E9AB8;}
+  pre .k{color:#6FD7D5;}
+  pre .g{color:#F2C14E;}
+  pre .r{color:#FF9A9A;}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════ COVER ══ -->
+<div class="cover">
+  <div class="kicker">Sphere Web Automation</div>
+  <h1>Account Page Script<br>Step-by-Step Walkthrough</h1>
+  <div class="rule"></div>
+  <div class="sub">A section-by-section map of how <span class="mono">tests/Account.spec.ts</span> covers the learner's profile page — the bilingual engine behind every assertion, the reason it can never navigate to the page directly, and an honest account of which of its 68 tests can actually fail.</div>
+  <div class="rule" style="width:40px;height:2px;background:#2D3E54;"></div>
+  <div class="meta">
+    <b>Script</b> &nbsp; tests/Account.spec.ts &nbsp;·&nbsp; 1,239 lines &nbsp;·&nbsp; <b>68 tests</b> in 10 groups &nbsp;·&nbsp; 42 expect()<br>
+    <b>Target</b> &nbsp; /app/profile-view &nbsp;<span style="color:#F0A500;">(login required)</span><br>
+    <b>Run</b> &nbsp;&nbsp;&nbsp;&nbsp; npm run run:account<br>
+    <b>Date</b> &nbsp;&nbsp;&nbsp; 12 September 2026
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CONTENTS ══ -->
+<div class="page sec">
+  <h2>Contents</h2>
+  <div class="toc">
+    <div><span>1 &nbsp; What this script does</span><span>Purpose, scope, entry points</span></div>
+    <div><span>2 &nbsp; The bilingual engine</span><span>Diagram — one UI, two languages, and a hazard</span></div>
+    <div><span>3 &nbsp; Getting to the page, and staying there</span><span>Diagram — one shared tab, and why no direct URL</span></div>
+    <div><span>4 &nbsp; Group 1 — Landing and left nav</span><span>13 tests · lines 269–382</span></div>
+    <div><span>5 &nbsp; Group 2 — Personal Details</span><span>13 tests · lines 384–581</span></div>
+    <div><span>6 &nbsp; Groups 3 and 4 — Organization and Academic</span><span>14 tests · lines 583–704</span></div>
+    <div><span>7 &nbsp; Groups 5 to 8 — the soft middle</span><span>12 tests · lines 770–954</span></div>
+    <div><span>8 &nbsp; Group 9 — Logout</span><span>4 tests · lines 988–1072</span></div>
+    <div><span>9 &nbsp; Group 10 — Header and page health</span><span>12 tests · lines 1074–1239</span></div>
+    <div><span>10 &nbsp; What green actually proves</span><span>Diagram — 40 assert · 28 observe</span></div>
+    <div><span>11 &nbsp; Artifacts, run variants, failure modes</span><span>Troubleshooting reference</span></div>
+  </div>
+
+  <h3>How to read this document</h3>
+  <p>Sections 4 to 9 walk the file in order, one section per <code>describe</code> group. Each test is marked by what it actually does with its result:</p>
+  <table>
+    <thead><tr><th style="width:22%">Marker</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-ok">assert</span></td><td>An <code>expect()</code> runs. A missing or wrong element fails the test.</td></tr>
+      <tr><td><span class="pill p-teal">observe</span></td><td>No <code>expect()</code> at all. The test performs the action, measures something, and prints it for a human to read.</td></tr>
+    </tbody>
+  </table>
+  <p>The split is <b>40 assert to 28 observe</b>, and it is not spread evenly: three whole groups contain no assertion at all. Section 10 maps that, and the group sections flag the individual cases as they come up.</p>
+
+  <div class="callout gold">
+    <span class="t">This spec writes to a real account</span>
+    Most specs in the suite only read. This one fills the phone and pincode fields and saves, sets the organisation name and saves, and <b>switches the whole UI to Hindi and back</b>. It is pointed at a shared test learner, and Section 2 covers the safety net that stops a half-finished run leaving that account in Hindi for everything that follows.
+  </div>
+
+  <div class="callout">
+    <span class="t">Line numbers in this document are live</span>
+    Every reference points at <code>tests/Account.spec.ts</code> as it stands today — 1,239 lines, including the per-line explanatory comments carried across the suite.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 1. WHAT IT DOES ══ -->
+<div class="page sec">
+  <h2>1 &nbsp; What this script does</h2>
+  <p class="lead">It is the sweep of the learner's own profile page — the one screen where a user changes something about themselves rather than about a course.</p>
+
+  <p><code>/app/profile-view</code> carries five left-nav sections, each with its own form, plus a profile panel, a header, and a logout flow. This spec puts <b>68 granular tests</b> across all of it in ten groups, so a failure names the control rather than the page.</p>
+
+  <h3>The five sections, and what each holds</h3>
+  <table>
+    <thead><tr><th style="width:26%">Section</th><th>Fields</th></tr></thead>
+    <tbody>
+      <tr><td><b>Personal Details</b></td><td>First and last name, phone, email (masked), date of birth as three dropdowns, country, pincode, Save</td></tr>
+      <tr><td><b>Organization Details</b></td><td>Background, designation, RN/RM number, organisation type, organisation name, Save</td></tr>
+      <tr><td><b>Academic Details</b></td><td>An Education block with an <code>+ Add Education</code> control</td></tr>
+      <tr><td><b>Language Preference</b></td><td>English / हिंदी radios, and Save</td></tr>
+      <tr><td><b>My Certificates</b></td><td>The certificate list, or its empty state</td></tr>
+    </tbody>
+  </table>
+  <p>Around them: the profile avatar and its pencil edit icon, a <b>Help and Support</b> button, a <b>Logout</b> button that opens a confirmation modal, and the shared app header.</p>
+
+  <h3>What makes this page harder to test than it looks</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="h">It is bilingual, and it can change</div>
+      <ul>
+        <li>Every label renders in English <i>or</i> Hindi</li>
+        <li>One of this file's own tests flips the language</li>
+        <li>So English-only selectors break the tests that follow</li>
+        <li>Section 2 is entirely about this</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">It cannot be navigated to</div>
+      <ul>
+        <li>A direct URL renders the Account route <b>blank</b></li>
+        <li>So does a plain <code>page.reload()</code></li>
+        <li>Every entry goes Home &#8594; header click</li>
+        <li>Section 3 covers the machinery</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">It writes to a shared account</div>
+      <ul>
+        <li>Phone, pincode and organisation name are saved</li>
+        <li>The language is switched and switched back</li>
+        <li>Fields are read-only on production</li>
+        <li>So the mutating tests guard before they type</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Entry points</h3>
+  <table>
+    <thead><tr><th style="width:36%">Command</th><th>What it runs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:account</td><td>All 68 tests, headed, against staging. The full walkthrough this document describes.</td></tr>
+      <tr><td class="mono">npm run report:app</td><td>This spec alongside My Courses, Course TOC and Competency — the authenticated-app blob report.</td></tr>
+      <tr><td class="mono">… --grep "Logout"</td><td>One group. Every group name starts with <code>Account —</code>, so a group name is unambiguous.</td></tr>
+      <tr><td class="mono">… --grep "Language Preference"</td><td>The group most worth running alone, because it is the one that changes shared state.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">The file header promises independence, and the code mostly delivers</span>
+    "Each test is INDEPENDENT — reuses <code>.auth-state.json</code> from previous tests." There is no <code>describe.serial</code> anywhere, and a <code>beforeEach</code> resets the viewport, dismisses any leftover modal and re-opens the Account page if a previous test navigated away. What the tests <i>do</i> share is a single browser tab and a single real account — so independence holds for ordering, not for state. Section 3 covers the difference.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ 2. BILINGUAL ENGINE ══ -->
+<div class="page sec">
+  <h2>2 &nbsp; The bilingual engine</h2>
+  <p class="lead">Every text assertion in this file matches English or Hindi. That is not future-proofing — it is a direct consequence of one of its own tests.</p>
+
+  <p>The Language Preference group switches the account to Hindi, saves, and checks the choice survives a reload. From that moment the entire UI is in Hindi, including the left-nav labels every later section needs to click. An English-only selector would not fail with a useful message; it would simply find nothing, and the rest of the run would collapse for a reason that had nothing to do with the page being broken.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 470" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="b1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#17283C"/>
+        </marker>
+        <marker id="b2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#B91C1C"/>
+        </marker>
+      </defs>
+
+      <!-- the T table -->
+      <rect x="40" y="30" width="380" height="176" rx="8" fill="#FFFFFF" stroke="#1E8F8E" stroke-width="1.8"/>
+      <rect x="40" y="30" width="380" height="22" rx="8" fill="#1E8F8E"/>
+      <rect x="40" y="44" width="380" height="8" fill="#1E8F8E"/>
+      <text x="56" y="46" font-size="10" font-weight="700" fill="#FFF">const T &#8212; one table, every label  &#183;  line 34</text>
+      <text x="56" y="70" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">personalDetails: /^(personal details</text>
+      <text x="56" y="82" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;|&#2357;&#2381;&#2351;&#2325;&#2381;&#2340;&#2367;&#2327;&#2340; &#2357;&#2367;&#2357;&#2352;&#2339;)$/i</text>
+      <text x="56" y="102" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">save: /^(save|&#2360;&#2375;&#2357; &#2325;&#2352;&#2375;&#2306;|&#2360;&#2361;&#2375;&#2332;&#2375;&#2306;)$/i</text>
+      <text x="56" y="122" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">logout: /^(logout|log ?out|&#2354;&#2377;&#2327; &#2310;&#2313;&#2335;)$/i</text>
+      <text x="56" y="146" font-size="8.6" font-weight="700" fill="#135858">Anchored vs unanchored, deliberately</text>
+      <text x="56" y="160" font-size="8.4" fill="#2D3E54">^&#8230;$ &#8212; the label must be the WHOLE string</text>
+      <text x="56" y="173" font-size="8.4" fill="#2D3E54">unanchored &#8212; it may appear anywhere in one</text>
+      <text x="56" y="193" font-size="8.2" fill="#7C8696">A heading is matched loosely; a nav item exactly.</text>
+
+      <!-- placeholders exception -->
+      <rect x="450" y="30" width="410" height="90" rx="8" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.6"/>
+      <text x="466" y="52" font-size="10" font-weight="700" fill="#9A6800">The exception: placeholders stay English</text>
+      <text x="466" y="70" font-size="8.6" fill="#2D3E54">Field <tspan font-style="italic">placeholders</tspan> are not translated, in either language.</text>
+      <text x="466" y="84" font-size="8.6" fill="#2D3E54">So field-presence checks prefer getByPlaceholder() &#8212;</text>
+      <text x="466" y="98" font-size="8.6" fill="#2D3E54">one selector that works whatever the UI is set to.</text>
+      <text x="466" y="112" font-size="8.2" fill="#9A6800">Headings and buttons still need the T table.</text>
+
+      <!-- NAV_HINDI -->
+      <rect x="450" y="132" width="410" height="74" rx="8" fill="#FFFFFF" stroke="#7C8696" stroke-width="1.4"/>
+      <text x="466" y="153" font-size="10" font-weight="700" fill="#2D3E54">NAV_HINDI &#8212; a second, narrower table  &#183;  line 71</text>
+      <text x="466" y="170" font-size="8.6" fill="#2D3E54">Five left-nav labels, English key &#8594; Hindi value, so</text>
+      <text x="466" y="183" font-size="8.6" fill="#2D3E54">clickAccountNav() can build an either-language regex</text>
+      <text x="466" y="196" font-size="8.6" fill="#2D3E54">from a single English argument at the call site.</text>
+
+      <!-- the hazard -->
+      <rect x="40" y="226" width="820" height="70" rx="8" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.8"/>
+      <text x="58" y="248" font-size="11" font-weight="700" fill="#B91C1C">THE HAZARD &#8212; the language test changes state for everything after it</text>
+      <text x="58" y="268" font-size="9" fill="#B91C1C">"Select Hindi, click Save" leaves the shared account in Hindi. If the run stops there &#8212; a crash, a Ctrl-C, a</text>
+      <text x="58" y="282" font-size="9" fill="#B91C1C">failure in that very test &#8212; the account stays in Hindi, and the NEXT run starts against a Hindi UI.</text>
+
+      <line x1="450" y1="296" x2="450" y2="310" stroke="#B91C1C" stroke-width="1.4" marker-end="url(#b2)"/>
+
+      <!-- the safety net -->
+      <rect x="40" y="314" width="820" height="94" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="1.8"/>
+      <text x="58" y="336" font-size="11" font-weight="700" fill="#15803D">THE SAFETY NET &#8212; ensureEnglish() in an afterEach  &#183;  lines 127 and 778</text>
+      <text x="58" y="356" font-size="8.8" fill="#2D3E54">Runs after EVERY test in the Language Preference group, including failures. Opens the Account page, opens</text>
+      <text x="58" y="370" font-size="8.8" fill="#2D3E54">Language Preference, ticks <tspan font-weight="700">radio index 0</tspan> &#8212; always English, whatever language the page is in &#8212; and saves.</text>
+      <text x="58" y="390" font-size="8.8" fill="#15803D">Every step is <tspan font-weight="700">.catch()</tspan>-ed and the whole body is wrapped: a cleanup helper must never throw, because a</text>
+      <text x="58" y="402" font-size="8.8" fill="#15803D">failure here would mask the real failure it is cleaning up after.</text>
+
+      <text x="40" y="434" font-size="8.6" fill="#7C8696">Radio index 0 rather than a label match is the key idea: it is the one handle on the language control that</text>
+      <text x="40" y="447" font-size="8.6" fill="#7C8696">does not itself depend on knowing which language the page is currently rendering in.</text>
+      <text x="40" y="462" font-size="8.4" fill="#B45309">The net covers its own group. It does not cover a crash elsewhere in the file after Hindi was set.</text>
+    </svg>
+    <p class="cap">Figure 1 — two lookup tables, one exception, and the cleanup hook that keeps the shared account usable for the next run.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════ 3. GETTING TO THE PAGE ══ -->
+<div class="page sec">
+  <h2>3 &nbsp; Getting to the page, and staying there</h2>
+  <p class="lead">The Account route does not render on direct navigation. Everything about this file's setup follows from that one fact.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 512" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="n1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#17283C"/>
+        </marker>
+      </defs>
+
+      <!-- PANEL A -->
+      <rect x="30" y="24" width="840" height="168" rx="8" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <circle cx="52" cy="46" r="11" fill="#17283C"/><text x="52" y="50" font-size="11" font-weight="700" fill="#FFF" text-anchor="middle">A</text>
+      <text x="70" y="50" font-size="12" font-weight="700" fill="#17283C">Three ways to reach /app/profile-view &#8212; only one of them works</text>
+
+      <rect x="52" y="66" width="500" height="30" rx="6" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.2"/>
+      <text x="66" y="85" font-size="9" fill="#B91C1C" font-family="JetBrains Mono, monospace">page.goto(BASE_URL + '/app/profile-view')</text>
+      <text x="566" y="85" font-size="9" font-weight="700" fill="#B91C1C">&#8594; the route renders BLANK</text>
+
+      <rect x="52" y="102" width="500" height="30" rx="6" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.2"/>
+      <text x="66" y="121" font-size="9" fill="#B91C1C" font-family="JetBrains Mono, monospace">page.reload()  while already on it</text>
+      <text x="566" y="121" font-size="9" font-weight="700" fill="#B91C1C">&#8594; blank, or bounces to Home</text>
+
+      <rect x="52" y="138" width="500" height="34" rx="6" fill="#DCFCE7" stroke="#15803D" stroke-width="1.6"/>
+      <text x="66" y="151" font-size="9" fill="#15803D" font-family="JetBrains Mono, monospace">goto(/page/home) &#8594; click the header's Account</text>
+      <text x="66" y="165" font-size="8.4" fill="#15803D">then WAIT for the panel to mount &#8212; openAccountViaHeader(), line 157</text>
+      <text x="566" y="158" font-size="9" font-weight="700" fill="#15803D">&#8594; mounted</text>
+
+      <!-- PANEL B -->
+      <rect x="30" y="204" width="840" height="292" rx="8" fill="#FFFFFF" stroke="#D8DEE5"/>
+      <circle cx="52" cy="226" r="11" fill="#17283C"/><text x="52" y="230" font-size="11" font-weight="700" fill="#FFF" text-anchor="middle">B</text>
+      <text x="70" y="230" font-size="12" font-weight="700" fill="#17283C">One tab for all 68 tests &#8212; opened once, reset before each</text>
+
+      <rect x="56" y="248" width="230" height="64" rx="7" fill="#17283C"/>
+      <text x="171" y="268" font-size="9.6" font-weight="700" fill="#FFF" text-anchor="middle">beforeAll  &#183;  line 219</text>
+      <text x="171" y="284" font-size="8.4" fill="#BEC5CE" text-anchor="middle">newPage() from the worker-scoped</text>
+      <text x="171" y="296" font-size="8.4" fill="#BEC5CE" text-anchor="middle">authContext, then open the page</text>
+      <text x="171" y="307" font-size="8" fill="#F2C14E" text-anchor="middle">expect(opened) &#8212; fails the whole file</text>
+
+      <line x1="286" y1="280" x2="306" y2="280" stroke="#17283C" stroke-width="1.4" marker-end="url(#n1)"/>
+
+      <rect x="308" y="248" width="250" height="64" rx="7" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.6"/>
+      <text x="433" y="268" font-size="9.6" font-weight="700" fill="#135858" text-anchor="middle">beforeEach  &#183;  line 237</text>
+      <text x="433" y="284" font-size="8.4" fill="#135858" text-anchor="middle">undo whatever the last test left</text>
+      <text x="433" y="296" font-size="8.4" fill="#135858" text-anchor="middle">behind &#8212; three things, below</text>
+
+      <line x1="558" y1="280" x2="578" y2="280" stroke="#17283C" stroke-width="1.4" marker-end="url(#n1)"/>
+
+      <rect x="580" y="248" width="230" height="64" rx="7" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="695" y="272" font-size="9.6" font-weight="600" fill="#17283C" text-anchor="middle">the test body</text>
+      <text x="695" y="288" font-size="8.4" fill="#7C8696" text-anchor="middle">one of 68, in whatever group</text>
+
+      <path d="M810,296 H830 V336 H433 V318" fill="none" stroke="#1E8F8E" stroke-width="1.4" marker-end="url(#n1)"/>
+      <text x="700" y="332" font-size="8.2" fill="#135858">&#215; 68</text>
+
+      <!-- beforeEach detail -->
+      <rect x="56" y="348" width="754" height="86" rx="7" fill="#F6F7F9" stroke="#1E8F8E" stroke-width="1.2"/>
+      <text x="72" y="366" font-size="9" font-weight="700" fill="#135858">What beforeEach actually does</text>
+      <text x="72" y="384" font-size="8.6" fill="#2D3E54"><tspan font-weight="700">1.</tspan> Reset the viewport to 1280&#215;800 &#8212; three tests at the end of the file change it, and the tab is shared.</text>
+      <text x="72" y="400" font-size="8.6" fill="#2D3E54"><tspan font-weight="700">2.</tspan> Dismiss any leftover overlay, up to three times: Escape, then click the backdrop. A stale backdrop would</text>
+      <text x="72" y="412" font-size="8.6" fill="#2D3E54">&#160;&#160;&#160;&#160;silently swallow every click in this test &#8212; the Logout modal and the picture uploader both leave one.</text>
+      <text x="72" y="428" font-size="8.6" fill="#2D3E54"><tspan font-weight="700">3.</tspan> Re-open the Account page <tspan font-style="italic">only if</tspan> a previous test navigated away. For most tests this is a no-op.</text>
+
+      <rect x="56" y="446" width="754" height="34" rx="7" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.4"/>
+      <text x="433" y="467" font-size="9" font-weight="600" fill="#9A6800" text-anchor="middle">afterAll &#8212; close only OUR tab, never the user's CDP browser  &#183;  line 231</text>
+    </svg>
+    <p class="cap">Figure 2 — (A) the only navigation that works, and (B) the shared-tab lifecycle built around it.</p>
+  </div>
+
+  <h3>Why <code>openAccountViaHeader()</code> retries</h3>
+  <p>Three attempts, and each one re-does the whole hop rather than retrying just the click. Two details are worth calling out:</p>
+  <table>
+    <thead><tr><th style="width:30%">Choice</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>domcontentloaded</code>, never <code>networkidle</code></td>
+        <td>The comment is emphatic and correct: <b>this SPA never goes idle</b> — long-polling and analytics keep the network busy, so <code>networkidle</code> would simply time out on a perfectly healthy page.</td>
+      </tr>
+      <tr>
+        <td>Clicking is not enough</td>
+        <td>After the click it waits for <code>accountMountedMarker()</code> — the Position label or the Personal Details nav item, whichever appears — with an 8-second window. A click that navigates but leaves the panel unmounted counts as a failed attempt.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>The header control itself is matched three ways (line 98): <code>button</code>, then <code>link</code>, then plain text. The source explains why — <b>it renders as a <code>&lt;button&gt;</code> on this SPA, not a link</b>, and it sometimes lags behind first paint, which is also why it gets a generous 12-second visibility window.</p>
+
+  <div class="callout gold">
+    <span class="t">One helper name carries the whole lesson</span>
+    <code>reNavigateToAccount()</code> (line 191) is a one-line wrapper around <code>openAccountViaHeader()</code>, and it exists purely so that reload-then-verify tests read correctly. Its comment says: <i>"Use this instead of <code>page.reload()</code>, which makes the Account route render blank."</i> Naming the wrapper after the intention — re-navigate — rather than the mechanism is what stops the next person reaching for <code>reload()</code> and spending an afternoon on a blank page.
+  </div>
+
+  <div class="callout">
+    <span class="t">Shared tab, shared account, independent order</span>
+    Because there is one tab and one real learner, tests are not isolated from each other's <i>effects</i> — the language test changes what later tests see, and the save tests change stored data. What <code>beforeEach</code> buys is that the <b>order</b> does not matter and one failure does not cascade: each test starts on a mounted Account page at a known viewport with no modal open, whatever the last one did.
+  </div>
+</div>
+
+<!-- ════════════════════════════════ 4. GROUP 1 — LANDING & NAV ══ -->
+<div class="page sec">
+  <h2>4 &nbsp; Group 1 — Landing and left nav</h2>
+  <p class="lead">Thirteen tests, lines 269–382. The profile panel and the five nav items — the fixed chrome that every later group depends on.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:26%">Test</th><th style="width:34%">Locator</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>URL contains /profile</b><br><span style="font-size:7.6pt;color:#7C8696;">line 271</span></td>
+        <td>expect(page.url()).toMatch(/profile|account/i)</td>
+        <td><span class="pill p-ok">assert</span> We are where we think we are. Accepts either route spelling, because the app has used both.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td><td><b>User name in left panel</b><br><span style="font-size:7.6pt;color:#7C8696;">line 278</span></td>
+        <td>locator('h1, h2, h3, [class*="user-name"]')<br>.filter({ hasText: /\w+\s+\w+/ }).first()</td>
+        <td><span class="pill p-teal">observe</span> Reads whatever matches a crude "two words" shape and prints it. A blank name passes, because the name is account data rather than page structure.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>Position label</b><br><span style="font-size:7.6pt;color:#7C8696;">line 290</span></td>
+        <td>expect(accountMountedMarker(page)).toBeVisible()</td>
+        <td><span class="pill p-ok">assert</span> The label's <i>presence</i> is required; its content is only logged. This is the same marker <code>openAccountViaHeader()</code> waits on, so it doubles as a mount check.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>Profile avatar</b><br><span style="font-size:7.6pt;color:#7C8696;">line 300</span></td>
+        <td>'[class*="avatar"] img, [class*="profile-pic"] img,<br>[class*="user-image"]'</td>
+        <td><span class="pill p-teal">observe</span> Three class conventions, one printed boolean. Correctly soft: a learner with no photo still has a valid account.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td><td><b>Pencil edit icon</b><br><span style="font-size:7.6pt;color:#7C8696;">line 309</span></td>
+        <td>button:has(mat-icon:has-text("edit"))<br>mat-icon:has-text("edit")<br>[aria-label*="edit" i] &#183; [class*="edit-icon"]</td>
+        <td><span class="pill p-teal">observe</span> Four shapes because Material icons can be found by ligature text, by label, or by class depending on build.</td>
+      </tr>
+      <tr>
+        <td class="n">6&#8211;10</td><td><b>The five nav links</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 323–348</span></td>
+        <td>expect(getByText(T.personalDetails).first())<br>&#8230; and four more, one per section</td>
+        <td><span class="pill p-ok">assert</span> All five hard, and rightly so: the nav is fixed chrome, identical for every account, so it is safely assertable in either language.</td>
+      </tr>
+      <tr>
+        <td class="n">11</td><td><b>Help and Support button</b><br><span style="font-size:7.6pt;color:#7C8696;">line 354</span></td>
+        <td>getByRole('button', { name: T.helpSupport })<br>.or(getByText(T.helpSupport))</td>
+        <td><span class="pill p-ok">assert</span> Button first, text as a fallback.</td>
+      </tr>
+      <tr>
+        <td class="n">12</td><td><b>Logout button</b><br><span style="font-size:7.6pt;color:#7C8696;">line 362</span></td>
+        <td>getByRole('button', { name: T.logout })<br>.or(getByText(T.logout))</td>
+        <td><span class="pill p-ok">assert</span> Same shape. Group 9 then exercises what it opens.</td>
+      </tr>
+      <tr>
+        <td class="n">13</td><td><b>Personal Details active by default</b><br><span style="font-size:7.6pt;color:#7C8696;">line 370</span></td>
+        <td>read the class attribute, print it</td>
+        <td><span class="pill p-teal">observe</span> The class is printed rather than checked for an active marker. See the note below.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">Four "active in nav" tests, none of them assertions</span>
+    Test 13 here, plus the equivalents in the Academic Details and My Certificates groups and the header's <i>"Account nav link is marked active"</i>, all follow the same shape: read <code>class</code>, print the first hundred characters, pass. None of them looks for an active/selected marker in that string.
+    <br><br>
+    That is defensible while the active-state class name is in flux — asserting on <code>mat-list-item-active</code> would break on a Material upgrade that renames it. But four tests named "is active" that cannot detect an inactive item is worth knowing when reading a green report. A single shared helper checking for <code>/active|selected/i</code> would turn all four into real checks without hard-coding one build's class name.
+  </div>
+
+  <p>The group's shape is otherwise sound: <b>9 of 13 assert</b>, and the four that observe are all things that legitimately vary by account — the name, the photo, the edit affordance, and a class string.</p>
+</div>
+
+<!-- ══════════════════════════════ 5. GROUP 2 — PERSONAL DETAILS ══ -->
+<div class="page sec">
+  <h2>5 &nbsp; Group 2 — Personal Details</h2>
+  <p class="lead">Thirteen tests, lines 384–581. The largest form on the page, and the first group that writes to the account.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:26%">Test</th><th style="width:32%">Approach</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1&#8211;4</td><td><b>Heading, first name, last name, phone</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 391–418</span></td>
+        <td>getByPlaceholder(/first name/i) &#8230;<br>getByPlaceholder(/phone/i)</td>
+        <td><span class="pill p-ok">assert</span> All four hard. Placeholders are used rather than labels — <b>the one thing on this page that is not translated</b>, so one selector works in both languages.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td><td><b>Email field is visible and masked</b><br><span style="font-size:7.6pt;color:#7C8696;">line 423</span></td>
+        <td>expect(getByPlaceholder(/email/i)).toBeVisible()<br>then walk every non-radio input for a value with @<br>masked = /\*/.test(value)</td>
+        <td><span class="pill p-ok">assert</span> on presence, <span class="pill p-teal">observe</span> on masking. The test name promises both; only the first half is enforced. An unmasked email would print <code>masked: false</code> and pass.</td>
+      </tr>
+      <tr>
+        <td class="n">6&#8211;9</td><td><b>DOB block, country, pincode, Save</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 449–473</span></td>
+        <td>getByText(/date of birth|जन्म की तारीख/i)<br>&#8230; then <code>saveButton(page)</code></td>
+        <td><span class="pill p-ok">assert</span> Four more hard checks. The DOB test also counts the native <code>&lt;select&gt;</code> elements and prints the total, which is what tests 12 and 13 later index into.</td>
+      </tr>
+      <tr>
+        <td class="n">10</td><td><b>Fill Phone and Pincode then Save</b><br><span style="font-size:7.6pt;color:#7C8696;">line 481</span></td>
+        <td>isEditable() guard on each field<br>isEnabled() guard on Save<br>read the toast, print it</td>
+        <td><span class="pill p-teal">observe</span> The most carefully written test in the group, and still it asserts nothing. See below.</td>
+      </tr>
+      <tr>
+        <td class="n">11</td><td><b>Saved values persist after reload</b><br><span style="font-size:7.6pt;color:#7C8696;">line 528</span></td>
+        <td>reNavigateToAccount() &#8594; re-read both inputs &#8594; print</td>
+        <td><span class="pill p-teal">observe</span> <b>Nothing compares the re-read values to what test 10 typed.</b> See the red note.</td>
+      </tr>
+      <tr>
+        <td class="n">12&#8211;13</td><td><b>DOB Year / Country can be changed</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 546, 563</span></td>
+        <td>selectOption({ index: 5 }) / ({ index: 2 })<br>read the value back, print it</td>
+        <td><span class="pill p-teal">observe</span> Positional: Year is select 0, Country is select 3. Both guard on the count first, and both swallow the selection error, so a dropdown that refuses to change still passes.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The guards on test 10 are the right instinct</h3>
+  <p>On production the phone field is read-only — it is verified and masked — so a blind <code>fill()</code> would throw for a reason that is not a defect. The test checks <code>isEditable()</code> first, and does the same for pincode. Then it checks <code>isEnabled()</code> on Save, because <b>the button stays disabled until an editable field actually changes</b>: if nothing was editable, a disabled Save is correct behaviour, not a bug.</p>
+  <p>And when it cannot save, it says so honestly rather than pretending:</p>
+  <pre><span class="c">ℹ️  Save button is disabled (no editable fields changed) — nothing to save</span></pre>
+
+  <div class="callout red">
+    <span class="t">Test 11 is named for the one thing it does not do</span>
+    "Saved values persist after page reload" re-navigates, re-reads the phone and pincode fields, and prints them. It never compares them to <code>'9876543210'</code> and <code>'560001'</code> — the values test 10 typed. A save that silently failed, or a backend that dropped the write, produces exactly the same green result.
+    <br><br>
+    The fix is two lines and needs no new machinery: have test 10 record what it actually filled (it already knows, because it guards on <code>isEditable()</code>), and have test 11 assert against that. As written, the two most valuable tests in the group — write it, then prove it stuck — prove nothing between them. The identical problem exists in Organization Details, Section 6.
+  </div>
+</div>
+
+<!-- ═════════════════════ 6. GROUPS 3 AND 4 — ORG AND ACADEMIC ══ -->
+<div class="page sec">
+  <h2>6 &nbsp; Groups 3 and 4 — Organization and Academic</h2>
+  <p class="lead">Fourteen tests, lines 583–765. The weakest stretch of the file: three assertions across ten Organization tests, and the same write-then-don't-check pattern as Section 5.</p>
+
+  <h3>Organization Details &nbsp;<span style="font-weight:400;color:#7C8696;font-size:10pt;">10 tests · 3 assert · 7 observe</span></h3>
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:26%">Test</th><th style="width:30%">Approach</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1&#8211;2</td><td><b>Heading, Background label</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 590, 598</span></td>
+        <td>filter({ hasText: T.organizationalHead })<br>getByText(T.background)</td>
+        <td><span class="pill p-ok">assert</span> Both hard, in either language. Note the heading and nav labels differ — <i>"Organizational Details"</i> as a heading, <i>"Organization Details"</i> in the nav — which is why <code>T</code> carries two separate entries for it.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>Background shows a value</b><br><span style="font-size:7.6pt;color:#7C8696;">line 606</span></td>
+        <td>getByText(/healthcare worker|volunteer|asha<br>|student|faculty|others/i)</td>
+        <td><span class="pill p-teal">observe</span> Any of the six known options, printed. Soft is right here — which background this learner chose is account data.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>Designation dropdown is visible</b><br><span style="font-size:7.6pt;color:#7C8696;">line 618</span></td>
+        <td>locator('select, mat-select, [role="combobox"]')<br>.count()</td>
+        <td><span class="pill p-teal">observe</span> <b>It counts every dropdown on the page and prints the total.</b> Nothing ties any of them to a designation. A page with the designation control missing, but a country dropdown present, passes.</td>
+      </tr>
+      <tr>
+        <td class="n">5&#8211;7</td><td><b>RN/RM, org type, org name</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 629, 638, 647</span></td>
+        <td>isVisible().catch(() =&gt; false), printed</td>
+        <td><span class="pill p-teal">observe</span> Three tests, three booleans, no assertions. Each would read identically on a page where the field is simply absent.</td>
+      </tr>
+      <tr>
+        <td class="n">8</td><td><b>Save button visible</b><br><span style="font-size:7.6pt;color:#7C8696;">line 656</span></td>
+        <td>expect(saveButton(page)).toBeVisible()</td>
+        <td><span class="pill p-ok">assert</span> The third and last hard check in the group.</td>
+      </tr>
+      <tr>
+        <td class="n">9</td><td><b>Fill Organization Name and Save</b><br><span style="font-size:7.6pt;color:#7C8696;">line 662</span></td>
+        <td>if (visible) { fill('Test Hospital Bangalore');<br>&#160;&#160;click Save; print the toast }</td>
+        <td><span class="pill p-teal">observe</span> Writes real data. Two differences from its Personal Details sibling: <b>no <code>isEnabled()</code> guard on Save</b>, and the whole body sits inside a visibility guard — so a missing field is a silent pass, not even a logged skip.</td>
+      </tr>
+      <tr>
+        <td class="n">10</td><td><b>Saved name persists after reload</b><br><span style="font-size:7.6pt;color:#7C8696;">line 687</span></td>
+        <td>reNavigateToAccount() &#8594; re-read &#8594; print</td>
+        <td><span class="pill p-teal">observe</span> The same gap as Section 5: the value is read back and printed, never compared to <code>'Test Hospital Bangalore'</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout red">
+    <span class="t">The one test here that would catch a real regression is one line away</span>
+    Test 10 already re-navigates, already re-opens the section, and already reads the field. Adding <code>expect(val).toBe('Test Hospital Bangalore')</code> would turn the pair into the only end-to-end write-and-verify in the whole spec — and it is the sort of thing that breaks when a profile API changes shape, which is exactly what you want a test to notice.
+    <br><br>
+    The same single line applies to Personal Details test 11. Two lines across the file would close both.
+  </div>
+
+  <h3>Academic Details &nbsp;<span style="font-weight:400;color:#7C8696;font-size:10pt;">4 tests · 2 assert · 2 observe</span></h3>
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:26%">Test</th><th style="width:30%">Approach</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>"Education" heading</b><br><span style="font-size:7.6pt;color:#7C8696;">line 713</span></td>
+        <td>getByText(T.education)</td>
+        <td><span class="pill p-ok">assert</span> Unanchored, because the heading can carry extra text around the word.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td><td><b>"+ Add Education" link</b><br><span style="font-size:7.6pt;color:#7C8696;">line 722</span></td>
+        <td>getByText(T.addEducation)</td>
+        <td><span class="pill p-ok">assert</span> The <code>T</code> entry begins <code>/(\+?\s*add education…</code> — the leading optional plus is there because the control renders as "+ Add Education" on some builds and "Add Education" on others.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>Clicking it opens a form or modal</b><br><span style="font-size:7.6pt;color:#7C8696;">line 729</span></td>
+        <td>click, then look for a dialog, new inputs, or<br>education-ish wording; print what was found</td>
+        <td><span class="pill p-teal">observe</span> The click is real; the outcome is printed. A control that opens nothing at all would pass.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>Academic Details active in nav</b><br><span style="font-size:7.6pt;color:#7C8696;">line 757</span></td>
+        <td>read the class, print it</td>
+        <td><span class="pill p-teal">observe</span> The second of the four "is active" tests from Section 4's note.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Both groups open their section through a nested <code>beforeEach</code> that calls <code>clickAccountNav()</code> — so every test starts on the right panel without repeating the navigation, and the either-language regex is built once from the English name at the call site.</p>
+</div>
+
+<!-- ═════════════════════════ 7. GROUPS 5–8 — THE SOFT MIDDLE ══ -->
+<div class="page sec">
+  <h2>7 &nbsp; Groups 5 to 8 — the soft middle</h2>
+  <p class="lead">Twelve tests, lines 770–954. Language Preference is the only one of the four with real teeth; the other three contain no assertion at all.</p>
+
+  <h3>Language Preference &nbsp;<span style="font-weight:400;color:#7C8696;font-size:10pt;">7 tests · 4 assert · 3 observe</span></h3>
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:28%">Test</th><th style="width:28%">Approach</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1&#8211;3</td><td><b>Heading, English radio, Hindi radio</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 783, 792, 800</span></td>
+        <td>getByText(/^(english|अंग्रेजी)$/i)<br>getByText(/^(hindi|हिंदी)$/i)</td>
+        <td><span class="pill p-ok">assert</span> All three hard. Note that "English" itself renders as <b>अंग्रेजी</b> when the UI is in Hindi — the option labels are translated along with everything else, which is precisely why <code>ensureEnglish()</code> uses the radio's <i>index</i> instead.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>English selected by default</b><br><span style="font-size:7.6pt;color:#7C8696;">line 807</span></td>
+        <td>read which radio is checked, print it</td>
+        <td><span class="pill p-teal">observe</span> Defensible: the account's language is state this very group changes, so a hard assertion would depend on run order.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td><td><b>Save button visible</b><br><span style="font-size:7.6pt;color:#7C8696;">line 828</span></td>
+        <td>expect(saveButton(page)).toBeVisible()</td>
+        <td><span class="pill p-ok">assert</span></td>
+      </tr>
+      <tr>
+        <td class="n">6</td><td><b>Select Hindi, save, verify after reload</b><br><span style="font-size:7.6pt;color:#7C8696;">line 834</span></td>
+        <td>check the Hindi radio, Save, re-navigate,<br>read which radio is checked, print it</td>
+        <td><span class="pill p-teal">observe</span> <b>The test that changes shared state for the whole file</b>, and it does not assert that the change stuck. Its <code>afterEach</code> then undoes it.</td>
+      </tr>
+      <tr>
+        <td class="n">7</td><td><b>Switch back to English, verify</b><br><span style="font-size:7.6pt;color:#7C8696;">line 862</span></td>
+        <td>the mirror image of test 6</td>
+        <td><span class="pill p-teal">observe</span> Same shape, same gap. Between them these two are the strongest evidence the page's language setting works — and neither can fail.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>My Certificates, Profile Picture, Help and Support &nbsp;<span style="font-weight:400;color:#7C8696;font-size:10pt;">5 tests · 0 assert</span></h3>
+  <table class="t-sel">
+    <thead><tr><th style="width:22%">Group</th><th style="width:28%">Test</th><th style="width:24%">Approach</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td rowspan="3"><b>My Certificates</b><br><span style="font-size:7.6pt;color:#7C8696;">line 887</span></td>
+        <td>Active in left nav <span style="font-size:7.6pt;color:#7C8696;">· 894</span></td>
+        <td>read the class, print it</td>
+        <td><span class="pill p-teal">observe</span> The third "is active" test.</td>
+      </tr>
+      <tr>
+        <td>"No Certificates" empty state <span style="font-size:7.6pt;color:#7C8696;">· 901</span></td>
+        <td>isVisible(), printed</td>
+        <td><span class="pill p-teal">observe</span> Correctly soft — this account <i>may</i> have certificates, so requiring the empty state would be wrong.</td>
+      </tr>
+      <tr>
+        <td>No certificate cards <span style="font-size:7.6pt;color:#7C8696;">· 910</span></td>
+        <td>count(), printed as<br><code>N (expected 0 for new user)</code></td>
+        <td><span class="pill p-teal">observe</span> The parenthetical states an expectation the code does not enforce — the clearest example in the file of a test <i>describing</i> a check rather than performing one.</td>
+      </tr>
+      <tr>
+        <td><b>Profile Picture</b><br><span style="font-size:7.6pt;color:#7C8696;">line 923</span></td>
+        <td>Pencil opens an uploader <span style="font-size:7.6pt;color:#7C8696;">· 925</span></td>
+        <td>click, then count <code>input[type="file"]</code><br>and look for upload wording</td>
+        <td><span class="pill p-teal">observe</span> Returns early with a log line if the pencil is absent. A pencil that opens nothing prints <code>file inputs: 0</code> and passes.</td>
+      </tr>
+      <tr>
+        <td><b>Help and Support</b><br><span style="font-size:7.6pt;color:#7C8696;">line 956</span></td>
+        <td>Clicking it navigates or opens <span style="font-size:7.6pt;color:#7C8696;">· 958</span></td>
+        <td>click, then print the URL and whether<br>any helper UI appeared</td>
+        <td><span class="pill p-teal">observe</span> Same shape. The test name's "navigates / opens helper" is an accurate description of what it <i>watches for</i>, and of what it does not require.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">Three of these five are soft for good reasons; two are not</span>
+    The certificate empty-state and the background-value tests are correctly soft: they depend on what this particular account holds, and hardening them would make the suite fail on a different learner. But <b>the pencil and Help and Support tests are about page structure, not account data</b> — the controls either open something or they do not, for every account alike. Those two are the ones worth hardening, and each needs one <code>expect()</code> on the signal it already measures.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ 8. GROUP 9 — LOGOUT ══ -->
+<div class="page sec">
+  <h2>8 &nbsp; Group 9 — Logout</h2>
+  <p class="lead">Four tests, lines 988–1072, and the only group in the file where every single test asserts. It is also the group with the clearest reason to.</p>
+
+  <p>Logout is destructive and irreversible within a session. A Logout button that signs the user out <i>without asking</i> is a real defect, and so is a confirmation dialog that offers only one way out. Both are things a test can state precisely, and this group does.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:26%">Test</th><th style="width:32%">The assertion</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>Logout opens a confirmation</b><br><span style="font-size:7.6pt;color:#7C8696;">line 990</span></td>
+        <td>expect(getByText(/logout now|लॉग आउट|साइन आउट/i)<br>.or(getByRole('button', { name: /^(yes|हाँ|हां)$/i }))<br>.first()).toBeVisible({ timeout: 5_000 })</td>
+        <td><span class="pill p-ok">assert</span> <b>Real coverage.</b> An immediate logout with no confirmation fails this outright. Either the heading or the Yes button is enough proof the modal opened.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td><td><b>Modal asks "Are you sure?"</b><br><span style="font-size:7.6pt;color:#7C8696;">line 1006</span></td>
+        <td>expect(getByText(/are you sure\??|क्या आप सुनिश्चित<br>|क्या आप वाकई/i)<br>.or(getByRole('button', { name: /^(no|नहीं)$/i })))</td>
+        <td><span class="pill p-ok">assert</span> Two Hindi phrasings, because the app has used both. The No button is accepted as a fallback for the same reason as test 1.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>Both Yes and No are offered</b><br><span style="font-size:7.6pt;color:#7C8696;">line 1020</span></td>
+        <td>expect(yesBtn).toBeVisible()<br>expect(noBtn).toBeVisible()</td>
+        <td><span class="pill p-ok">assert</span> Two separate assertions. The source's comment names the defect it guards against exactly: <i>"a modal with only Yes would be a trap."</i></td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>"No" cancels and keeps the session</b><br><span style="font-size:7.6pt;color:#7C8696;">line 1038</span></td>
+        <td>expect(page.url()).toMatch(/profile|account/i)<br><span style="color:#B45309;">modal-closed and still-signed-in: printed only</span></td>
+        <td><span class="pill p-warn">mixed</span> The URL check is hard — cancelling must not navigate away. The other two signals it gathers are logged, not asserted. See the note.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Every test re-opens the modal</h3>
+  <p>Tests 2, 3 and 4 each begin by clicking Logout again, because the file's <code>beforeEach</code> dismisses any leftover overlay — so each test starts from a clean page and has to reopen what it wants to inspect. That is four clicks on a Logout button in one run, and it is why the overlay-dismissal loop in <code>beforeEach</code> matters: without it, the second test's click would land on the first test's backdrop.</p>
+
+  <div class="callout gold">
+    <span class="t">Test 4 measures the two things that matter most, and asserts neither</span>
+    After clicking No it gathers three signals: the URL (asserted), whether the modal is gone, and whether the profile marker is still visible. The last two are printed:
+    <pre style="margin-top:6px;"><span class="c">✅ Modal closed (logout now text hidden): true</span>
+<span class="c">✅ User still authenticated (profile marker visible): true</span></pre>
+    The source is candid about the consequence — <i>"a No that silently logged the user out would still be reported as a pass"</i> — because the URL would remain on the profile route for a moment even after the session was dropped. Two <code>expect()</code> calls on values the test already computes would make this the strongest test in the file rather than the most nearly-strong one.
+  </div>
+
+  <p>Taken together the group is still the best-shaped in the spec: <b>4 of 4 assert</b>, the assertions are about behaviour rather than presence, and each names a genuine failure a user would notice. The gap in test 4 is narrow and one line wide.</p>
+</div>
+
+<!-- ═══════════════════════ 9. GROUP 10 — HEADER & PAGE HEALTH ══ -->
+<div class="page sec">
+  <h2>9 &nbsp; Group 10 — Header and page health</h2>
+  <p class="lead">Twelve tests, lines 1074–1239. The shared app chrome, three viewports, and the file's only test that opens a second browser context.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:26%">Test</th><th style="width:30%">Approach</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1&#8211;2</td><td><b>Logo, search bar</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 1076, 1085</span></td>
+        <td>expect(&#8230;).toBeVisible()</td>
+        <td><span class="pill p-ok">assert</span> Shared header chrome, identical on every page — safely hard.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>"Account" nav marked active</b><br><span style="font-size:7.6pt;color:#7C8696;">line 1096</span></td>
+        <td>read the class, print it</td>
+        <td><span class="pill p-teal">observe</span> The fourth and last "is active" test.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>Clicking Home navigates</b><br><span style="font-size:7.6pt;color:#7C8696;">line 1104</span></td>
+        <td>click Home, then assert the URL</td>
+        <td><span class="pill p-ok">assert</span> A behaviour check, not a presence check. Note this test deliberately navigates away — <code>beforeEach</code> puts the next one back.</td>
+      </tr>
+      <tr>
+        <td class="n">5&#8211;6</td><td><b>Dark-mode toggle, notification bell</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 1119, 1131</span></td>
+        <td>isVisible(), printed</td>
+        <td><span class="pill p-teal">observe</span> Both are optional chrome that has come and gone across builds, so soft is defensible here.</td>
+      </tr>
+      <tr>
+        <td class="n">7</td><td><b>No console errors on load</b><br><span style="font-size:7.6pt;color:#7C8696;">line 1138</span></td>
+        <td>attach a console listener, wait, count, print</td>
+        <td><span class="pill p-teal">observe</span> <b>Two problems, not one.</b> See the red note.</td>
+      </tr>
+      <tr>
+        <td class="n">8&#8211;10</td><td><b>Mobile / tablet / desktop</b><br><span style="font-size:7.6pt;color:#7C8696;">lines 1158, 1168, 1176</span></td>
+        <td>setViewportSize(&#8230;)<br>expect(accountMountedMarker(page)).toBeVisible()</td>
+        <td><span class="pill p-ok">assert</span> Three hard checks at 390&#215;844, 768&#215;1024 and 1440&#215;900. The profile panel must survive each layout. <code>beforeEach</code> resets the viewport afterwards, which is why it does that at all.</td>
+      </tr>
+      <tr>
+        <td class="n">11</td><td><b>URL persists on reload</b><br><span style="font-size:7.6pt;color:#7C8696;">line 1184</span></td>
+        <td>a genuine page.reload()<br>expect(url).toMatch(/profile|account|home/i)</td>
+        <td><span class="pill p-ok">assert</span> Deliberately permissive: on production, reloading the profile route bounces to Home, and both outcomes are well-defined correct behaviour. The test then logs whether content actually rendered rather than failing on the known-blank case.</td>
+      </tr>
+      <tr>
+        <td class="n">12</td><td><b>Unauthenticated access</b><br><span style="font-size:7.6pt;color:#7C8696;">line 1210</span></td>
+        <td>a fresh <code>browser.newContext()</code> with no cookies<br>goto the profile URL, then<br>expect(authedVisible).toBeFalsy()</td>
+        <td><span class="pill p-ok">assert</span> <b>The most valuable test in the group.</b> A brand-new context has no session, so the profile must not render — it must bounce to login or public home. This is the one security-shaped check in the file.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout red">
+    <span class="t">Test 7 cannot see the errors it is named for</span>
+    "No console errors on Account page load" attaches its <code>page.on('console')</code> listener <b>after</b> the page has already loaded — <code>beforeEach</code> navigated to Account before the test body ran. The listener can therefore only catch errors that fire from that moment on. Load-time errors, which are the ones the title is about, have already happened and are gone.
+    <br><br>
+    The source is honest about it in a <code>NOTE</code> comment, which is better than hiding it, but the test name is not. And it has no <code>expect()</code> either: it counts, prints the first five truncated, and passes. So it is soft about a thing it cannot observe. The fix is to attach the listener and <i>then</i> navigate — <code>reNavigateToAccount()</code> already exists for exactly this — and to assert on the count, or at least to rename the test to say it samples post-load errors.
+  </div>
+
+  <div class="callout">
+    <span class="t">Test 12 is wrapped, and for a good reason</span>
+    Creating an isolated context is the whole point of the unauthenticated test, but <b>a CDP-attached browser cannot always create one</b> — you are driving someone's real Chrome, not a fresh instance. The test wraps the creation and calls <code>test.skip()</code> with a message naming that reason &#8212; skipping honestly rather than passing for the wrong reason. In CI, where <code>storageState</code> mode gives it a proper isolated browser, the real check runs.
+  </div>
+</div>
+
+<!-- ═══════════════════════ 10. WHAT GREEN ACTUALLY PROVES ══ -->
+<div class="page sec">
+  <h2>10 &nbsp; What green actually proves</h2>
+  <p class="lead">Forty of the sixty-eight tests assert. The twenty-eight that do not are concentrated, not scattered — and that is the useful part.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 452" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <text x="30" y="24" font-size="11" font-weight="700" fill="#17283C">Assertion coverage, group by group</text>
+      <text x="30" y="40" font-size="8.4" fill="#7C8696">one segment per test &#8212; green asserts, grey observes</text>
+
+      <g font-size="9">
+        <text x="30" y="72" fill="#17283C" font-weight="600">1 &#183; Landing and left nav</text>
+        <rect x="250" y="60" width="270" height="16" rx="3" fill="#15803D"/>
+        <rect x="522" y="60" width="120" height="16" rx="3" fill="#7C8696"/>
+        <text x="654" y="73" font-size="8.4" fill="#7C8696">9 / 13</text>
+
+        <text x="30" y="104" fill="#17283C" font-weight="600">2 &#183; Personal Details</text>
+        <rect x="250" y="92" width="270" height="16" rx="3" fill="#15803D"/>
+        <rect x="522" y="92" width="120" height="16" rx="3" fill="#7C8696"/>
+        <text x="654" y="105" font-size="8.4" fill="#7C8696">9 / 13</text>
+
+        <text x="30" y="136" fill="#17283C" font-weight="600">3 &#183; Organization Details</text>
+        <rect x="250" y="124" width="90" height="16" rx="3" fill="#15803D"/>
+        <rect x="342" y="124" width="210" height="16" rx="3" fill="#7C8696"/>
+        <text x="564" y="137" font-size="8.4" fill="#B45309">3 / 10</text>
+
+        <text x="30" y="168" fill="#17283C" font-weight="600">4 &#183; Academic Details</text>
+        <rect x="250" y="156" width="60" height="16" rx="3" fill="#15803D"/>
+        <rect x="312" y="156" width="60" height="16" rx="3" fill="#7C8696"/>
+        <text x="384" y="169" font-size="8.4" fill="#7C8696">2 / 4</text>
+
+        <text x="30" y="200" fill="#17283C" font-weight="600">5 &#183; Language Preference</text>
+        <rect x="250" y="188" width="120" height="16" rx="3" fill="#15803D"/>
+        <rect x="372" y="188" width="90" height="16" rx="3" fill="#7C8696"/>
+        <text x="474" y="201" font-size="8.4" fill="#7C8696">4 / 7</text>
+
+        <text x="30" y="232" fill="#17283C" font-weight="600">6 &#183; My Certificates</text>
+        <rect x="250" y="220" width="90" height="16" rx="3" fill="#7C8696"/>
+        <text x="352" y="233" font-size="8.4" fill="#B91C1C" font-weight="700">0 / 3</text>
+
+        <text x="30" y="264" fill="#17283C" font-weight="600">7 &#183; Profile Picture</text>
+        <rect x="250" y="252" width="30" height="16" rx="3" fill="#7C8696"/>
+        <text x="292" y="265" font-size="8.4" fill="#B91C1C" font-weight="700">0 / 1</text>
+
+        <text x="30" y="296" fill="#17283C" font-weight="600">8 &#183; Help and Support</text>
+        <rect x="250" y="284" width="30" height="16" rx="3" fill="#7C8696"/>
+        <text x="292" y="297" font-size="8.4" fill="#B91C1C" font-weight="700">0 / 1</text>
+
+        <text x="30" y="328" fill="#17283C" font-weight="600">9 &#183; Logout</text>
+        <rect x="250" y="316" width="120" height="16" rx="3" fill="#15803D"/>
+        <text x="382" y="329" font-size="8.4" fill="#15803D" font-weight="700">4 / 4</text>
+
+        <text x="30" y="360" fill="#17283C" font-weight="600">10 &#183; Header and page health</text>
+        <rect x="250" y="348" width="270" height="16" rx="3" fill="#15803D"/>
+        <rect x="522" y="348" width="90" height="16" rx="3" fill="#7C8696"/>
+        <text x="624" y="361" font-size="8.4" fill="#7C8696">9 / 12</text>
+      </g>
+
+      <line x1="30" y1="382" x2="870" y2="382" stroke="#D8DEE5"/>
+      <text x="30" y="404" font-size="10" font-weight="700" fill="#17283C">TOTAL</text>
+      <rect x="250" y="392" width="360" height="18" rx="3" fill="#15803D"/>
+      <rect x="612" y="392" width="252" height="18" rx="3" fill="#7C8696"/>
+      <text x="430" y="405" font-size="9" font-weight="700" fill="#FFF" text-anchor="middle">40 assert</text>
+      <text x="738" y="405" font-size="9" font-weight="700" fill="#FFF" text-anchor="middle">28 observe</text>
+
+      <text x="30" y="436" font-size="8.4" fill="#7C8696">Three groups &#8212; 5 tests &#8212; contain no assertion at all. Everything about the certificates list, the profile</text>
+      <text x="30" y="448" font-size="8.4" fill="#7C8696">picture and Help and Support could break without turning this suite red.</text>
+    </svg>
+    <p class="cap">Figure 3 — where the assertions are. The two ends of the file are strong; the middle is where a regression would go unnoticed.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-color:#15803D;">
+      <div class="h" style="color:#15803D;">Green means this, for certain</div>
+      <ul>
+        <li>The Account page mounts, reached the only way that works</li>
+        <li>All five left-nav items render, in either language</li>
+        <li>Personal Details' fields and Save button are present</li>
+        <li>Both Save buttons render</li>
+        <li>Language options render and are labelled</li>
+        <li><b>Logout asks first, and offers both Yes and No</b></li>
+        <li>Cancelling does not navigate away</li>
+        <li>The page survives three viewports</li>
+        <li><b>A logged-out visitor cannot see the profile</b></li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:#B45309;">
+      <div class="h" style="color:#B45309;">Green does <i>not</i> mean this</div>
+      <ul>
+        <li>That anything saved actually persisted — both persistence tests only print</li>
+        <li>That the email is masked</li>
+        <li>That a designation dropdown exists — only that <i>a</i> dropdown does</li>
+        <li>That any nav item is highlighted when selected</li>
+        <li>That the pencil opens an uploader</li>
+        <li>That Help and Support does anything</li>
+        <li>That the certificates list is correct</li>
+        <li>That the page loads without console errors</li>
+        <li>That cancelling logout keeps the session alive</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>The one change that would do the most</h3>
+  <p>Of the eleven gaps above, four share a shape: the test already computes the value it needs and then prints it instead of asserting on it. Those are the cheap ones, and together they are four lines:</p>
+  <table>
+    <thead><tr><th style="width:34%">Test</th><th style="width:34%">The line to add</th><th>What it would catch</th></tr></thead>
+    <tbody>
+      <tr><td>Personal Details 11 &#183; line 528</td><td class="mono">expect(pincodeVal).toBe('560001')</td><td>A profile save that silently fails.</td></tr>
+      <tr><td>Organization Details 10 &#183; line 687</td><td class="mono">expect(val).toBe('Test Hospital Bangalore')</td><td>The same, on the other form.</td></tr>
+      <tr><td>Logout 4 &#183; line 1038</td><td class="mono">expect(userStillVisible).toBe(true)</td><td>A No button that logs the user out anyway.</td></tr>
+      <tr><td>Personal Details 5 &#183; line 423</td><td class="mono">expect(masked).toBe(true)</td><td>An unmasked email address on screen.</td></tr>
+    </tbody>
+  </table>
+  <p>None of them needs a new locator, a new helper or a new wait — every value is already in a variable by the time it is logged.</p>
+
+  <h3>Against the rest of the suite</h3>
+  <table>
+    <thead><tr><th style="width:28%">Suite</th><th style="width:12%">Tests</th><th style="width:18%">Assert always</th><th>Shape of the rest</th></tr></thead>
+    <tbody>
+      <tr><td>Course TOC</td><td>21</td><td>15 &#183; 71&#37;</td><td>3 conditional, 3 observe.</td></tr>
+      <tr><td>Public Page</td><td>64</td><td>42 &#183; 66&#37;</td><td>22 soft or present-only.</td></tr>
+      <tr><td>Public Login</td><td>29</td><td>18 &#183; 62&#37;</td><td>No test asserts that login succeeded.</td></tr>
+      <tr><td><b>Account</b> <span class="pill p-ok">this one</span></td><td>68</td><td><b>40 &#183; 59&#37;</b></td><td>28 observe, concentrated in three assertion-free groups and the two save-persistence pairs.</td></tr>
+      <tr><td>My Courses</td><td>49</td><td>17 &#183; 35&#37;</td><td>31 observe — content depends on what the account studied.</td></tr>
+    </tbody>
+  </table>
+  <p>Account sits in the middle, and its softness has a different cause from My Courses'. There, the page genuinely shows whatever the learner happens to have studied, so soft checks are the honest choice. Here, <b>most of what is left soft is page structure</b> — a pencil icon, a support button, a nav highlight — which is the same for every account and could be asserted outright.</p>
+</div>
+
+<!-- ═════════════════ 11. ARTIFACTS, RUN VARIANTS, FAILURE MODES ══ -->
+<div class="page sec">
+  <h2>11 &nbsp; Artifacts, run variants, failure modes</h2>
+
+  <h3>What a run leaves behind</h3>
+  <p>The standard reporters, with nothing bespoke: the branded HTML report in <code>brand-reports/</code>, the full run report (HTML and PDF) in <code>test-reports/run-reports/</code>, an Excel summary, and a screenshot of <b>every</b> test — <code>screenshot: 'on'</code>, not just on failure — so a green run still carries visual evidence of all 68.</p>
+
+  <h3>Run variants</h3>
+  <table>
+    <thead><tr><th style="width:40%">Command</th><th>Use it when</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:account</td><td>Normal use. Headed, against staging.</td></tr>
+      <tr><td class="mono">HEADLESS=true npm run run:account</td><td>Unattended. Screenshots are still captured.</td></tr>
+      <tr><td class="mono">… --grep "Logout"</td><td>The group worth running alone when touching the modal.</td></tr>
+      <tr><td class="mono">… --grep "Language Preference"</td><td>The group that changes shared state. Running it alone still leaves the account in English, because its <code>afterEach</code> runs either way.</td></tr>
+      <tr><td class="mono">USE_CDP=1 …</td><td>Local development against a Chrome you logged into by hand. Note the unauthenticated test may skip in this mode.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Failure modes</h3>
+  <table>
+    <thead><tr><th style="width:28%">Symptom</th><th style="width:32%">Cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Every test fails at once</b>, with "Account page failed to mount"</td>
+        <td><code>beforeAll</code>'s assertion. The header's Account control never appeared, across three attempts.</td>
+        <td>The message names the likely cause: is <code>TEST_USER</code> logged in on the environment <code>BASE_URL</code> points at? Check both together — a valid session on the wrong environment looks identical.</td>
+      </tr>
+      <tr>
+        <td>A run goes red <b>from the Language Preference group onwards</b></td>
+        <td>The account is in Hindi and something is matching English only.</td>
+        <td>Any new assertion must go through <code>T</code> or <code>NAV_HINDI</code>. If the run was interrupted mid-group, <code>ensureEnglish()</code> may not have fired — run that group alone once to reset the account.</td>
+      </tr>
+      <tr>
+        <td>Clicks land on nothing, several tests in a row</td>
+        <td>A leftover modal backdrop. The Logout modal and the picture uploader both leave one.</td>
+        <td>The <code>beforeEach</code> loop should have cleared it. If a new overlay shape has appeared, add it to the three-selector list at line 247.</td>
+      </tr>
+      <tr>
+        <td>The Account panel renders blank</td>
+        <td>Something reached the route by URL or by <code>reload()</code>.</td>
+        <td>Use <code>reNavigateToAccount()</code>. This is the single most common mistake when adding a test to this file, and the reason that wrapper exists.</td>
+      </tr>
+      <tr>
+        <td><code>networkidle</code> timeouts</td>
+        <td>This SPA never goes idle — long-polling and analytics keep the connection busy.</td>
+        <td>Wait on <code>domcontentloaded</code> plus a specific element, the way <code>openAccountViaHeader()</code> does.</td>
+      </tr>
+      <tr>
+        <td>The unauthenticated test skips</td>
+        <td>A CDP-attached browser cannot create an isolated context.</td>
+        <td>Not a defect — the skip message says so. The check runs properly in CI under <code>storageState</code> mode.</td>
+      </tr>
+      <tr>
+        <td>A save test passes but the data did not change</td>
+        <td>The field was read-only, or the save failed silently.</td>
+        <td>Read the log: <code>ℹ️ Phone field is read-only — skipping fill</code> and <code>ℹ️ Save button is disabled</code> both mean nothing was written. This is exactly the case the missing assertions from Section 10 would surface.</td>
+      </tr>
+      <tr>
+        <td>Viewport tests fail but nothing else does</td>
+        <td>The profile panel does not survive a narrow layout.</td>
+        <td>A genuine responsive defect, and one of the few things this file asserts hard at all three sizes.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Where to start when a run goes red</span>
+    Check the failure count first. <b>One</b> failure is usually a real finding in that control. <b>All 68</b> is the <code>beforeAll</code> mount assertion and means a session or environment problem, not a page problem. <b>Everything from test 40 onwards</b> points at the language switch.
+  </div>
+</div>

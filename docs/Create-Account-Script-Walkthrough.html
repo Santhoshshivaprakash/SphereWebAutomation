@@ -1,0 +1,1066 @@
+<title>Create Account Script Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#17283C; --navy-400:#18293D; --navy-300:#2D3E54; --navy-100:#7E8A9A; --navy-50:#BEC5CE;
+    --teal:#1E8F8E; --teal-600:#186E6E; --teal-700:#135858; --teal-50:#E3F7F6; --teal-100:#B8ECE9;
+    --gold:#F0A500; --gold-600:#C88800; --gold-700:#9A6800; --gold-50:#FEF6E0;
+    --offwhite:#F6F7F9; --line:#D8DEE5; --mid:#7C8696; --ink:#0D1218;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7; --err:#B91C1C; --err-bg:#FEE2E2;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Open Sans",Segoe UI,Arial,sans-serif;
+    font-size:9.9pt; line-height:1.47; color:var(--ink); background:#fff;
+    margin:0;
+  }
+  .page{ padding:0 16mm; }
+
+  /* ── Typography ─────────────────────────────────────────── */
+  h1{font-size:20pt;font-weight:700;color:var(--navy);margin:0 0 6px;letter-spacing:-.2px;}
+  h2{font-size:14.5pt;font-weight:700;color:var(--navy);margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid var(--teal);}
+  h3{font-size:11.5pt;font-weight:600;color:var(--navy);margin:15px 0 6px;}
+  h4{font-size:10.5pt;font-weight:600;color:var(--navy-300);margin:14px 0 6px;}
+  p{margin:0 0 8px;}
+  .lead{font-size:10.4pt;color:var(--navy-300);}
+  .cap{font-family:Lato,Arial,sans-serif;font-size:8.2pt;color:var(--mid);margin:4px 0 0;}
+  code,.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:8.8pt;}
+  code{background:var(--offwhite);border:1px solid var(--line);border-radius:4px;padding:1px 4px;color:var(--navy);}
+  a{color:var(--teal-600);}
+
+  /* ── Cover ──────────────────────────────────────────────── */
+  .cover{height:247mm;display:flex;flex-direction:column;justify-content:center;background:var(--navy);color:#fff;padding:0 20mm;margin:-14mm 0 0;}
+  .cover .kicker{font-family:Lato;font-size:10pt;letter-spacing:3px;text-transform:uppercase;color:var(--teal-100);margin-bottom:18px;}
+  .cover h1{font-size:34pt;color:#fff;line-height:1.15;margin-bottom:14px;}
+  .cover .sub{font-size:13pt;color:var(--navy-50);max-width:150mm;line-height:1.5;}
+  .cover .rule{width:72px;height:5px;background:var(--gold);margin:26px 0;border-radius:3px;}
+  .cover .meta{font-family:Lato;font-size:9.5pt;color:var(--navy-50);line-height:1.9;}
+  .cover .meta b{color:#fff;font-weight:700;}
+
+  /* ── Layout blocks ──────────────────────────────────────── */
+  .sec{page-break-before:always;padding-top:1mm;}
+  .nobreak{page-break-inside:avoid;}
+
+  .callout{border-left:4px solid var(--teal);background:var(--teal-50);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;font-size:9.5pt;}
+  .callout.gold{border-left-color:var(--gold);background:var(--gold-50);}
+  .callout .t{font-weight:700;color:var(--navy);display:block;margin-bottom:2px;}
+
+  table{width:100%;border-collapse:collapse;margin:8px 0 11px;font-size:8.6pt;page-break-inside:auto;}
+  thead{display:table-header-group;}
+  th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:6px 8px;border:.5pt solid var(--navy);font-size:8.8pt;}
+  td{padding:5px 8px;border:.5pt solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--offwhite);}
+  tr{page-break-inside:avoid;}
+  td.n{width:26px;text-align:center;font-weight:700;color:var(--teal-700);background:var(--teal-50)!important;}
+  .t-sel td:nth-child(3){font-family:"JetBrains Mono",Consolas,monospace;font-size:7.9pt;line-height:1.45;word-break:break-word;}
+
+  .pill{display:inline-block;padding:1px 8px;border-radius:9999px;font-size:8pt;font-weight:600;font-family:Lato;}
+  .p-ok{background:var(--ok-bg);color:var(--ok);}
+  .p-warn{background:var(--warn-bg);color:var(--warn);}
+  .p-err{background:var(--err-bg);color:var(--err);}
+  .p-teal{background:var(--teal-50);color:var(--teal-700);}
+  .p-gold{background:var(--gold-50);color:var(--gold-700);}
+
+  .grid2{display:flex;gap:14px;margin:12px 0;}
+  .card{flex:1;border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:#fff;}
+  .card .h{font-weight:700;color:var(--navy);font-size:10pt;margin-bottom:6px;}
+  .card ul{margin:0;padding-left:16px;}
+  .card li{margin-bottom:3px;font-size:9.5pt;}
+
+  .fig{margin:12px 0 4px;page-break-inside:avoid;}
+  .fig svg{width:100%;height:auto;display:block;}
+  .figtitle{font-weight:700;color:var(--navy);font-size:10pt;margin-bottom:8px;}
+
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:10px 0;}
+  ol.steps li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px;font-size:9.4pt;page-break-inside:avoid;}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:9999px;background:var(--navy);color:#fff;font-size:8pt;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  ol.steps li b{color:var(--navy);}
+
+  .toc{margin:14px 0;}
+  .toc div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:6px 2px;font-size:9.6pt;}
+  .toc div span:first-child{color:var(--navy);font-weight:600;}
+  .toc div span:last-child{color:var(--mid);font-family:Lato;font-size:9pt;}
+
+  pre{background:var(--navy);color:#E8EDF3;border-radius:8px;padding:9px 12px;font-family:"JetBrains Mono",Consolas,monospace;font-size:8pt;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;}
+  pre .c{color:#7E9AB8;}
+  pre .k{color:#6FD7D5;}
+  pre .g{color:#F2C14E;}
+</style>
+
+<!-- ══════════════════════════════════════════════════════════ COVER ══ -->
+<div class="cover">
+  <div class="kicker">Sphere Web Automation</div>
+  <h1>Create Account Script<br>Step-by-Step Walkthrough</h1>
+  <div class="rule"></div>
+  <div class="sub">A screen-by-screen, line-by-line map of how <span class="mono">tests/create-account.spec.ts</span> drives the Sphere signup journey — every navigation, selector, wait, assertion and fallback, with flow diagrams.</div>
+  <div class="rule" style="width:40px;height:2px;background:#2D3E54;"></div>
+  <div class="meta">
+    <b>Script</b> &nbsp; tests/create-account.spec.ts &nbsp;·&nbsp; 936 lines &nbsp;·&nbsp; 23 tests in 6 sections<br>
+    <b>Target</b> &nbsp; https://sphere.aastrika.org &nbsp;(staging)<br>
+    <b>Run</b> &nbsp;&nbsp;&nbsp;&nbsp; npm run run:create-account<br>
+    <b>Date</b> &nbsp;&nbsp;&nbsp; 12 September 2026
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ CONTENTS ══ -->
+<div class="page sec">
+  <h2>Contents</h2>
+  <div class="toc">
+    <div><span>1 &nbsp; What this script does</span><span>Purpose, scope, entry points</span></div>
+    <div><span>2 &nbsp; Configuration and inputs</span><span>Constants, env vars, generated identities</span></div>
+    <div><span>3 &nbsp; Master execution flow</span><span>Diagram — how the 6 sections chain</span></div>
+    <div><span>4 &nbsp; The UI journey</span><span>Diagram — every screen and branch</span></div>
+    <div><span>5 &nbsp; Section 1 — Select Language</span><span>7 steps</span></div>
+    <div><span>6 &nbsp; Section 2 — Form validation</span><span>5 steps</span></div>
+    <div><span>7 &nbsp; Section 3 — Full signup, OTP path</span><span>5 steps</span></div>
+    <div><span>8 &nbsp; The OTP subsystem</span><span>Diagram — 3-layer fallback + throttling</span></div>
+    <div><span>9 &nbsp; Section 4 — Phone + password path</span><span>1 step, 8 sub-steps</span></div>
+    <div><span>10 &nbsp; Section 5 — Sign up and accept T&amp;C</span><span>2 steps — mints the reusable user</span></div>
+    <div><span>11 &nbsp; Section 6 — Responsive layout</span><span>3 steps</span></div>
+    <div><span>12 &nbsp; Artifacts the run writes</span><span>Files, sessions, hand-offs</span></div>
+    <div><span>13 &nbsp; Failure modes and fixes</span><span>Troubleshooting reference</span></div>
+  </div>
+
+  <h3>How to read this document</h3>
+  <p>Sections 5 through 11 walk the script in execution order. Each one opens with what the section proves, then a numbered step table giving the <b>action</b>, the <b>selector or API</b> it uses, the <b>wait</b> it applies, and the <b>assertion</b> that must hold. Selectors are quoted exactly as written in the spec, so you can search the file for any of them.</p>
+
+  <div class="callout">
+    <span class="t">One tab, many tests</span>
+    Sections 1–3 deliberately reuse a single browser tab (<code>sharedPage</code>) so the language screen is opened once and the form state carries forward. Sections 4–6 open their own tabs or contexts, because they need clean, unconfigured starting states.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 1. WHAT IT DOES ══ -->
+<div class="page sec">
+  <h2>1 &nbsp; What this script does</h2>
+  <p class="lead">It is the end-to-end proof that a brand-new person can create a Sphere account unaided — and it is the factory that mints the fresh, logged-in users every other suite depends on.</p>
+
+  <p>The script exercises the complete public signup journey: <b>Select Language → Personal Details → OTP verification → Name confirmation → Terms &amp; Conditions → logged-in Home</b>. It covers both login methods the portal offers (OTP and password), validates the form before submitting it, and checks the screens render on phone, tablet and desktop.</p>
+
+  <p>The OTP is not stubbed. The script registers a real <code>@yopmail.com</code> address, then reads the real verification mail out of that inbox, so the mail-delivery leg of the journey is covered too.</p>
+
+  <h3>The three jobs it performs</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="h">Validates</div>
+      <ul>
+        <li>Language screen renders, is single-choice, gates Next</li>
+        <li>Form gates Next until filled</li>
+        <li>Field accepts email <i>and</i> phone</li>
+        <li>Layout survives 390px → 1440px</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Proves end-to-end</div>
+      <ul>
+        <li>Email + OTP signup reaches Home</li>
+        <li>Phone + password signup completes</li>
+        <li>Mail actually arrives and carries a usable OTP</li>
+        <li>T&amp;C accept unlocks the app</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Produces</div>
+      <ul>
+        <li><code>.last-registered-email.json</code></li>
+        <li><code>.auth/fresh-user.json</code> — live session</li>
+        <li><code>.auth/fresh-user-email.json</code></li>
+        <li>Console trail of every email used</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Where it runs, and why not localhost</h3>
+  <p>The spec pins its own default target instead of inheriting the shared <code>BASE_URL</code>:</p>
+  <pre><span class="c">// tests/create-account.spec.ts:22</span>
+const BASE_URL = process.env.BASE_URL ?? <span class="g">'https://sphere.aastrika.org'</span>;</pre>
+  <p>Signup cannot run against the localhost prod-mirror — that mirror has no mail path and no user-provisioning backend, so an OTP would never arrive. This flow therefore targets staging by default. Passing <code>BASE_URL</code> still overrides it if you need to point somewhere else.</p>
+
+  <h3>Entry points</h3>
+  <table>
+    <thead><tr><th style="width:36%">Command</th><th>What it runs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:create-account</td><td>All 6 sections, headed, against staging. The full walkthrough this document describes.</td></tr>
+      <tr><td class="mono">npm run mint:fresh-user</td><td>Section 5 only — the fastest way to mint one new logged-in user and save its session for a course run.</td></tr>
+      <tr><td class="mono">npm run report:auth</td><td>Runs this spec alongside login, positive-flow and OTP specs headless, into a merged blob report.</td></tr>
+      <tr><td class="mono">npm run compare:signup</td><td>Replays the signup journey against two environments and diffs them.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">Run it from the right folder</span>
+    Every Playwright command must be issued from <code>SphereWebAutomation\</code>, not the <code>D:\Automation</code> root. Run from the root and every spec fails to resolve.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 2. CONFIGURATION ══ -->
+<div class="page sec">
+  <h2>2 &nbsp; Configuration and inputs</h2>
+
+  <h3>2.1 &nbsp; Hard-coded constants</h3>
+  <table>
+    <thead><tr><th style="width:26%">Constant</th><th style="width:26%">Value</th><th>Role in the flow</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">CREATE_ACCOUNT_URL</td><td class="mono">{BASE_URL}/app/create-account</td><td>The single entry URL every section navigates to.</td></tr>
+      <tr><td class="mono">EMAIL_RECORD_FILE</td><td class="mono">.last-registered-email.json</td><td>Where the most recent signup email is persisted for later specs.</td></tr>
+      <tr><td class="mono">DEFAULT_PHONE</td><td class="mono">9999999999</td><td>Seed for the phone path; decremented on collision.</td></tr>
+      <tr><td class="mono">DEFAULT_PASSWORD</td><td class="mono">Sunbird@123</td><td>Password used on the password path.</td></tr>
+      <tr><td class="mono">FIRST_NAME / LAST_NAME</td><td class="mono">Test / Aastrika</td><td>Identity typed into every signup form.</td></tr>
+      <tr><td class="mono">DUMMY_PHONE</td><td class="mono">8971159809</td><td>Documented for <i>manual</i> SMS testing only. Automation never uses it.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 &nbsp; Environment variables</h3>
+  <table>
+    <thead><tr><th style="width:28%">Variable</th><th style="width:16%">Default</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">BASE_URL</td><td class="mono">sphere.aastrika.org</td><td>Target environment.</td></tr>
+      <tr><td class="mono">OTP_API_URL</td><td class="mono">(empty)</td><td>Layer 3 OTP endpoint. Without it, Layer 3 is unavailable.</td></tr>
+      <tr><td class="mono">OTP_EXTRACTION_KEY</td><td class="mono">(empty)</td><td>Auth key for that endpoint.</td></tr>
+      <tr><td class="mono">YOPMAIL_MIN_GAP_MS</td><td class="mono">6000</td><td>Minimum gap between <i>any</i> two yopmail requests, run-wide.</td></tr>
+      <tr><td class="mono">YOPMAIL_POLL_MS</td><td class="mono">7000</td><td>Pause between inbox poll attempts.</td></tr>
+      <tr><td class="mono">YOPMAIL_RETRIES</td><td class="mono">8</td><td>Poll attempts per OTP fetch.</td></tr>
+      <tr><td class="mono">FETCH_CYCLE_GAP_MS</td><td class="mono">12000</td><td>Minimum gap between two whole OTP-fetch cycles.</td></tr>
+      <tr><td class="mono">DUMMY_PHONE</td><td class="mono">8971159809</td><td>Overrides the documented manual-test number.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.3 &nbsp; How a fresh identity is generated</h3>
+  <pre><span class="c">// :38 — a new inbox on every call, 90,000 possible addresses</span>
+function <span class="k">generateEmail</span>() {
+  const suffix = Math.floor(10000 + Math.random() * 90000);
+  return <span class="g">`testautomation${suffix}@yopmail.com`</span>;   <span class="c">// e.g. testautomation48213@yopmail.com</span>
+}
+
+<span class="c">// :43 — phone path walks DOWN from 9999999999 on each collision</span>
+function <span class="k">generatePhone</span>(seed = 0) {
+  return String(parseInt(DEFAULT_PHONE) - seed);    <span class="c">// 9999999999, 9999999998, …</span>
+}</pre>
+
+  <div class="callout">
+    <span class="t">Why email is the automation identity, not phone</span>
+    A phone number can register exactly one account, its SMS OTP cannot be read by automation, and a real-looking number risks texting a stranger. A yopmail address gives an unlimited supply of single-use identities whose OTP the script <i>can</i> read — which is precisely how the "a number can never be reused" limitation is overcome.
+  </div>
+
+  <h3>2.4 &nbsp; The seven shared helpers</h3>
+  <table>
+    <thead><tr><th style="width:30%">Helper</th><th style="width:9%">Line</th><th>What it guarantees</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">goToCreateAccount</td><td class="mono">:56</td><td>Lands on the signup page — and if the app redirected to <code>/public/login</code>, clicks "Create an account" to get back on course.</td></tr>
+      <tr><td class="mono">selectLanguageByIndex</td><td class="mono">:68</td><td>Picks a radio by position through three escalating strategies, returning whether it actually got checked.</td></tr>
+      <tr><td class="mono">advancePastLanguageScreen</td><td class="mono">:101</td><td>Picks English <i>by label</i> (never by position) and clicks Next.</td></tr>
+      <tr><td class="mono">formInputs</td><td class="mono">:120</td><td>The three visible text inputs, excluding radio, hidden and password fields.</td></tr>
+      <tr><td class="mono">clearFormInputs</td><td class="mono">:124</td><td>Empties those three fields so a test starts from a known blank state.</td></tr>
+      <tr><td class="mono">isOnTerms</td><td class="mono">:137</td><td>Detects the T&amp;C screen by route or by the Decline+Accept control pair — never by wording.</td></tr>
+      <tr><td class="mono">isAlreadyExistsToast</td><td class="mono">:152</td><td>Reads the snackbar and reports whether the identity was rejected as already registered.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 3. MASTER FLOW ══ -->
+<div class="page sec">
+  <h2>3 &nbsp; Master execution flow</h2>
+  <p class="lead">Six sections run in file order. Sections 1–3 share one tab; 4, 5 and 6 open their own.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 1020" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#2D3E54"/>
+        </marker>
+        <marker id="arT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#1E8F8E"/>
+        </marker>
+      </defs>
+
+      <!-- lane label -->
+      <rect x="4" y="118" width="20" height="430" rx="10" fill="#1E8F8E" opacity=".18"/>
+      <text x="14" y="337" fill="#186E6E" font-size="10.5" font-weight="700" text-anchor="middle" transform="rotate(-90 14 337)">SHARED TAB — sharedPage</text>
+
+      <!-- beforeAll -->
+      <rect x="250" y="10" width="400" height="54" rx="8" fill="#17283C"/>
+      <text x="450" y="32" fill="#fff" font-size="13" font-weight="700" text-anchor="middle">test.beforeAll</text>
+      <text x="450" y="50" fill="#BEC5CE" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono, monospace">browser.newContext() → sharedContext → sharedPage</text>
+      <line x1="450" y1="64" x2="450" y2="112" stroke="#2D3E54" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- S1 -->
+      <rect x="40" y="118" width="820" height="96" rx="8" fill="#fff" stroke="#D8DEE5" stroke-width="1.5"/>
+      <rect x="40" y="118" width="6" height="96" rx="3" fill="#1E8F8E"/>
+      <text x="66" y="142" fill="#17283C" font-size="13.5" font-weight="700">SECTION 1 &nbsp;·&nbsp; Step 1: Select Language</text>
+      <text x="66" y="162" fill="#7C8696" font-size="10.5">7 tests &nbsp;— open page · heading+logo · Next disabled · English · Hindi · single-choice · Next enabled</text>
+      <rect x="66" y="174" width="180" height="26" rx="6" fill="#E3F7F6"/>
+      <text x="156" y="191" fill="#135858" font-size="10" font-weight="600" text-anchor="middle">screen: /app/create-account</text>
+      <rect x="256" y="174" width="150" height="26" rx="6" fill="#F6F7F9"/>
+      <text x="331" y="191" fill="#2D3E54" font-size="10" text-anchor="middle">no account created</text>
+      <line x1="450" y1="214" x2="450" y2="248" stroke="#2D3E54" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- S2 -->
+      <rect x="40" y="254" width="820" height="96" rx="8" fill="#fff" stroke="#D8DEE5" stroke-width="1.5"/>
+      <rect x="40" y="254" width="6" height="96" rx="3" fill="#1E8F8E"/>
+      <text x="66" y="278" fill="#17283C" font-size="13.5" font-weight="700">SECTION 2 &nbsp;·&nbsp; Step 2: Form Validation</text>
+      <text x="66" y="298" fill="#7C8696" font-size="10.5">5 tests &nbsp;— advance to form · labels visible · Next disabled when empty · accepts text · accepts phone</text>
+      <rect x="66" y="310" width="180" height="26" rx="6" fill="#E3F7F6"/>
+      <text x="156" y="327" fill="#135858" font-size="10" font-weight="600" text-anchor="middle">screen: Create your account</text>
+      <rect x="256" y="310" width="150" height="26" rx="6" fill="#F6F7F9"/>
+      <text x="331" y="327" fill="#2D3E54" font-size="10" text-anchor="middle">no account created</text>
+      <line x1="450" y1="350" x2="450" y2="384" stroke="#2D3E54" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- S3 -->
+      <rect x="40" y="390" width="820" height="158" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="1.5"/>
+      <rect x="40" y="390" width="6" height="158" rx="3" fill="#1E8F8E"/>
+      <text x="66" y="414" fill="#17283C" font-size="13.5" font-weight="700">SECTION 3 &nbsp;·&nbsp; Step 3: Full Signup — OTP Path</text>
+      <text x="66" y="434" fill="#7C8696" font-size="10.5">5 tests &nbsp;— submit form (By OTP + email) · confirm-name modal · OTP screen · fetch &amp; enter OTP · land on T&amp;C/Home</text>
+      <rect x="66" y="448" width="742" height="42" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="80" y="466" fill="#2D3E54" font-size="10.5" font-weight="600">calls fetchOtp(email, { context: sharedContext })</text>
+      <text x="80" y="482" fill="#7C8696" font-size="10">→ reads the real verification mail from yopmail &nbsp;(see Section 8)</text>
+      <rect x="66" y="500" width="230" height="28" rx="6" fill="#FEF6E0"/>
+      <text x="181" y="518" fill="#9A6800" font-size="10.5" font-weight="700" text-anchor="middle">ACCOUNT #1 created</text>
+      <rect x="306" y="500" width="280" height="28" rx="6" fill="#E3F7F6"/>
+      <text x="446" y="518" fill="#135858" font-size="10" text-anchor="middle">writes .last-registered-email.json</text>
+      <line x1="450" y1="548" x2="450" y2="590" stroke="#2D3E54" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- S4 -->
+      <rect x="40" y="596" width="820" height="104" rx="8" fill="#fff" stroke="#D8DEE5" stroke-width="1.5"/>
+      <rect x="40" y="596" width="6" height="104" rx="3" fill="#2D3E54"/>
+      <text x="66" y="620" fill="#17283C" font-size="13.5" font-weight="700">SECTION 4 &nbsp;·&nbsp; Step 4: Phone + Password Path</text>
+      <text x="66" y="640" fill="#7C8696" font-size="10.5">1 test &nbsp;— NEW TAB · retries up to 10 phone numbers on "already exists" · sets password · submits</text>
+      <rect x="66" y="652" width="150" height="26" rx="6" fill="#F6F7F9"/>
+      <text x="141" y="669" fill="#2D3E54" font-size="10" text-anchor="middle" font-weight="600">context.newPage()</text>
+      <rect x="226" y="652" width="230" height="26" rx="6" fill="#FEF6E0"/>
+      <text x="341" y="669" fill="#9A6800" font-size="10.5" font-weight="700" text-anchor="middle">ACCOUNT #2 created</text>
+      <rect x="466" y="652" width="140" height="26" rx="6" fill="#F6F7F9"/>
+      <text x="536" y="669" fill="#7C8696" font-size="10" text-anchor="middle">tab closed at end</text>
+      <line x1="450" y1="700" x2="450" y2="734" stroke="#2D3E54" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- S5 -->
+      <rect x="40" y="740" width="820" height="118" rx="8" fill="#fff" stroke="#F0A500" stroke-width="2"/>
+      <rect x="40" y="740" width="6" height="118" rx="3" fill="#F0A500"/>
+      <text x="66" y="764" fill="#17283C" font-size="13.5" font-weight="700">SECTION 5 &nbsp;·&nbsp; Step 5: Sign up and ACCEPT the T&amp;C</text>
+      <text x="66" y="784" fill="#7C8696" font-size="10.5">2 tests &nbsp;— NEW TAB · email+OTP signup → T&amp;C page · tick consent · Accept → logged-in Home</text>
+      <rect x="66" y="796" width="230" height="26" rx="6" fill="#FEF6E0"/>
+      <text x="181" y="813" fill="#9A6800" font-size="10.5" font-weight="700" text-anchor="middle">ACCOUNT #3 created</text>
+      <rect x="306" y="796" width="502" height="26" rx="6" fill="#E3F7F6"/>
+      <text x="557" y="813" fill="#135858" font-size="10" text-anchor="middle" font-weight="600">saves .auth/fresh-user.json + fresh-user-email.json — the hand-off to course suites</text>
+      <text x="66" y="842" fill="#7C8696" font-size="10">This is the section <tspan font-family="JetBrains Mono, monospace" font-size="9.5" fill="#2D3E54">npm run mint:fresh-user</tspan> runs on its own.</text>
+      <line x1="450" y1="858" x2="450" y2="892" stroke="#2D3E54" stroke-width="2" marker-end="url(#ar)"/>
+
+      <!-- S6 -->
+      <rect x="40" y="898" width="820" height="68" rx="8" fill="#fff" stroke="#D8DEE5" stroke-width="1.5"/>
+      <rect x="40" y="898" width="6" height="68" rx="3" fill="#2D3E54"/>
+      <text x="66" y="922" fill="#17283C" font-size="13.5" font-weight="700">SECTION 6 &nbsp;·&nbsp; Responsive Layout</text>
+      <text x="66" y="942" fill="#7C8696" font-size="10.5">3 tests &nbsp;— one throwaway context each at 390×844, 768×1024, 1440×900 · parallel-safe · no account created</text>
+      <line x1="450" y1="966" x2="450" y2="982" stroke="#1E8F8E" stroke-width="2" marker-end="url(#arT)"/>
+
+      <!-- afterAll -->
+      <rect x="250" y="988" width="400" height="30" rx="8" fill="#1E8F8E"/>
+      <text x="450" y="1008" fill="#fff" font-size="11.5" font-weight="700" text-anchor="middle">test.afterAll &nbsp;— sharedContext.close()</text>
+    </svg>
+    <p class="cap">Figure 1 — Execution order. Sections 1–3 operate on one tab; the boxed notes mark where a real account comes into existence and which files are written.</p>
+  </div>
+
+  <div class="callout">
+    <span class="t">Serial by design</span>
+    Sections 1–5 are declared <code>test.describe.serial</code> with <code>retries: 0</code>. Each step leaves the browser on the screen the next step expects, so parallelism or a retry would restart mid-journey on the wrong screen. A failure inside a serial block skips the rest of that block — which is correct: there is nothing to test on a screen you never reached. Section 6 is a plain <code>describe</code>, so its three viewport tests can run in parallel.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 4. UI JOURNEY ══ -->
+<div class="page sec">
+  <h2>4 &nbsp; The UI journey</h2>
+  <p class="lead">The screens the script actually walks through, and the two branches it takes.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 1000" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2D3E54"/></marker>
+        <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1E8F8E"/></marker>
+        <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C88800"/></marker>
+      </defs>
+
+      <!-- 1 entry -->
+      <rect x="300" y="8" width="300" height="46" rx="8" fill="#17283C"/>
+      <text x="450" y="28" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">page.goto()</text>
+      <text x="450" y="45" fill="#BEC5CE" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono, monospace">/app/create-account</text>
+
+      <!-- redirect guard -->
+      <path d="M450,54 L450,74" stroke="#2D3E54" stroke-width="2" marker-end="url(#a2)"/>
+      <polygon points="450,80 620,116 450,152 280,116" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.5"/>
+      <text x="450" y="112" fill="#9A6800" font-size="11" font-weight="700" text-anchor="middle">redirected to /public/login?</text>
+      <text x="450" y="128" fill="#9A6800" font-size="9.5" text-anchor="middle">guard in goToCreateAccount()</text>
+      <path d="M620,116 L700,116 L700,42 L604,42" stroke="#C88800" stroke-width="2" fill="none" marker-end="url(#a4)"/>
+      <text x="712" y="82" fill="#9A6800" font-size="9.5" font-weight="600">yes → click</text>
+      <text x="712" y="95" fill="#9A6800" font-size="9.5" font-weight="600">"Create an account"</text>
+      <text x="466" y="170" fill="#7C8696" font-size="9.5">no</text>
+
+      <!-- screen A -->
+      <path d="M450,152 L450,182" stroke="#2D3E54" stroke-width="2" marker-end="url(#a2)"/>
+      <rect x="270" y="188" width="360" height="92" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <text x="290" y="212" fill="#17283C" font-size="12.5" font-weight="700">SCREEN A &nbsp;— Select Language</text>
+      <rect x="290" y="222" width="150" height="22" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="365" y="237" fill="#2D3E54" font-size="9.5" text-anchor="middle">◉ English &nbsp; ○ हिन्दी</text>
+      <rect x="450" y="222" width="70" height="22" rx="4" fill="#F0A500"/>
+      <text x="485" y="237" fill="#17283C" font-size="9.5" font-weight="700" text-anchor="middle">Next</text>
+      <text x="290" y="264" fill="#7C8696" font-size="8.5">matched by LABEL (/english|अंग्रेजी/), never by index — staging renders in Hindi</text>
+
+      <!-- screen B -->
+      <path d="M450,280 L450,310" stroke="#2D3E54" stroke-width="2" marker-end="url(#a2)"/>
+      <rect x="230" y="316" width="440" height="128" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <text x="250" y="340" fill="#17283C" font-size="12.5" font-weight="700">SCREEN B &nbsp;— Create your account</text>
+      <rect x="250" y="350" width="190" height="20" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/><text x="258" y="364" fill="#7C8696" font-size="9">First name → "Test"</text>
+      <rect x="250" y="374" width="190" height="20" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/><text x="258" y="388" fill="#7C8696" font-size="9">Last name → "Aastrika"</text>
+      <rect x="250" y="398" width="190" height="20" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/><text x="258" y="412" fill="#7C8696" font-size="9">Phone number / Email  ← the branch point</text>
+      <text x="454" y="364" fill="#17283C" font-size="9.5" font-weight="700">Choose your login method</text>
+      <rect x="454" y="372" width="90" height="22" rx="4" fill="#E3F7F6" stroke="#1E8F8E"/><text x="499" y="387" fill="#135858" font-size="9.5" text-anchor="middle" font-weight="600">◉ By OTP</text>
+      <rect x="550" y="372" width="104" height="22" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/><text x="602" y="387" fill="#2D3E54" font-size="9.5" text-anchor="middle">○ By password</text>
+      <rect x="584" y="400" width="70" height="22" rx="4" fill="#F0A500"/><text x="619" y="415" fill="#17283C" font-size="9.5" font-weight="700" text-anchor="middle">Next</text>
+      <text x="250" y="434" fill="#7C8696" font-size="9.5">3 inputs, addressed by position: nth(0) first · nth(1) last · nth(2) email-or-phone</text>
+
+      <!-- confirm modal -->
+      <path d="M450,444 L450,474" stroke="#2D3E54" stroke-width="2" marker-end="url(#a2)"/>
+      <rect x="290" y="480" width="320" height="64" rx="12" fill="#17283C"/>
+      <text x="450" y="504" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">MODAL &nbsp;— Confirm your name</text>
+      <text x="450" y="522" fill="#BEC5CE" font-size="9.5" text-anchor="middle">"…will be displayed on the certificate"</text>
+      <rect x="375" y="524" width="150" height="17" rx="6" fill="#F0A500"/>
+      <text x="450" y="536" fill="#17283C" font-size="10" font-weight="700" text-anchor="middle">Confirm name</text>
+
+      <!-- split -->
+      <path d="M450,544 L450,566 L210,566 L210,596" stroke="#1E8F8E" stroke-width="2" fill="none" marker-end="url(#a3)"/>
+      <path d="M450,544 L450,566 L690,566 L690,596" stroke="#2D3E54" stroke-width="2" fill="none" marker-end="url(#a2)"/>
+      <text x="250" y="560" fill="#135858" font-size="10" font-weight="700">login method = By OTP</text>
+      <text x="560" y="560" fill="#2D3E54" font-size="10" font-weight="700">login method = By password</text>
+
+      <!-- left: OTP -->
+      <rect x="40" y="602" width="340" height="150" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <text x="60" y="626" fill="#17283C" font-size="12.5" font-weight="700">SCREEN C1 &nbsp;— Enter OTP</text>
+      <g>
+        <rect x="60" y="638" width="26" height="30" rx="4" fill="#F6F7F9" stroke="#1E8F8E"/>
+        <rect x="92" y="638" width="26" height="30" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <rect x="124" y="638" width="26" height="30" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <rect x="156" y="638" width="26" height="30" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+      </g>
+      <text x="192" y="658" fill="#7C8696" font-size="9.5">input#code · maxlength="1"</text>
+      <rect x="60" y="678" width="300" height="34" rx="6" fill="#E3F7F6"/>
+      <text x="72" y="692" fill="#135858" font-size="9.5" font-weight="700">fetchOtp() reads the real mail from yopmail</text>
+      <text x="72" y="706" fill="#186E6E" font-size="9">3 fallback layers — see Figure 3</text>
+      <text x="60" y="730" fill="#7C8696" font-size="9.5">then click Verify — retried 4× behind the loading .overlay</text>
+      <text x="60" y="744" fill="#7C8696" font-size="9.5">Sections 3 and 5 both take this branch.</text>
+
+      <!-- right: password -->
+      <rect x="520" y="602" width="340" height="150" rx="8" fill="#fff" stroke="#D8DEE5" stroke-width="1.5"/>
+      <text x="540" y="626" fill="#17283C" font-size="12.5" font-weight="700">SCREEN C2 &nbsp;— Set password</text>
+      <rect x="540" y="638" width="220" height="20" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/><text x="548" y="652" fill="#7C8696" font-size="9">Password → Sunbird@123</text>
+      <rect x="540" y="662" width="220" height="20" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/><text x="548" y="676" fill="#7C8696" font-size="9">Confirm → Sunbird@123</text>
+      <rect x="540" y="690" width="300" height="34" rx="6" fill="#FEF6E0"/>
+      <text x="552" y="704" fill="#9A6800" font-size="9.5" font-weight="700">on "already exists" toast → next phone number</text>
+      <text x="552" y="718" fill="#9A6800" font-size="9">9999999999 → 9999999998 → … up to 10 tries</text>
+      <text x="540" y="744" fill="#7C8696" font-size="9.5">Section 4 only. SMS OTP is never read by automation.</text>
+
+      <!-- join -->
+      <path d="M210,752 L210,782 L450,782 L450,808" stroke="#1E8F8E" stroke-width="2" fill="none" marker-end="url(#a3)"/>
+      <path d="M690,752 L690,782 L450,782" stroke="#2D3E54" stroke-width="2" fill="none"/>
+
+      <!-- T&C -->
+      <rect x="250" y="814" width="400" height="94" rx="8" fill="#fff" stroke="#F0A500" stroke-width="2"/>
+      <text x="270" y="838" fill="#17283C" font-size="12.5" font-weight="700">SCREEN D &nbsp;— Terms &amp; Conditions &nbsp;<tspan font-family="JetBrains Mono, monospace" font-size="9.5" fill="#7C8696">/app/new-tnc</tspan></text>
+      <rect x="270" y="848" width="14" height="14" rx="3" fill="#1E8F8E"/>
+      <text x="292" y="860" fill="#2D3E54" font-size="9.5">tick the consent checkbox — Accept is gated on it</text>
+      <rect x="270" y="870" width="90" height="22" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/><text x="315" y="885" fill="#7C8696" font-size="9.5" text-anchor="middle">button.decline-btn</text>
+      <rect x="370" y="870" width="90" height="22" rx="4" fill="#F0A500"/><text x="415" y="885" fill="#17283C" font-size="9.5" font-weight="700" text-anchor="middle">button.accept-btn</text>
+      <text x="270" y="902" fill="#7C8696" font-size="9">matched by CLASS, not by label — this screen is served in the account&#39;s own language</text>
+
+      <!-- home -->
+      <path d="M450,908 L450,936" stroke="#1E8F8E" stroke-width="2" marker-end="url(#a3)"/>
+      <rect x="290" y="942" width="320" height="50" rx="8" fill="#1E8F8E"/>
+      <text x="450" y="964" fill="#fff" font-size="12.5" font-weight="700" text-anchor="middle">LOGGED-IN HOME</text>
+      <text x="450" y="981" fill="#E3F7F6" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono, monospace">/page/home &nbsp;— account is live</text>
+    </svg>
+    <p class="cap">Figure 2 — The signup journey as the script walks it. The diamond is the only conditional navigation; the split after the confirm-name modal is decided by which login method was clicked on Screen B.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 5. SECTION 1 ══ -->
+<div class="page sec">
+  <h2>5 &nbsp; Section 1 — Select Language</h2>
+  <p class="lead"><span class="mono">Step 1: Select Language</span> &nbsp;·&nbsp; 7 tests &nbsp;·&nbsp; line 428 &nbsp;·&nbsp; <span class="pill p-teal">shared tab</span> <span class="pill p-teal">serial</span></p>
+
+  <p><b>What it proves:</b> the first screen a new user ever sees is complete and behaves like a proper single-choice control — it renders both languages, refuses to advance until one is chosen, and enables Next the moment one is.</p>
+
+  <h3>Before the first test — the setup hook</h3>
+  <pre><span class="c">// :416 — runs once, before every test in the file</span>
+test.<span class="k">beforeAll</span>(async ({ browser }) => {
+  sharedContext = await browser.newContext();   <span class="c">// clean cookie jar, no stored auth</span>
+  sharedPage    = await sharedContext.newPage(); <span class="c">// the one tab Sections 1–3 share</span>
+});</pre>
+  <p>A fresh context matters: if the run inherited a logged-in session, <code>/app/create-account</code> would bounce straight to the home page and every step below would fail on a screen it never reached.</p>
+
+  <h3>Step-by-step</h3>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:23%">Action</th><th style="width:31%">Selector / call</th><th>Wait &amp; assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td>
+        <td><b>Open Create Account page</b><br>Navigate to the signup entry URL, absorbing the login redirect if the app issues one.</td>
+        <td>goToCreateAccount(sharedPage)<br>→ page.goto(CREATE_ACCOUNT_URL)<br>→ if /\/public\/login/ → click "create an account"</td>
+        <td>waitForLoadState('networkidle') then 500 ms settle; 800 ms more after the redirect click.<br><span class="pill p-ok">assert</span> <code>mat-radio-button</code> count ≥ 2 — at least two languages offered.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td>
+        <td><b>Heading + logo visible</b><br>Confirm the page is branded and titled, not a blank shell.</td>
+        <td>getByText(/select language/i).first()<br>img[alt*="logo" i], img[alt*="aastrika" i]</td>
+        <td>Playwright auto-wait on <code>toBeVisible()</code>.<br><span class="pill p-ok">assert</span> both the heading and the logo image are visible.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td>
+        <td><b>Next is disabled before any choice</b><br>The gate must hold on arrival.</td>
+        <td>getByRole('button', { name: /^next$/i })<br>.isDisabled()</td>
+        <td>No extra wait — the page already settled in step 1.<br><span class="pill p-ok">assert</span> <code>isDisabled() === true</code>.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td>
+        <td><b>English (index 0) is selectable</b><br>Click the first radio and verify it really took.</td>
+        <td>selectLanguageByIndex(page, 0) — see the three-strategy note below</td>
+        <td>600 ms after the click, then re-reads <code>input[type=radio]</code> checked state.<br><span class="pill p-ok">assert</span> the helper returns <code>true</code>.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td>
+        <td><b>Hindi (index 1) is selectable</b><br>The second option must work the same way.</td>
+        <td>selectLanguageByIndex(page, 1)</td>
+        <td>Same 600 ms + verification cycle.<br><span class="pill p-ok">assert</span> returns <code>true</code>.</td>
+      </tr>
+      <tr>
+        <td class="n">6</td>
+        <td><b>Single-choice behaviour</b><br>Selecting English must clear Hindi — this is a radio group, not a checkbox list.</td>
+        <td>selectLanguageByIndex(page, 0), then read<br>input[type=radio].nth(0).isChecked()<br>input[type=radio].nth(1).isChecked()</td>
+        <td>Reads both states immediately after selection.<br><span class="pill p-ok">assert</span> index 0 is <code>true</code> <b>and</b> index 1 is <code>false</code>.</td>
+      </tr>
+      <tr>
+        <td class="n">7</td>
+        <td><b>Next enables after a choice</b><br>The gate opens — English is left selected, which is the state Section 2 starts from.</td>
+        <td>getByRole('button', { name: /^next$/i })</td>
+        <td><code>toBeEnabled({ timeout: 5000 })</code> — polls for up to 5 s while Angular updates the form state.<br><span class="pill p-ok">assert</span> the button is enabled.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Inside <span class="mono">selectLanguageByIndex</span> — three escalating strategies</h3>
+  <p>Angular Material radios are not plain inputs; the real <code>&lt;input&gt;</code> sits under a styled wrapper that can swallow a click. The helper therefore escalates, verifying after each attempt and stopping as soon as the input reports checked:</p>
+  <ol class="steps">
+    <li><b>Click the wrapper.</b> <code>mat-radio-button</code> at the index, scrolled into view, with <code>{ force: true }</code>. Wait 600 ms, then read <code>input[type=radio].nth(idx).isChecked()</code>. If true, done.</li>
+    <li><b>Click the inner ripple.</b> Falls through to <code>.mdc-radio</code> inside that wrapper — the element Material actually binds the handler to. Wait 500 ms, re-check.</li>
+    <li><b>Drive the DOM directly.</b> A <code>page.evaluate</code> clicks the raw input, and if it still is not checked, sets <code>.checked = true</code> and dispatches <code>input</code> and <code>change</code> events so Angular's form control notices.</li>
+  </ol>
+  <p>The helper returns the final checked state rather than throwing, which is why each test asserts on its return value instead of trusting the click.</p>
+
+  <div class="callout gold">
+    <span class="t">Index is fine here, label is required later</span>
+    These tests use index deliberately — they are testing radio <i>mechanics</i>, so position is the right handle. But <code>advancePastLanguageScreen</code> (:101), which picks the language the account is actually created in, matches on <code>/english|अंग्रेजी/i</code> instead. Staging renders this screen in Hindi, so a reordered list would silently sign the user up in Hindi and break every English selector downstream.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 6. SECTION 2 ══ -->
+<div class="page sec">
+  <h2>6 &nbsp; Section 2 — Form validation</h2>
+  <p class="lead"><span class="mono">Step 2: Form Validation (shared tab)</span> &nbsp;·&nbsp; 5 tests &nbsp;·&nbsp; line 481 &nbsp;·&nbsp; <span class="pill p-teal">shared tab</span> <span class="pill p-teal">serial</span></p>
+
+  <p><b>What it proves:</b> the details form is complete, labelled, gated while empty, and flexible enough to accept either an email address or a phone number in its single identity field. Nothing here creates an account — Next is clicked exactly once, to move off the language screen.</p>
+
+  <h3>Step-by-step</h3>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:23%">Action</th><th style="width:31%">Selector / call</th><th>Wait &amp; assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td>
+        <td><b>Advance to the form screen</b><br>Clicks the Next that Section 1 step 7 just enabled, with English still selected.</td>
+        <td>getByRole('button', { name: /^next$/i }).click()</td>
+        <td>waitForLoadState('networkidle') (errors swallowed) + 1200 ms for the screen transition.<br><span class="pill p-ok">assert</span> /create your account/i is visible within 8 s.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td>
+        <td><b>All labels and options visible</b><br>Six checks in one test: the three field labels plus the login-method block.</td>
+        <td>/first name/i · /last name/i<br>/phone number.*email/i<br>/choose your login method/i<br>/by otp/i · /by password/i</td>
+        <td>Auto-wait per <code>toBeVisible()</code>.<br><span class="pill p-ok">assert</span> all six are visible. The combined <code>/phone number.*email/i</code> label is what documents that one field takes both.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td>
+        <td><b>Next disabled with empty fields</b><br>Blanks the form first so the state is unambiguous.</td>
+        <td>clearFormInputs(page) — <code>.fill('')</code> on the first 3 of<br>input:not([type=radio]):not([type=hidden]):not([type=password])</td>
+        <td>100 ms between each clear, then 400 ms for validation to run.<br><span class="pill p-ok">assert</span> Next reports disabled.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td>
+        <td><b>Form accepts text input</b><br>Types a full identity and reads each value back.</td>
+        <td>inputs.nth(0) ← "Test"<br>inputs.nth(1) ← "Aastrika"<br>inputs.nth(2) ← generateEmail()</td>
+        <td>No explicit wait — <code>fill()</code> is synchronous against the DOM.<br><span class="pill p-ok">assert</span> all three <code>inputValue()</code> round-trip exactly. This email is throwaway; it is never submitted.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td>
+        <td><b>Same field accepts a phone number</b><br>Clears field 3 and types digits instead.</td>
+        <td>inputs.nth(2).fill('') then .fill('9999999999')</td>
+        <td>Immediate read-back.<br><span class="pill p-ok">assert</span> <code>inputValue() === '9999999999'</code> — no format mask rejects or rewrites it.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Why the inputs are addressed by position</h3>
+  <pre><span class="c">// :120 — the three visible text fields, in DOM order</span>
+function <span class="k">formInputs</span>(page) {
+  return page.locator(<span class="g">'input:not([type="radio"]):not([type="hidden"]):not([type="password"])'</span>);
+}
+<span class="c">//   nth(0) → First name</span>
+<span class="c">//   nth(1) → Last name</span>
+<span class="c">//   nth(2) → Phone number / Email</span></pre>
+  <p>The three exclusions are what make positional addressing safe. Dropping <code>radio</code> keeps the language and login-method controls out of the list; dropping <code>hidden</code> excludes Angular's internal fields; dropping <code>password</code> means the same helper still returns exactly three fields on the password screen, where two more inputs appear. <code>clearFormInputs</code> caps its loop at <code>Math.min(count, 3)</code> for the same reason.</p>
+
+  <div class="callout">
+    <span class="t">Carry-over into Section 3</span>
+    Section 2 ends with the tab parked on a filled-in form. Section 3 does not assume that — it re-checks that <code>/create your account/i</code> is visible and re-navigates from scratch if it is not, so the two sections can also be run independently with <code>--grep</code>.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 7. SECTION 3 ══ -->
+<div class="page sec">
+  <h2>7 &nbsp; Section 3 — Full signup, OTP path</h2>
+  <p class="lead"><span class="mono">Step 3: Full Signup — OTP Path</span> &nbsp;·&nbsp; 5 tests &nbsp;·&nbsp; line 534 &nbsp;·&nbsp; <span class="pill p-gold">creates a real account</span> <span class="pill p-teal">shared tab</span></p>
+
+  <p><b>What it proves:</b> a brand-new person can register with an email address, receive a real verification mail, enter the code, and land inside the app. This is the first section that changes state on the server.</p>
+
+  <h3>Step-by-step</h3>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:23%">Action</th><th style="width:31%">Selector / call</th><th>Wait &amp; assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td>
+        <td><b>Submit the form with By OTP + email</b><br>Self-heals its starting position, generates and records the identity, fills, picks OTP, submits.<br><span class="pill p-warn">timeout 120 s</span></td>
+        <td>if page.isClosed() → new page + goToCreateAccount + advancePastLanguageScreen<br>else if !/create your account/i → same recovery<br>clearFormInputs → nth(0,1,2) ← Test / Aastrika / signupEmail<br>getByText(/by otp/i).first().click()<br>Next</td>
+        <td>400 ms after picking the login method; 2500 ms after Next for the modal to mount.<br><span class="pill p-ok">effect</span> <code>saveEmail()</code> writes <code>.last-registered-email.json</code> <b>before</b> submitting, so the address is recoverable even if the rest of the run dies.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td>
+        <td><b>Name confirmation modal</b><br>Sphere prints this name on certificates, so it asks the user to confirm it.</td>
+        <td>getByText(/confirm your name|will be displayed on the certificate|edit name|confirm name/i)<br>then getByRole('button', {name:/confirm name/i}) <b>.or(</b>getByText(/confirm name/i)<b>)</b></td>
+        <td>5 s visibility poll; 3500 ms after the click for the OTP request to fire and the next screen to render.<br><span class="pill p-ok">assert</span> the modal was shown.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td>
+        <td><b>OTP screen is visible</b><br>Confirms the app moved to verification — tolerant of eight different wordings.</td>
+        <td>Loops 8 regexes: /enter.*otp/i, /verification code/i, /verify/i, /one.time.*password/i, /enter.*code/i, /we (have|'ve) sent/i, /sent.*to.*your.*(email|inbox)/i, /check your email/i<br>Fallback: count of input[maxlength="1"] ≥ 4</td>
+        <td>2000 ms settle + scroll to top; 2 s per regex, first match wins.<br><span class="pill p-ok">assert</span> one marker matched. On failure it logs the URL and the first 200 chars of body text, so the report shows which screen it actually landed on.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td>
+        <td><b>Retrieve and submit the OTP</b><br>The only step that leaves the application to read an external mailbox.<br><span class="pill p-warn">timeout 180 s</span></td>
+        <td>fetchOtp(signupEmail, { context: sharedContext })<br>enterOtp(page, otp) → input#code<br>then re-fill across input[maxlength="1"] boxes<br>getByRole('button', {name:/verify|submit|next/i})</td>
+        <td>See Section 8 for the fetch timings. 150 ms per digit; 1000 ms before clicking Verify; 3000 ms after.<br><span class="pill p-ok">assert</span> an OTP came back. The verify click is retried up to 4× behind the loading overlay.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td>
+        <td><b>Account created — lands on T&amp;C or Home</b><br>Accepts either landing, because a first-time account is sent to the terms page while a returning one goes straight home.</td>
+        <td>URL /terms/i or getByText(/terms of use|terms and conditions/i)<br>or URL /\/(page|app)\/home/i<br>then checkbox + getByRole('button',{name:/accept|agree|continue/i})</td>
+        <td>2000 ms settle; 400 ms after ticking consent; 3000 ms after Accept.<br><span class="pill p-ok">assert</span> <code>onTerms || onHome || /\/page\/|\/app\//</code> — the account exists and the app let it in.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The overlay-safe click</h3>
+  <p>Submitting an OTP puts a full-screen loading <code>.overlay</code> over the page. It intercepts pointer events, so a plain <code>click()</code> throws "element intercepts pointer events" and the test fails on a flow that actually worked. The script handles it with a four-attempt loop:</p>
+  <pre>for (let i = 0; i &lt; 4 &amp;&amp; !submitted; i++) {
+  await page.locator(<span class="g">'.overlay'</span>).first()
+    .waitFor({ state: <span class="g">'hidden'</span>, timeout: 5000 }).catch(() =&gt; {});  <span class="c">// let it clear</span>
+  try { await verifyBtn.click({ timeout: 6000 }); submitted = true; }
+  catch {
+    <span class="c">// enterOtp() pressed Enter — the form may ALREADY be submitted,</span>
+    <span class="c">// in which case the button is gone. That counts as success.</span>
+    if (!(await verifyBtn.isVisible().catch(() =&gt; false))) { submitted = true; break; }
+    await page.waitForTimeout(1000);
+  }
+}</pre>
+
+  <h3>Why the OTP is typed twice</h3>
+  <p><code>enterOtp</code> (:393) targets <code>input#code</code>: if there are as many fields as digits it fills one digit each and presses Enter on the last, otherwise it fills a single field and presses Enter. Step 4 then re-reads the page for <code>input[maxlength="1"]</code> boxes and fills them again. The duplication is deliberate — some builds render the boxes without the <code>#code</code> id, and re-filling an already-correct field is harmless, while a half-filled OTP is not.</p>
+
+  <div class="callout gold">
+    <span class="t">Every test guards on a closed page</span>
+    Tests 2–5 each open with <code>if (sharedPage.isClosed()) { test.skip(...); return; }</code>. In a serial block a crashed tab would otherwise turn one real failure into four confusing ones; skipping keeps the report pointed at the step that actually broke.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 8. OTP ══ -->
+<div class="page sec">
+  <h2>8 &nbsp; The OTP subsystem</h2>
+  <p class="lead">The most failure-prone leg of the journey, and the one with the most engineering behind it.</p>
+
+  <p>The script cannot ask the server for the code — that would skip the mail-delivery leg it is meant to cover. So it reads the real inbox. Three independent readers are tried in order, and each one's failure is remembered so the final error names all three.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2D3E54"/></marker>
+        <marker id="b2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B91C1C"/></marker>
+        <marker id="b3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#15803D"/></marker>
+      </defs>
+
+      <rect x="300" y="8" width="300" height="42" rx="8" fill="#17283C"/>
+      <text x="450" y="34" fill="#fff" font-size="12" font-weight="700" text-anchor="middle" font-family="JetBrains Mono, monospace">fetchOtp(email, { context })</text>
+      <path d="M450,50 L450,72" stroke="#2D3E54" stroke-width="2" marker-end="url(#b1)"/>
+
+      <rect x="290" y="78" width="320" height="36" rx="8" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.5"/>
+      <text x="450" y="101" fill="#9A6800" font-size="11" font-weight="700" text-anchor="middle">fetchCycleGate() — wait out the 12 s cycle gap</text>
+      <path d="M450,114 L450,140" stroke="#2D3E54" stroke-width="2" marker-end="url(#b1)"/>
+
+      <!-- L1 -->
+      <rect x="120" y="146" width="660" height="96" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <rect x="120" y="146" width="6" height="96" rx="3" fill="#1E8F8E"/>
+      <circle cx="156" cy="176" r="13" fill="#1E8F8E"/><text x="156" y="181" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">1</text>
+      <text x="180" y="181" fill="#17283C" font-size="13" font-weight="700">easy-yopmail &nbsp;— HTTP API, no browser</text>
+      <text x="180" y="200" fill="#7C8696" font-size="10">yopmail.getInbox(inbox, null, { LIMIT_PAGE: 1, LIMIT_MAIL: 10 }) → readMessage(id, 'txt')</text>
+      <text x="180" y="216" fill="#7C8696" font-size="10">keeps only mail where from = support@aastrika.org AND subject matches /OTP to verify Email/</text>
+      <text x="180" y="232" fill="#186E6E" font-size="10" font-weight="600">8 attempts · 7 s apart · 6 s global gate before every request &nbsp;→ fastest path, tried first</text>
+
+      <path d="M450,242 L450,268" stroke="#B91C1C" stroke-width="2" marker-end="url(#b2)"/>
+      <text x="466" y="260" fill="#B91C1C" font-size="10" font-weight="600">no OTP / CAPTCHA / error</text>
+      <path d="M780,194 L850,194 L850,556 L610,556" stroke="#15803D" stroke-width="2" fill="none" marker-end="url(#b3)"/>
+
+      <!-- L2 -->
+      <rect x="120" y="274" width="660" height="96" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="1.5"/>
+      <rect x="120" y="274" width="6" height="96" rx="3" fill="#1E8F8E" opacity=".7"/>
+      <circle cx="156" cy="304" r="13" fill="#1E8F8E" opacity=".8"/><text x="156" y="309" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">2</text>
+      <text x="180" y="309" fill="#17283C" font-size="13" font-weight="700">Yopmail UI &nbsp;— Playwright iframe scraper</text>
+      <text x="180" y="328" fill="#7C8696" font-size="10">opens yopmail.com/en/ in a new tab · dismisses cookie consent · types the inbox into input#login</text>
+      <text x="180" y="344" fill="#7C8696" font-size="10">reads frameLocator('#ifinbox') for messages, then frameLocator('#ifmail') #mail body → extractOtp()</text>
+      <text x="180" y="360" fill="#186E6E" font-size="10" font-weight="600">requires the BrowserContext — skipped entirely if `context` was not passed in</text>
+
+      <path d="M450,370 L450,396" stroke="#B91C1C" stroke-width="2" marker-end="url(#b2)"/>
+      <text x="466" y="388" fill="#B91C1C" font-size="10" font-weight="600">no OTP, or skipped</text>
+      <path d="M780,322 L850,322 L850,556" stroke="#15803D" stroke-width="2" fill="none"/>
+
+      <!-- L3 -->
+      <rect x="120" y="402" width="660" height="88" rx="8" fill="#fff" stroke="#D8DEE5" stroke-width="1.5"/>
+      <rect x="120" y="402" width="6" height="88" rx="3" fill="#7E8A9A"/>
+      <circle cx="156" cy="432" r="13" fill="#7E8A9A"/><text x="156" y="437" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">3</text>
+      <text x="180" y="437" fill="#17283C" font-size="13" font-weight="700">Prod OTP API &nbsp;— last resort</text>
+      <text x="180" y="456" fill="#7C8696" font-size="10">POST OTP_API_URL { key: email, type: 'email', extractionKey } → json.data[0].otp · 10 tries · 5 s apart</text>
+      <text x="180" y="474" fill="#B45309" font-size="10" font-weight="600">unavailable unless OTP_API_URL and OTP_EXTRACTION_KEY are both set in .env</text>
+
+      <path d="M450,490 L450,514" stroke="#B91C1C" stroke-width="2" marker-end="url(#b2)"/>
+      <path d="M780,446 L850,446 L850,556" stroke="#15803D" stroke-width="2" fill="none"/>
+
+      <!-- fail -->
+      <rect x="120" y="520" width="360" height="72" rx="8" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.5"/>
+      <text x="140" y="542" fill="#B91C1C" font-size="12" font-weight="700">All three layers failed</text>
+      <text x="140" y="560" fill="#B91C1C" font-size="9.5">throws ONE aggregated error naming each layer's own message —</text>
+      <text x="140" y="575" fill="#B91C1C" font-size="9.5">so the report says which readers were tried and why each gave up.</text>
+
+      <!-- success -->
+      <rect x="520" y="532" width="330" height="48" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="1.5"/>
+      <text x="685" y="554" fill="#15803D" font-size="12.5" font-weight="700" text-anchor="middle">OTP returned</text>
+      <text x="685" y="571" fill="#15803D" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono, monospace">→ enterOtp(page, otp)</text>
+    </svg>
+    <p class="cap">Figure 3 — Three readers, tried in order. Any layer returning a code short-circuits the rest; only an all-three failure raises, and it raises once with all three reasons.</p>
+  </div>
+
+  <h3>8.1 &nbsp; How the code is recognised</h3>
+  <p>Layer 1 filters on sender <i>and</i> subject before parsing, so a newsletter landing in the same inbox cannot be mistaken for a verification mail. The digits are then pulled with a two-stage regex that prefers the phrase form and only then falls back to any standalone 4–8 digit run:</p>
+  <pre>const m = body.match(<span class="g">/is\s+(\d{4,8})/i</span>) ?? body.match(<span class="g">/\b(\d{4,8})\b/</span>);</pre>
+  <p>Preferring <code>"…is 483921"</code> matters because mail bodies often carry other numbers — a year, a support phone, a ticket id — and a bare digit match would happily grab the wrong one.</p>
+
+  <h3>8.2 &nbsp; Throttling — why the run deliberately goes slow</h3>
+  <p>Yopmail does not rate-limit steady traffic; it flags <b>bursts</b> of automated inbox reads, and answers with a CAPTCHA that no layer can pass. Three independent gates keep the run under that threshold:</p>
+  <table>
+    <thead><tr><th style="width:26%">Gate</th><th style="width:14%">Default</th><th>What it spaces out</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">YOPMAIL_MIN_GAP_MS</td><td class="mono">6 s</td><td><b>Every single yopmail request</b>, run-wide — each <code>getInbox</code>, each <code>readMessage</code>, each UI refresh click. Enforced by a module-level timestamp, so it holds across all signups in the run, not just within one.</td></tr>
+      <tr><td class="mono">YOPMAIL_POLL_MS</td><td class="mono">7 s</td><td>The pause between poll attempts while waiting for the mail to land.</td></tr>
+      <tr><td class="mono">YOPMAIL_RETRIES</td><td class="mono">8</td><td>How many attempts each layer makes before giving up — fewer attempts, spaced further apart.</td></tr>
+      <tr><td class="mono">FETCH_CYCLE_GAP_MS</td><td class="mono">12 s</td><td>The gap between two whole fetch cycles, which is the gap between two signups. Stops back-to-back registrations from bursting the inbox.</td></tr>
+    </tbody>
+  </table>
+  <p>Both gates share one small primitive that simply sleeps for whatever remains of the minimum interval:</p>
+  <pre><span class="c">// :191</span>
+async function <span class="k">throttleGate</span>(getLast, setLast, minGap) {
+  const wait = minGap - (Date.now() - getLast());
+  if (wait &gt; 0) await new Promise((r) =&gt; setTimeout(r, wait));
+  setLast(Date.now());
+}</pre>
+  <div class="callout">
+    <span class="t">Budget the time</span>
+    A full run signs up three times. With the defaults, expect roughly 30–90 s per OTP fetch depending on how fast the mail arrives — which is why the OTP steps carry 180 s timeouts. If you are debugging something unrelated, <code>--grep</code> to the section you care about rather than waiting out all three.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 9. SECTION 4 ══ -->
+<div class="page sec">
+  <h2>9 &nbsp; Section 4 — Phone + password path</h2>
+  <p class="lead"><span class="mono">Step 4: Full Signup — Phone + Password Path</span> &nbsp;·&nbsp; 1 test &nbsp;·&nbsp; line 714 &nbsp;·&nbsp; <span class="pill p-gold">creates a real account</span> <span class="pill p-warn">timeout 180 s</span></p>
+
+  <p><b>What it proves:</b> the second registration route works — identify by phone number, set a password instead of verifying a code. It runs in its own tab because it must start from the language screen with no carried-over form state.</p>
+
+  <h3>Step-by-step within the single test</h3>
+  <ol class="steps">
+    <li><b>Open a clean tab.</b> <code>sharedContext.newPage()</code>, then <code>goToCreateAccount(page)</code>. The tab shares the context's cookie jar but starts on a fresh navigation.</li>
+    <li><b>Select English and advance.</b> <code>selectLanguageByIndex(page, 0)</code> then Next, <code>waitForLoadState('networkidle')</code> and 1500 ms.</li>
+    <li><b>Enter the retry loop</b> over <code>seed = 0…9</code>. Each pass computes <code>generatePhone(seed)</code> — 9999999999, then 9999999998, and so on downward.</li>
+    <li><b>Fill and submit.</b> nth(0) ← "Test", nth(1) ← "Aastrika", nth(2) ← the candidate phone. Click <code>/by password/i</code>, wait 400 ms, click Next, wait 2500 ms.</li>
+    <li><b>Check the toast.</b> <code>isAlreadyExistsToast(page)</code> reads <code>mat-snack-bar-container, [role=alert], [class*=snackbar], [class*=toast]</code> and tests its text against <code>/already\s+(exists?|registered)|user.*exists?/i</code>. If it matches, <code>clearFormInputs</code> and continue with the next seed. Otherwise mark the phone accepted and break.<br><span class="pill p-ok">assert</span> <code>phoneAccepted === true</code> — all 10 candidates taken is a genuine failure worth reporting.</li>
+    <li><b>Confirm the name.</b> Same modal as the OTP path, matched by <code>/confirm name/i</code> with a 5 s visibility poll. Optional here — it is clicked only if shown, then 2500 ms.</li>
+    <li><b>Set the password.</b> Waits up to 10 s for <code>input[type="password"]</code> to become visible, fills it and its sibling <code>.nth(1)</code> with <code>Sunbird@123</code>, waits 800 ms.</li>
+    <li><b>Submit and close.</b> Click Next, wait 4000 ms, log the final URL, then <code>page.close()</code> so the tab does not leak into Section 5.</li>
+  </ol>
+
+  <div class="callout gold">
+    <span class="t">Why this path is shallower than the OTP path</span>
+    A phone number can register exactly one account — once 9999999999 is used, it is used forever. The script cannot read the SMS, and a real-looking number risks texting a stranger, so this section verifies that the password route <i>completes</i> and stops there. It does not assert a landing URL, only logs it. The deep, repeatable coverage lives on the email path, where identities are unlimited and the OTP is readable.
+  </div>
+
+  <p>The <code>DUMMY_PHONE</code> constant at line 799 (<code>8971159809</code>) is a real dummy handset kept for <i>manual</i> phone testing, where a human reads the SMS. The script references it as <code>void DUMMY_PHONE</code> purely so the number stays documented in the file — automation never types it.</p>
+
+  <h3>What a collision looks like in the console</h3>
+  <pre><span class="c">⚠️  Phone 9999999999 already exists — trying next</span>
+<span class="c">⚠️  Phone 9999999998 already exists — trying next</span>
+<span class="k">✅ Phone 9999999997 accepted</span>
+<span class="k">✅ Confirmed name</span>
+<span class="k">✅ Password set</span>
+   Final URL after submit: https://sphere.aastrika.org/app/new-tnc
+<span class="k">✅ Signup flow completed</span></pre>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 10. SECTION 5 ══ -->
+<div class="page sec">
+  <h2>10 &nbsp; Section 5 — Sign up and accept the T&amp;C</h2>
+  <p class="lead"><span class="mono">Step 5: New user signs up and ACCEPTS the T&amp;C</span> &nbsp;·&nbsp; 2 tests &nbsp;·&nbsp; line 801 &nbsp;·&nbsp; <span class="pill p-gold">creates a real account</span> <span class="pill p-gold">writes the session hand-off</span></p>
+
+  <p><b>What it proves — and produces:</b> this is the positive path end to end, and the section every other suite quietly depends on. It creates a brand-new user, accepts the terms, confirms the app let them in, and then <b>saves that live logged-in session to disk</b> so a course-completion run can pick up as this same fresh user.</p>
+
+  <div class="callout">
+    <span class="t">Run it alone</span>
+    <code>npm run mint:fresh-user</code> greps to <code>"Step 5"</code> — the fastest way to mint one logged-in user without paying for the other five sections.
+  </div>
+
+  <h3>Test 1 — Create a new user and reach the T&amp;C page &nbsp;<span class="pill p-warn">180 s</span></h3>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:25%">Action</th><th style="width:30%">Selector / call</th><th>Wait &amp; assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>New tab, new identity</b></td><td>sharedContext.newPage()<br>tcEmail = generateEmail(); saveEmail(tcEmail)</td><td>Email is recorded to disk before anything is submitted.</td></tr>
+      <tr><td class="n">2</td><td><b>Navigate and pick English by label</b></td><td>goToCreateAccount(tcPage)<br>advancePastLanguageScreen(tcPage)</td><td>Matches <code>/english|अंग्रेजी/i</code>, falls back to index 0 only if that is not visible. 1200 ms after Next.</td></tr>
+      <tr><td class="n">3</td><td><b>Fill the form, choose By OTP</b></td><td>clearFormInputs → nth(0,1,2)<br>getByText(/by otp/i).first().click()<br>Next</td><td>400 ms after the method click; 2500 ms after Next.</td></tr>
+      <tr><td class="n">4</td><td><b>Confirm the name</b></td><td>getByRole('button',{name:/confirm name/i}).or(getByText(...))</td><td>6 s visibility poll, then 3000 ms. Clicked only if shown.</td></tr>
+      <tr><td class="n">5</td><td><b>Fetch, enter and submit the OTP</b></td><td>fetchOtp(tcEmail, { context: sharedContext })<br>enterOtp(tcPage, otp)<br>submitOtp(tcPage) — the local overlay-safe helper at :807</td><td>Up to 4 click attempts behind the overlay, 4000 ms after.<br><span class="pill p-ok">assert</span> an OTP was returned.</td></tr>
+      <tr><td class="n">6</td><td><b>Verify the T&amp;C screen was reached</b></td><td>isOnTerms(tcPage)</td><td><span class="pill p-ok">assert</span> <code>onTerms === true</code> — a brand-new account must be shown the terms before anything else.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Test 2 — Accept the T&amp;C and land on Home &nbsp;<span class="pill p-warn">150 s</span></h3>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:25%">Action</th><th style="width:30%">Selector / call</th><th>Wait &amp; assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Re-confirm position</b></td><td>isOnTerms(tcPage)</td><td><span class="pill p-ok">assert</span> still on the terms page before touching anything.</td></tr>
+      <tr><td class="n">2</td><td><b>Tick the consent checkbox</b></td><td>mat-checkbox, input[type=checkbox] — first, <code>{ force: true }</code></td><td>400 ms. Accept is gated on this box, so it must be ticked first.</td></tr>
+      <tr><td class="n">3</td><td><b>Click Accept</b></td><td>button.accept-btn<br>.or(getByRole('button',{name:/^accept$|^स्वीकार|^सहमत/i}))</td><td>8 s visibility assertion, then click, then 4000 ms.</td></tr>
+      <tr><td class="n">4</td><td><b>Confirm the app let the user in</b></td><td>finalUrl + isOnTerms()</td><td><span class="pill p-ok">assert</span> <code>!stillOnTerms &amp;&amp; /\/(page|app)\//i.test(finalUrl)</code> — off the terms page and inside the app.</td></tr>
+      <tr><td class="n">5</td><td><b>Save the session hand-off</b></td><td>context.storageState({ path: '.auth/fresh-user.json' })<br>writeFileSync('.auth/fresh-user-email.json', { email, timestamp })</td><td>Wrapped in try/catch — a write failure logs a warning but does not fail a signup that genuinely succeeded. Tab is then closed.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Two selector lessons, both learned the hard way</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="h">Match by class, not by wording</div>
+      <p style="font-size:9.5pt;margin:0;">Portal language is a per-account setting, and staging serves this screen in Hindi, where Accept reads <b>स्वीकार करना</b>. An anchored <code>/^स्वीकार( करें)?$/</code> does not match that, so the button was never found and the terms were never accepted. <code>button.accept-btn</code> and <code>button.decline-btn</code> are identical in every language.</p>
+    </div>
+    <div class="card">
+      <div class="h">Detect the screen by route, not by text</div>
+      <p style="font-size:9.5pt;margin:0;">Keying <code>isOnTerms</code> off the words "Terms of Use" produced false positives — that phrase also appears in the <b>home page footer</b>. The check now uses the route (<code>/new-tnc|\/tnc\b|terms-and-cond|consent/</code>) or the Decline + Accept control pair, which only ever coexist on the real terms screen.</p>
+    </div>
+  </div>
+
+  <h3>Why the Decline detour was removed</h3>
+  <p>An earlier version signed up, <i>declined</i> the terms, logged back in, and then accepted. It was dropped: it doubled the OTP fetches and therefore the runtime, and it made minting a fresh user fail whenever the public login page changed — without adding any coverage the positive path needs. Decline is now tested where it belongs, not on the critical path that every other suite depends on.</p>
+
+  <h3>The hand-off, and who consumes it</h3>
+  <pre><span class="c">// .auth/fresh-user.json       → full Playwright storageState (cookies + origins)</span>
+<span class="c">// .auth/fresh-user-email.json → { "email": "testautomation48213@yopmail.com", "timestamp": … }</span>
+
+<span class="c">// Consumed by tests/helpers/authedTest.ts when USE_FRESH_USER=1</span></pre>
+  <p>The session is saved rather than the credentials, because a yopmail-email account is OTP-only — there is no password to log back in with. Capturing the live session is the only way a later suite can continue as this user.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 11. SECTION 6 ══ -->
+<div class="page sec">
+  <h2>11 &nbsp; Section 6 — Responsive layout</h2>
+  <p class="lead"><span class="mono">Responsive Layout</span> &nbsp;·&nbsp; 3 tests &nbsp;·&nbsp; line 916 &nbsp;·&nbsp; <span class="pill p-teal">parallel-safe</span> <span class="pill p-ok">creates no account</span></p>
+
+  <p><b>What it proves:</b> the two screens a user must get through before any account exists render correctly from a small phone up to a desktop. This is the only non-serial block in the file — each test builds its own context at its own viewport, so nothing is shared and the three can run together.</p>
+
+  <table>
+    <thead><tr><th style="width:30%">Viewport</th><th style="width:18%">Size</th><th>Represents</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Mobile</td><td class="mono">390 × 844</td><td>The dominant real-world case — a modern phone. The narrowest layout the signup form must survive.</td></tr>
+      <tr><td class="mono">Tablet</td><td class="mono">768 × 1024</td><td>The breakpoint where most responsive grids switch between stacked and side-by-side.</td></tr>
+      <tr><td class="mono">Desktop</td><td class="mono">1440 × 900</td><td>The design reference width.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What each of the three tests does</h3>
+  <ol class="steps">
+    <li><b>Build an isolated context at that viewport.</b> <code>browser.newContext({ viewport: { width, height } })</code> then <code>newPage()</code>. A fresh context per viewport is what makes the block parallel-safe.</li>
+    <li><b>Navigate.</b> <code>goToCreateAccount(page)</code>, including the login-redirect guard.</li>
+    <li><b>Clear the language screen.</b> <code>selectLanguageByIndex(page, 0)</code> then Next, <code>waitForLoadState('networkidle')</code> and 1200 ms.</li>
+    <li><b>Assert the form rendered.</b> <code>expect(page.getByText(/create your account/i).first()).toBeVisible()</code> — proof that both screens survived the narrower viewport and the form is reachable, not clipped or collapsed.</li>
+    <li><b>Tear down.</b> <code>ctx.close()</code> disposes the context and its page together.</li>
+  </ol>
+
+  <div class="callout">
+    <span class="t">Scope, honestly stated</span>
+    This is a smoke check for reachability, not a visual-regression test. It confirms the layout does not break badly enough to hide the form; it will not catch a mildly misaligned label or an overlapping icon. Pixel-level checks belong in the brand and Figma comparison suites.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 12. ARTIFACTS ══ -->
+<div class="page sec">
+  <h2>12 &nbsp; Artifacts the run writes</h2>
+
+  <table>
+    <thead><tr><th style="width:30%">File</th><th style="width:18%">Written by</th><th>Contents and purpose</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">.last-registered-email.json</td>
+        <td>Sections 3 and 5, via <code>saveEmail()</code></td>
+        <td><code>{ "email": "…", "timestamp": … }</code>. Overwritten on every signup, so it always holds the most recent address. Written <b>before</b> the form is submitted, so the identity survives a crash mid-signup.</td>
+      </tr>
+      <tr>
+        <td class="mono">.auth/fresh-user.json</td>
+        <td>Section 5, test 2</td>
+        <td>A full Playwright <code>storageState</code> — cookies plus origin storage for the brand-new, terms-accepted user. The hand-off that lets a course suite continue as this user.</td>
+      </tr>
+      <tr>
+        <td class="mono">.auth/fresh-user-email.json</td>
+        <td>Section 5, test 2</td>
+        <td>Which email that session belongs to, plus when it was minted — so a stale session can be spotted rather than silently reused.</td>
+      </tr>
+      <tr>
+        <td class="mono">generated-emails.txt<br>registered-accounts.xlsx</td>
+        <td>Reporters / helper scripts</td>
+        <td>The running ledger of identities created across runs. Useful when you need to find an account you made last week.</td>
+      </tr>
+      <tr>
+        <td class="mono">playwright-report/ · test-results/</td>
+        <td>Playwright</td>
+        <td>HTML report, plus traces and screenshots for any failing test.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The console trail</h3>
+  <p>The script logs a checkmarked line at every meaningful step, which makes a headless run readable without opening the report:</p>
+  <pre><span class="k">✅ Found 2 language options</span>
+<span class="k">✅ Heading and logo visible</span>
+<span class="k">✅ Next disabled before selection</span>
+<span class="k">✅ Single-choice behavior confirmed</span>
+<span class="k">✅ On Create Account form</span>
+<span class="g">💾 Saved email to .last-registered-email.json: testautomation48213@yopmail.com</span>
+<span class="k">✅ Form submitted with email: testautomation48213@yopmail.com</span>
+<span class="k">✅ Name confirmation modal shown</span>
+<span class="k">✅ OTP screen visible</span>
+<span class="c">=============================================</span>
+<span class="c">Starting OTP Fetch Process | Email: … | Use Yopmail: true</span>
+<span class="c">   [yopmail 1/8] inbox has 0 message(s)</span>
+<span class="c">   [yopmail 2/8] inbox has 1 message(s)</span>
+<span class="c">      from="support@aastrika.org" subject="OTP to verify Email"</span>
+<span class="k">✅ OTP retrieved: 483921</span>
+<span class="k">✅ Accepted T&amp;C — logged in successfully</span>
+<span class="g">💾 Saved fresh-user session for course completion: testautomation48213@yopmail.com</span></pre>
+
+  <h3>Accounts created per full run</h3>
+  <table>
+    <thead><tr><th style="width:22%">Section</th><th style="width:24%">Identity</th><th style="width:20%">Verification</th><th>Ends up</th></tr></thead>
+    <tbody>
+      <tr><td>Section 3</td><td class="mono">testautomationNNNNN@yopmail.com</td><td>Email OTP</td><td>Terms accepted if the screen appeared; session not saved.</td></tr>
+      <tr><td>Section 4</td><td class="mono">9999999999 (descending)</td><td>Password</td><td>Submitted; landing URL logged only. Burns one phone number permanently.</td></tr>
+      <tr><td>Section 5</td><td class="mono">testautomationNNNNN@yopmail.com</td><td>Email OTP</td><td>Terms accepted, on Home, <b>session saved to disk</b>.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 13. FAILURES ══ -->
+<div class="page sec">
+  <h2>13 &nbsp; Failure modes and fixes</h2>
+
+  <table>
+    <thead><tr><th style="width:26%">Symptom</th><th style="width:30%">Most likely cause</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Every spec fails to resolve</b></td>
+        <td>Playwright was invoked from <code>D:\Automation</code> instead of <code>SphereWebAutomation\</code>.</td>
+        <td>Change into <code>SphereWebAutomation\</code> and re-run. This is the single most common cause of a whole-suite failure.</td>
+      </tr>
+      <tr>
+        <td><b>"OTP fetch failed across all layers"</b></td>
+        <td>Yopmail served a CAPTCHA after a burst, or the mail never arrived.</td>
+        <td>Read the aggregated error — it names all three layers' reasons. If Layer 1 mentions CAPTCHA, raise <code>YOPMAIL_MIN_GAP_MS</code> and <code>FETCH_CYCLE_GAP_MS</code> and re-run. Configure <code>OTP_API_URL</code> + <code>OTP_EXTRACTION_KEY</code> to make Layer 3 available as a real safety net.</td>
+      </tr>
+      <tr>
+        <td><b>Layer 2 logged as "skipped (no context)"</b></td>
+        <td><code>fetchOtp</code> was called without <code>{ context }</code>.</td>
+        <td>Pass the BrowserContext. Both in-file call sites already do; a new call site must too, or you silently run on two layers instead of three.</td>
+      </tr>
+      <tr>
+        <td><b>"OTP screen not detected"</b> with a URL and body preview logged</td>
+        <td>The app went somewhere else after Confirm name — often "already registered", or a server error on the signup POST.</td>
+        <td>Read the logged body preview; it usually names the real problem. If the wording simply changed, add the new phrase to the 8-marker list at line 594.</td>
+      </tr>
+      <tr>
+        <td><b>Verify click throws "intercepts pointer events"</b></td>
+        <td>The loading <code>.overlay</code> stayed up longer than the four retry attempts allowed.</td>
+        <td>The backend is slow. Confirm staging is healthy; the retry loop is already the correct pattern, so widen its timeout rather than removing the guard.</td>
+      </tr>
+      <tr>
+        <td><b>Section 5 fails with <code>onTerms === false</code></b></td>
+        <td>Either the account did not actually get created, or the terms screen rendered in a language the text matcher missed.</td>
+        <td>Check the logged URL first. If it <i>is</i> <code>/app/new-tnc</code>, the class-based selectors are the fix — match <code>button.accept-btn</code>, never the label.</td>
+      </tr>
+      <tr>
+        <td><b>Section 4 fails with <code>phoneAccepted === false</code></b></td>
+        <td>All 10 candidates from 9999999999 downward are already registered.</td>
+        <td>Expected eventually — the pool is consumed one number per run. Widen the loop or change the <code>DEFAULT_PHONE</code> seed to an unused block.</td>
+      </tr>
+      <tr>
+        <td><b>Language screen never appears; page lands on Home</b></td>
+        <td>The context carried a logged-in session, so the app redirected away from signup.</td>
+        <td>Confirm the run is not reusing a <code>storageState</code>. <code>beforeAll</code> creates a clean context precisely to prevent this.</td>
+      </tr>
+      <tr>
+        <td><b>The whole account got created in Hindi</b></td>
+        <td>Something selected index 0 on a screen where Hindi was listed first.</td>
+        <td>Use <code>advancePastLanguageScreen</code>, which matches <code>/english|अंग्रेजी/i</code> by label. Reserve <code>selectLanguageByIndex</code> for the radio-mechanics tests in Section 1.</td>
+      </tr>
+      <tr>
+        <td><b>Four tests fail where one broke</b></td>
+        <td>Normal serial behaviour — but check whether the tab crashed.</td>
+        <td>The <code>isClosed()</code> guards convert the downstream tests to skips. Fix the first failure; the rest usually follow.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Useful run variants</h3>
+  <pre><span class="c"># one section only</span>
+npx playwright test tests/create-account.spec.ts --grep <span class="g">"Step 5"</span> --headed
+
+<span class="c"># slow yopmail right down when it starts rate-limiting</span>
+<span class="k">cross-env</span> YOPMAIL_MIN_GAP_MS=12000 FETCH_CYCLE_GAP_MS=25000 \
+  npx playwright test tests/create-account.spec.ts
+
+<span class="c"># point at another environment</span>
+<span class="k">cross-env</span> BASE_URL=https://your-env.example.org \
+  npx playwright test tests/create-account.spec.ts --headed
+
+<span class="c"># trace a failure end to end</span>
+npx playwright test tests/create-account.spec.ts --trace on
+npx playwright show-trace test-results/<span class="g">&lt;run&gt;</span>/trace.zip</pre>
+
+  <div class="callout gold">
+    <span class="t">The one rule to keep</span>
+    Every selector in this script is chosen to survive a language change — matched by route, by class, or by a regex that covers both English and Hindi. When you add a selector, match the <i>structure</i>, not the words. The portal's language is a per-account setting, and the account this script creates may not be in yours.
+  </div>
+</div>

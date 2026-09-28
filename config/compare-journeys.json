@@ -1,0 +1,86 @@
+{
+  "_comment": [
+    "JOURNEYS for scripts/compare-env.mjs — flows walked on BOTH environments in",
+    "lockstep, with a screenshot + full comparison taken at EVERY step.",
+    "",
+    "  id     — short slug (used for --journey and for the image file names)",
+    "  name   — shown in the report",
+    "  path   — where the journey starts",
+    "  auth   — true = only runs when the comparison is signed in (--auth)",
+    "  steps  — the checkpoints. Each one is:",
+    "             label  what this screen is, in the report",
+    "             do     actions to perform BEFORE photographing (omit on step 1)",
+    "                      { \"click\": \"English\" }  button name, visible text, or css/xpath",
+    "                      { \"fill\": \"<selector>\", \"value\": \"…\" }",
+    "                      { \"waitFor\": \"<text or selector>\" }",
+    "                      { \"wait\": <ms> }",
+    "             wait   settle time before the photo",
+    "             writes true = this step creates real data (sends an OTP, submits a",
+    "                    signup). SKIPPED unless the run is started with --allow-writes,",
+    "                    so a routine comparison never registers users on production.",
+    "",
+    "  {{email}} / {{stamp}} in any value are replaced per run with a unique",
+    "  yopmail address and timestamp, so write-enabled runs do not collide.",
+    "",
+    "Run one:  npm run compare -- --auth --journey create-account",
+    "Run all:  npm run compare:journeys"
+  ],
+  "journeys": [
+    {
+      "id": "create-account",
+      "name": "Create account",
+      "path": "/app/create-account",
+      "auth": false,
+      "note": "The signup wizard, screen by screen. Typing is compared; the OTP send and submit are write steps.",
+      "steps": [
+        { "label": "1. Language selection", "wait": 800 },
+        { "label": "2. Details form", "do": [{ "click": "English" }, { "click": "Next" }], "wait": 1200 },
+        { "label": "3. Name filled in",
+          "do": [
+            { "fill": "#firstname, input[formcontrolname=firstname]", "value": "Compare" },
+            { "fill": "#lastname, input[formcontrolname=lastname]", "value": "Tester" }
+          ],
+          "wait": 500 },
+        { "label": "4. Email filled in",
+          "do": [
+            { "fill": "#email-field, input[formcontrolname=emailOrMobile]", "value": "{{email}}" }
+          ],
+          "wait": 500 },
+        { "label": "5. Login method chosen (OTP)", "do": [{ "click": "By OTP" }], "wait": 600 },
+        { "label": "6. OTP requested", "do": [{ "click": "Next" }], "wait": 2500, "writes": true },
+        { "label": "7. Terms screen", "do": [{ "waitFor": "Terms" }], "wait": 1200, "writes": true }
+      ]
+    },
+    {
+      "id": "login",
+      "name": "Login with password",
+      "path": "/public/login",
+      "auth": false,
+      "note": "The login screen, screen by screen. Credentials are typed but never submitted unless --allow-writes.",
+      "steps": [
+        { "label": "1. Login page as it lands", "wait": 800 },
+        { "label": "2. Password mode chosen", "do": [{ "click": "Login with password" }], "wait": 800 },
+        { "label": "3. Email typed in",
+          "do": [{ "fill": "input[type=text], input[type=email], input[type=tel]", "value": "compare@example.com" }],
+          "wait": 400 },
+        { "label": "4. Password typed in",
+          "do": [{ "fill": "input[type=password]", "value": "NotARealPassword1!" }],
+          "wait": 400 }
+      ]
+    },
+    {
+      "id": "profile-tabs",
+      "name": "Account settings tabs",
+      "path": "/app/profile-view",
+      "auth": true,
+      "note": "Every tab of the signed-in Account area, compared one after another. Nothing is saved.",
+      "steps": [
+        { "label": "1. Personal details", "wait": 1200 },
+        { "label": "2. Organization details", "do": [{ "click": "Organization Details" }], "wait": 1000 },
+        { "label": "3. Academic details", "do": [{ "click": "Academic Details" }], "wait": 1000 },
+        { "label": "4. Language preference", "do": [{ "click": "Language Preference" }], "wait": 1000 },
+        { "label": "5. My certificates", "do": [{ "click": "My Certificates" }], "wait": 1200 }
+      ]
+    }
+  ]
+}

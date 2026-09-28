@@ -1,0 +1,488 @@
+<title>Sphere Web Automation — Project Guide</title>
+<style>
+  :root {
+    --navy:#17283C; --navy-300:#2D3E54; --navy-100:#7E8A9A;
+    --teal:#1E8F8E; --teal-600:#186E6E; --teal-50:#E3F7F6;
+    --gold:#F0A500; --gold-700:#9A6800; --gold-50:#FEF6E0;
+    --page:#F6F7F9; --surface:#FFFFFF; --surface-2:#F0F2F5; --border:#D8DEE5;
+    --text:#0D1218; --muted:#5D6675; --heading:#17283C;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7;
+    --code-bg:#0F1B2A; --code-text:#D6E2F0; --code-inline-bg:#EAEEF3; --code-inline-text:#17283C;
+    --link:#186E6E;
+    --shadow:0 1px 2px rgba(23,40,60,.06), 0 8px 24px rgba(23,40,60,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page:#0B1420; --surface:#111F30; --surface-2:#0E1A29; --border:#243549;
+      --text:#E4EAF1; --muted:#93A0B2; --heading:#EAF0F7;
+      --teal-50:#0E2B2B; --gold-50:#2A2110;
+      --ok:#4ADE80; --ok-bg:#0E2A1A; --warn:#FBBF24; --warn-bg:#2C2109;
+      --code-bg:#0A121D; --code-text:#CBD9EA; --code-inline-bg:#1B2A3C; --code-inline-text:#CFE0F0;
+      --link:#5FC7C4;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --page:#0B1420; --surface:#111F30; --surface-2:#0E1A29; --border:#243549;
+    --text:#E4EAF1; --muted:#93A0B2; --heading:#EAF0F7;
+    --teal-50:#0E2B2B; --gold-50:#2A2110;
+    --ok:#4ADE80; --ok-bg:#0E2A1A; --warn:#FBBF24; --warn-bg:#2C2109;
+    --code-bg:#0A121D; --code-text:#CBD9EA; --code-inline-bg:#1B2A3C; --code-inline-text:#CFE0F0;
+    --link:#5FC7C4;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"] {
+    --page:#F6F7F9; --surface:#FFFFFF; --surface-2:#F0F2F5; --border:#D8DEE5;
+    --text:#0D1218; --muted:#5D6675; --heading:#17283C;
+    --teal-50:#E3F7F6; --gold-50:#FEF6E0;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7;
+    --code-bg:#0F1B2A; --code-text:#D6E2F0; --code-inline-bg:#EAEEF3; --code-inline-text:#17283C;
+    --link:#186E6E;
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--page); color:var(--text);
+    font-family:"Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:1060px; margin:0 auto; padding:0 24px 96px; }
+
+  header.masthead {
+    background:linear-gradient(180deg, var(--navy), var(--navy-300));
+    color:#EAF0F7; padding:56px 0 44px; border-bottom:4px solid var(--teal);
+  }
+  header.masthead .wrap { padding-bottom:0; }
+  .eyebrow { font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#8FB6B5; font-weight:700; }
+  header.masthead h1 { font-size:40px; line-height:1.12; margin:10px 0 8px; font-weight:700; color:#fff; text-wrap:balance; letter-spacing:-.01em; }
+  header.masthead p { font-size:17px; color:#C4D0DE; max-width:64ch; margin:0; }
+  .masthead-meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; }
+  .chip { font-size:12.5px; font-weight:600; padding:5px 11px; border-radius:9999px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); color:#DCE6F1; }
+  .chip.gold { background:var(--gold); color:var(--navy); border-color:transparent; }
+
+  section { margin-top:52px; scroll-margin-top:20px; }
+  h2 { font-size:24px; font-weight:700; color:var(--heading); margin:0 0 4px; letter-spacing:-.01em; text-wrap:balance; }
+  h2 .num { color:var(--teal); font-variant-numeric:tabular-nums; margin-right:12px; }
+  h2 + .rule { height:2px; background:linear-gradient(90deg,var(--teal),transparent); border:0; margin:12px 0 22px; }
+  h3 { font-size:17px; font-weight:700; color:var(--heading); margin:26px 0 8px; }
+  p { margin:12px 0; max-width:72ch; }
+  a { color:var(--link); text-decoration:underline; text-underline-offset:2px; }
+  a:focus-visible, .toc a:focus-visible { outline:2px solid var(--teal); outline-offset:2px; border-radius:3px; }
+  strong { color:var(--heading); }
+
+  .callout { border-radius:8px; padding:14px 16px 14px 18px; margin:18px 0; border:1px solid var(--border); border-left-width:4px; background:var(--surface); }
+  .callout.info { background:var(--teal-50); border-left-color:var(--teal); }
+  .callout.warn { background:var(--gold-50); border-left-color:var(--gold); }
+  .callout .k { font-weight:700; color:var(--heading); }
+
+  .toc { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:18px 20px; box-shadow:var(--shadow); }
+  .toc ol { margin:0; padding:0; list-style:none; columns:2; column-gap:32px; }
+  .toc li { margin:5px 0; break-inside:avoid; font-variant-numeric:tabular-nums; }
+  .toc a { text-decoration:none; color:var(--text); }
+  .toc a:hover { color:var(--link); text-decoration:underline; }
+  .toc .n { color:var(--teal); font-weight:700; margin-right:8px; }
+
+  .tablewrap { overflow-x:auto; margin:18px 0; border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow); }
+  table { border-collapse:collapse; width:100%; font-size:14.5px; background:var(--surface); }
+  thead th { background:var(--navy); color:#EAF0F7; text-align:left; font-weight:600; padding:11px 14px; white-space:nowrap; }
+  tbody td { padding:10px 14px; border-top:1px solid var(--border); vertical-align:top; }
+  tbody tr:nth-child(even) td { background:var(--surface-2); }
+  td code, th code { white-space:nowrap; }
+
+  .pill { display:inline-block; font-size:12px; font-weight:700; padding:2px 9px; border-radius:9999px; white-space:nowrap; }
+  .pill.ok { background:var(--ok-bg); color:var(--ok); }
+  .pill.warn { background:var(--warn-bg); color:var(--warn); }
+
+  pre { background:var(--code-bg); color:var(--code-text); border-radius:8px; padding:16px 18px; overflow-x:auto; margin:14px 0; border:1px solid rgba(255,255,255,.06); }
+  pre code { font-family:"JetBrains Mono", ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace; font-size:13.5px; line-height:1.65; }
+  code { font-family:"JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; }
+  p code, li code, td code { background:var(--code-inline-bg); color:var(--code-inline-text); padding:1.5px 6px; border-radius:5px; font-size:13px; }
+  .cmt { color:#7E93AC; }
+
+  .tree { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 18px; overflow-x:auto; box-shadow:var(--shadow); }
+  .tree pre { background:transparent; color:var(--text); border:0; padding:0; margin:0; }
+  .tree code { color:var(--text); font-size:13px; }
+
+  ul.clean { padding-left:20px; margin:12px 0; }
+  ul.clean li { margin:7px 0; }
+  .checklist { list-style:none; padding:0; margin:12px 0; }
+  .checklist li { padding-left:26px; position:relative; margin:8px 0; }
+  .checklist li::before { content:"☐"; position:absolute; left:0; color:var(--teal); font-weight:700; }
+
+  footer { margin-top:64px; padding-top:22px; border-top:2px solid var(--teal); color:var(--muted); font-size:13.5px; }
+  @media (max-width:640px){ .toc ol{columns:1;} header.masthead h1{font-size:30px;} }
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Playwright · Aastrika · Sphere</div>
+    <h1>Sphere Web Automation — Project Guide</h1>
+    <p>The full suite for the Sphere learning platform — with the star addition: a one-command runner that completes an entire named competency, on production or locally over CDP.</p>
+    <div class="masthead-meta">
+      <span class="chip">https://sphere.aastrika.org</span>
+      <span class="chip">Layered: UI · API · Monitor</span>
+      <span class="chip">TypeScript · POM</span>
+      <span class="chip gold">Complete-Competency runner</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="callout info" style="margin-top:32px;">
+    <span class="k">What we built.</span> <code>CompleteCompetency.spec.ts</code> — give a competency <strong>name in the terminal</strong> and it clears <strong>every level</strong> end to end. It answers with the <strong>real S3 answer key</strong> (fetched via the content hierarchy, no token), bypasses <strong>poisoned keys</strong>, and runs on <strong>production</strong> (password login) or <strong>locally over CDP</strong> (Chrome/Edge). Everything runs from direct terminal commands — no wrapper scripts.
+  </div>
+
+  <nav class="toc" aria-label="Contents">
+    <ol>
+      <li><a href="#s1"><span class="n">01</span>What this suite does</a></li>
+      <li><a href="#s2"><span class="n">02</span>Project structure</a></li>
+      <li><a href="#s3"><span class="n">03</span>Setup &amp; <code>.env</code></a></li>
+      <li><a href="#s4"><span class="n">04</span>Commands (everything)</a></li>
+      <li><a href="#s5"><span class="n">05</span>Complete-Competency runner</a></li>
+      <li><a href="#s6"><span class="n">06</span>Run locally over CDP</a></li>
+      <li><a href="#s7"><span class="n">07</span>Difference vs Ekshamata</a></li>
+      <li><a href="#s8"><span class="n">08</span>Reporting</a></li>
+      <li><a href="#s9"><span class="n">09</span>Roadmap</a></li>
+      <li><a href="#s10"><span class="n">10</span>Add to GitHub</a></li>
+      <li><a href="#s11"><span class="n">11</span>Quick reference</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1 -->
+  <section id="s1">
+    <h2><span class="num">01</span>What this suite does</h2>
+    <hr class="rule">
+    <p>A layered Playwright suite covering the Sphere web app end to end, plus API and synthetic-monitor layers. The competency runner below is the headline capability added in this work.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Capability</th><th>Spec / entry</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Complete a whole competency by name</strong> (all levels)</td><td><code>CompleteCompetency.spec.ts</code></td><td><span class="pill ok">Working</span></td></tr>
+          <tr><td>Competency dashboard full flow (role-fix, per-level, passbook)</td><td><code>Competency.spec.ts</code></td><td><span class="pill ok">Working</span></td></tr>
+          <tr><td>Course completion / TOC / SCORM</td><td><code>CourseComplete</code>, <code>CourseTOC</code>, <code>SCROM</code></td><td><span class="pill ok">Working</span></td></tr>
+          <tr><td>Account, My Courses, Private/Public pages</td><td><code>Account</code>, <code>Mycourse</code>, <code>PrivatePage</code>, <code>PublicPage</code></td><td><span class="pill ok">Working</span></td></tr>
+          <tr><td>Auth flows — signup, login, OTP, positive-flow</td><td><code>create-account</code>, <code>public-login</code>, <code>OTP</code>, <code>positiveflow</code></td><td><span class="pill ok">Working</span></td></tr>
+          <tr><td>API / service layer &amp; synthetic prod monitor</td><td><code>--project=api</code>, <code>--project=monitor</code></td><td><span class="pill ok">Working</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="s2">
+    <h2><span class="num">02</span>Project structure</h2>
+    <hr class="rule">
+    <div class="tree"><pre><code>SphereWebAutomation/
+├─ .env                          <span class="cmt"># Target env + creds (PRODUCTION); NOT committed</span>
+├─ playwright.config.ts          <span class="cmt"># Projects: api · monitor · legacy · Chrome; reporters</span>
+├─ package.json                  <span class="cmt"># run:* and report:* scripts (see §04)</span>
+│
+├─ tests/
+│  ├─ CompleteCompetency.spec.ts <span class="cmt"># ⭐ complete a named competency, all levels</span>
+│  ├─ Competency.spec.ts         <span class="cmt"># original dashboard full-flow suite</span>
+│  ├─ CourseComplete · CourseTOC · SCROM · Mycourse · Account · PrivatePage · PublicPage
+│  ├─ create-account · public-login · OTP · positiveflow · apiFastLogin
+│  └─ helpers/
+│     ├─ authedTest.ts           <span class="cmt"># auth harness: storageState OR CDP attach</span>
+│     ├─ login.ts                <span class="cmt"># UI password login</span>
+│     ├─ sphereApi.ts · apiFixtures.ts · onboarding.ts · orgs.ts
+│     └─ auth.ts · otp.ts · yopmail.ts · createAccount.ts
+│
+├─ scripts/
+│  ├─ compare-env.mjs            <span class="cmt"># ⭐ prod vs staging, side by side (see §04)</span>
+│  └─ run-compare.mjs            <span class="cmt"># interactive picker for the comparison</span>
+├─ config/
+│  ├─ compare-routes.json        <span class="cmt"># features + API endpoints compared</span>
+│  └─ compare-journeys.json      <span class="cmt"># flows walked step by step on both envs</span>
+├─ reporters/
+│  ├─ brand-html-reporter.ts     <span class="cmt"># branded HTML report (every run)</span>
+│  ├─ excel-reporter.ts          <span class="cmt"># Excel report</span>
+│  └─ email-reporter.ts          <span class="cmt"># email on failure (when SMTP configured)</span>
+└─ brand-reports/ · playwright-report/ · test-reports/ · compare-reports/   <span class="cmt"># generated output</span></code></pre></div>
+  </section>
+
+  <!-- 3 -->
+  <section id="s3">
+    <h2><span class="num">03</span>Setup &amp; <code>.env</code></h2>
+    <hr class="rule">
+    <pre><code>cd D:\Automation\SphereWebAutomation
+npm install
+npx playwright install chromium
+copy .env.example .env    <span class="cmt"># if present; else create .env with the keys below</span></code></pre>
+    <pre><code><span class="cmt"># Target — PRODUCTION only (localhost commented out)</span>
+BASE_URL=https://sphere.aastrika.org
+STAGING_URL=https://sphere.aastrika.org
+
+<span class="cmt"># Authenticated specs: UI password login on prod (CI-friendly)</span>
+USE_CDP=
+TEST_USER_EMAIL=sphereid052@yopmail.com
+TEST_USER_PASSWORD=Sunbird@123
+
+<span class="cmt"># Competency runner forces the standard account (override with COMPETENCY_USER_*)</span>
+<span class="cmt">#   default: sphereid041@yopmail.com / Sunbird@123</span>
+
+<span class="cmt"># AI answering fallback (used only when the S3 key is poisoned AND unreadable)</span>
+GEMINI_API_KEY=&lt;optional&gt;</code></pre>
+    <div class="callout info">
+      <span class="k">Local runs use CDP instead of a password.</span> The localhost mirror re-validates against prod, so cookie/password login fails there — attach to a logged-in Chrome/Edge over CDP (§06). On <strong>production</strong>, password login works directly.
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="s4">
+    <h2><span class="num">04</span>Commands (everything)</h2>
+    <hr class="rule">
+    <p>All from <code>D:\Automation\SphereWebAutomation</code>.</p>
+    <h3>⭐ Complete a competency (the headline)</h3>
+    <pre><code><span class="cmt"># PRODUCTION — standard account, password login</span>
+$env:COMPETENCY_NAME="Care of the newborn"; npm run run:complete-competency
+
+<span class="cmt"># LOCAL — attach to a logged-in browser over CDP (launch it first, see §06)</span>
+$env:USE_CDP="1"; $env:BASE_URL="http://localhost:3000"; $env:COMPETENCY_NAME="Care of the newborn"; npx playwright test tests/CompleteCompetency.spec.ts --headed</code></pre>
+
+    <h3>⭐ Complete a course</h3>
+    <pre><code>$env:COURSE_NAME="AMTSL"; npm run run:course
+<span class="cmt"># or explicitly:</span>
+$env:COURSE_NAME="Care of the newborn"; npx playwright test tests/CourseComplete.spec.ts --headed</code></pre>
+
+    <h3>⭐ Compare production vs staging (side by side)</h3>
+    <p><code>scripts/compare-env.mjs</code> loads every feature in <code>config/compare-routes.json</code> on <strong>both</strong> environments at the same time, in two browser contexts, and reports what differs — <strong>UI</strong> (screenshots left/right, pixel diff, missing headings/buttons/fields/links, broken images, copy drift), <strong>function</strong> (HTTP status, redirects, blank pages, console + uncaught JS errors, failing requests, settle time, build hash) and <strong>data</strong> (API parity, and which courses exist on one environment but not the other). Output: a branded side-by-side HTML report + JSON summary in <code>compare-reports/</code>. It <strong>exits 1 when anything blocking is found</strong>, so it can gate a release.</p>
+    <pre><code><span class="cmt"># ⭐ the usual one — signed in on both sides, everything, opens the report</span>
+npm run compare:all
+
+<span class="cmt"># interactive picker: which two envs → signed in or public → which features → options</span>
+npm run compare
+
+<span class="cmt"># any flag skips the prompts entirely</span>
+npm run compare -- --auth              <span class="cmt"># same as compare:all, without --open</span>
+npm run compare -- --headed            <span class="cmt"># public pages only, watch it run</span>
+npm run compare:journeys               <span class="cmt"># create-account · login · profile-tabs, step by step</span>
+npm run compare:signup                 <span class="cmt"># just the create-account journey</span>
+npm run compare:local                  <span class="cmt"># production vs http://localhost:3000</span>
+
+<span class="cmt"># scoping and tuning</span>
+npm run compare -- --auth --only competency,my-courses   <span class="cmt"># match route id or name</span>
+npm run compare -- --auth --route /app/profile-view      <span class="cmt"># a one-off path</span>
+npm run compare -- --auth --threshold 1.5                <span class="cmt"># ignore visual diffs under 1.5%</span>
+npm run compare -- --auth --no-catalogue                 <span class="cmt"># skip catalogue parity (faster)</span>
+npm run compare -- --auth --refresh                      <span class="cmt"># re-login + re-fetch the catalogue</span>
+npm run compare -- --auth --a https://sphere.aastrika.org --b https://portal-staging.aastrika.org</code></pre>
+    <p>The defaults are already <code>--a https://sphere.aastrika.org</code> and <code>--b https://portal-staging.aastrika.org</code>, so prod vs staging needs no URLs. Credentials for <code>--auth</code>, most specific first: <code>PROD_EMAIL</code>/<code>PROD_PASSWORD</code> · <code>STAGING_EMAIL</code>/<code>STAGING_PASSWORD</code> → <code>TEST_USER_EMAIL</code>/<code>TEST_USER_PASSWORD</code> → <code>MONITOR_*</code> → <code>config/accounts.json</code>.</p>
+
+    <h3>Individual feature specs</h3>
+    <pre><code>npm run run:competency      <span class="cmt"># Competency dashboard full flow</span>
+npm run run:course          <span class="cmt"># CourseComplete</span>
+npm run run:course-toc      <span class="cmt"># CourseTOC</span>
+npm run run:scorm           <span class="cmt"># SCORM</span>
+npm run run:account         <span class="cmt"># Account</span>
+npm run run:mycourse        <span class="cmt"># My Courses</span>
+npm run run:login           <span class="cmt"># public login</span>
+npm run run:create-account  <span class="cmt"># signup</span>
+npm run run:otp             <span class="cmt"># OTP</span>
+npm run run:private | run:public | run:fastlogin</code></pre>
+
+    <h3>Suites &amp; reports</h3>
+    <pre><code>npm test                <span class="cmt"># default suite</span>
+npm run test:ui         <span class="cmt"># --project=Chrome</span>
+npm run test:api        <span class="cmt"># --project=api</span>
+npm run test:monitor    <span class="cmt"># synthetic prod monitor</span>
+npm run report:app      <span class="cmt"># Account + Mycourse + CourseTOC + Competency (blob)</span>
+npm run report:course   <span class="cmt"># CourseComplete (COURSE_NAME env)</span>
+npm run report          <span class="cmt"># open the last HTML report</span></code></pre>
+
+    <h3>⭐ Run the full regression (after every release)</h3>
+    <pre><code>npm run test:regression   <span class="cmt"># = test:everything — auth + course + app + api,</span>
+                          <span class="cmt">#   headless, production, merged branded report</span></code></pre>
+    <p>In CI this runs automatically on every release — see <a href="#s10">§10</a>.</p>
+  </section>
+
+  <!-- 5 -->
+  <section id="s5">
+    <h2><span class="num">05</span><code>CompleteCompetency.spec.ts</code> — the runner</h2>
+    <hr class="rule">
+    <p>Give a competency name; it clears every level. How it answers, in order:</p>
+    <ul class="clean">
+      <li><strong>Real S3 answer key</strong> — from the viewer URL it reads the level + course ids, fetches the <strong>content hierarchy</strong> (<code>org</code>/<code>rootOrg</code> headers only — no expiring token), finds the level's S3 quiz artifact, and matches each on-screen question to the pool to pick the correct option <strong>by text</strong>.</li>
+      <li><strong>Poisoned-key bypass</strong> — the app serves a stripped quiz (<code>isCorrect:false</code>); the runner ignores it and uses the real S3 key instead.</li>
+      <li><strong>Per-page answering</strong> — one question per page: scrape → match → select → Next/Submit, until the result screen.</li>
+      <li><strong>Gemini fallback</strong> — only if the real key is genuinely unavailable; with 429 backoff.</li>
+    </ul>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Env var</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>COMPETENCY_NAME</code></td><td>Competency to complete <strong>(required)</strong></td></tr>
+          <tr><td><code>BASE_URL</code></td><td>Real env for password login (prod/staging); or localhost with <code>USE_CDP=1</code></td></tr>
+          <tr><td><code>USE_CDP</code></td><td><code>1</code> → attach to the logged-in browser on :9222 (local)</td></tr>
+          <tr><td><code>COMPETENCY_USER_EMAIL / _PASSWORD</code></td><td>Override the forced standard account</td></tr>
+          <tr><td><code>GEMINI_API_KEY</code></td><td>AI fallback (optional)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout info"><span class="k">Standard account:</span> <code>sphereid041@yopmail.com</code> / <code>Sunbird@123</code> (forced for this flow on production).</div>
+  </section>
+
+  <!-- 6 -->
+  <section id="s6">
+    <h2><span class="num">06</span>Run locally over CDP</h2>
+    <hr class="rule">
+    <p>Password login doesn't work on the localhost mirror, so attach to a browser you're already logged into. Two steps:</p>
+    <h3>1 — launch a CDP browser on :9222, then log in</h3>
+    <pre><code><span class="cmt"># Edge (clean profile, extensions disabled)</span>
+&amp; "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir="$env:TEMP\sphere-cdp-edge" --disable-extensions --no-first-run http://localhost:3000
+
+<span class="cmt"># or Chrome</span>
+&amp; "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="$env:TEMP\sphere-cdp" --no-first-run http://localhost:3000</code></pre>
+    <p>In the window that opens, sign in at <code>http://localhost:3000</code> and leave it open. The profile persists, so you log in once.</p>
+    <h3>2 — run the competency against it</h3>
+    <pre><code>$env:USE_CDP="1"; $env:BASE_URL="http://localhost:3000"; $env:COMPETENCY_NAME="Care of the newborn"; npx playwright test tests/CompleteCompetency.spec.ts --headed</code></pre>
+    <div class="callout warn">
+      <span class="k">Account note.</span> In <code>-Local</code> (CDP) mode the account is <strong>whoever is signed into that browser</strong> — not necessarily <code>sphereid041</code>. The standard credentials apply only to the production path.
+    </div>
+    <p>The runner reuses your <strong>logged-in tab</strong> (Sphere keeps its session in per-tab <code>sessionStorage</code>, so a fresh tab would look logged-out).</p>
+  </section>
+
+  <!-- 7 -->
+  <section id="s7">
+    <h2><span class="num">07</span>How this differs from the Ekshamata suite</h2>
+    <hr class="rule">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Aspect</th><th>Sphere (this)</th><th>Ekshamata (<code>EkshamataWebAutomation</code>)</th></tr></thead>
+        <tbody>
+          <tr><td>Auth model</td><td>Standard creds (password), or <strong>CDP</strong> attach for local</td><td>Provision users via API + UI password login</td></tr>
+          <tr><td>Local runs</td><td><strong>CDP</strong> attach to Chrome/Edge on <code>:9222</code></td><td>Prod only (branded shell → sphere host)</td></tr>
+          <tr><td>Answer key source</td><td><strong>Content hierarchy → S3, org headers only</strong> (no token)</td><td>Questionset hierarchy → S3, needs bearer token (expires)</td></tr>
+          <tr><td>Poisoned key</td><td><code>fetchRealAnswerKey()</code> bypasses via hierarchy</td><td>Uses the real S3 pool from questionset artifact</td></tr>
+          <tr><td>Quiz player DOM</td><td><code>mat-radio-group</code> / <code>mat-radio-button</code></td><td><code>input.mdc-radio__native-control</code> + <code>button.btn-active</code></td></tr>
+          <tr><td>Scope</td><td><strong>Single competency</strong> completion by name</td><td><strong>Multi-org</strong> (10 orgs, roles, content mapping)</td></tr>
+          <tr><td>Entry helpers</td><td>Direct terminal commands + npm scripts (no wrapper scripts)</td><td>npm scripts</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout info"><span class="k">Same backend.</span> Ekshamata is a branded shell over the Sphere instance — both hit <code>sphere.aastrika.org</code>, the same <code>do_</code> content ids, and the same S3 answer artifacts.</div>
+  </section>
+
+  <!-- 8 -->
+  <section id="s8">
+    <h2><span class="num">08</span>Reporting</h2>
+    <hr class="rule">
+    <p>Reporters run on every test run (configured in <code>playwright.config.ts</code>):</p>
+    <ul class="clean">
+      <li><strong>Branded HTML</strong> — <code>reporters/brand-html-reporter.ts</code> → <code>brand-reports/</code></li>
+      <li><strong>Excel</strong> — <code>reporters/excel-reporter.ts</code> → <code>test-reports/excel-reports/</code></li>
+      <li><strong>Email</strong> — <code>reporters/email-reporter.ts</code> (sends on failure only when <code>SMTP_HOST</code> + <code>ALERT_EMAIL_TO</code> are set)</li>
+      <li>Standard Playwright <strong>HTML</strong> (or <strong>blob</strong> when <code>BLOB=1</code> for merged multi-group runs)</li>
+    </ul>
+    <pre><code>npm run report                <span class="cmt"># open the last Playwright HTML report</span>
+npm run test:everything       <span class="cmt"># run groups + merge into one branded report</span></code></pre>
+  </section>
+
+  <!-- 9 -->
+  <section id="s9">
+    <h2><span class="num">09</span>Roadmap — to a production-grade platform</h2>
+    <hr class="rule">
+    <h3>Reliability</h3>
+    <ul class="checklist">
+      <li>Replace fixed <code>waitForTimeout</code> calls with web-first assertions / <code>expect.poll</code>.</li>
+      <li>Keep <code>retries</code> low but add <code>trace: 'on-first-retry'</code> everywhere; video/screenshot on failure.</li>
+      <li>Centralize selectors; add <code>data-testid</code>s where the app allows.</li>
+    </ul>
+    <h3>Auth &amp; local runs</h3>
+    <ul class="checklist">
+      <li>Document the CDP flow in <code>README</code>; auto-detect a running :9222 before launching a new one.</li>
+      <li>Optionally support headless prod runs for the competency runner in CI.</li>
+    </ul>
+    <h3>Coverage &amp; engineering</h3>
+    <ul class="checklist">
+      <li>ESLint + Prettier + <code>tsc --noEmit</code> gate; TypeScript <code>strict</code>.</li>
+      <li>Tag suites (<code>@smoke</code>, <code>@competency</code>, <code>@auth</code>) for selective CI runs.</li>
+      <li>Cross-browser (Chromium + WebKit) for read-only flows.</li>
+    </ul>
+  </section>
+
+  <!-- 10 -->
+  <section id="s10">
+    <h2><span class="num">10</span>Add to GitHub (future)</h2>
+    <hr class="rule">
+    <pre><code>cd D:\Automation\SphereWebAutomation
+git init
+git branch -M main</code></pre>
+    <h3><code>.gitignore</code> — never commit secrets or generated output</h3>
+    <pre><code>node_modules/
+/.env
+/.auth/
+/brand-reports/
+/playwright-report/
+/blob-reports/
+/test-results/
+/test-reports/
+*.log</code></pre>
+    <div class="callout info">Keep <code>.env.example</code> committed as the template; keep <code>.env</code> (has <code>TEST_USER_*</code>, <code>GEMINI_API_KEY</code>) <strong>out</strong> of git.</div>
+    <h3>First commit &amp; push</h3>
+    <pre><code>git add .
+git commit -m "Sphere web automation: complete-competency runner, CDP tooling, reporters"
+gh repo create sphere-web-automation --private --source . --remote origin
+git push -u origin main</code></pre>
+    <h3>Regression on every release — <code>.github/workflows/regression.yml</code> (already in the repo)</h3>
+    <p>This workflow runs the full regression <strong>after every published release</strong> (and via a manual “Run workflow” button). It's committed at <code>.github/workflows/regression.yml</code>:</p>
+    <pre><code>name: regression
+on:
+  release:
+    types: [published]     <span class="cmt"># fires after every GitHub Release</span>
+  workflow_dispatch: {}     <span class="cmt"># manual run button</span>
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:regression
+        env:
+          BASE_URL: https://sphere.aastrika.org
+          HEADLESS: 'true'
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: regression-reports-${{ github.run_number }}
+          path: |
+            brand-reports/
+            playwright-report/
+            test-reports/</code></pre>
+    <p>Store <code>TEST_USER_EMAIL</code>, <code>TEST_USER_PASSWORD</code>, <code>GEMINI_API_KEY</code> (and the <code>SMTP_*</code> / <code>ALERT_EMAIL_*</code> keys to email the report) as <strong>GitHub Actions secrets</strong>. Enable <strong>branch protection</strong> on <code>main</code>. The report is uploaded as a run artifact. <em>How it triggers:</em> publish a Release in GitHub → the regression runs automatically.</p>
+  </section>
+
+  <!-- 11 -->
+  <section id="s11">
+    <h2><span class="num">11</span>Quick reference</h2>
+    <hr class="rule">
+    <pre><code><span class="cmt"># Complete a competency on production (standard account)</span>
+$env:COMPETENCY_NAME="Care of the newborn"; npm run run:complete-competency
+
+<span class="cmt"># Complete a course</span>
+$env:COURSE_NAME="AMTSL"; npm run run:course
+
+<span class="cmt"># Local: launch a CDP browser on :9222, log in, then run</span>
+&amp; "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir="$env:TEMP\sphere-cdp-edge" --disable-extensions http://localhost:3000
+$env:USE_CDP="1"; $env:BASE_URL="http://localhost:3000"; $env:COMPETENCY_NAME="Care of the newborn"; npx playwright test tests/CompleteCompetency.spec.ts --headed
+
+<span class="cmt"># Compare production vs staging, signed in, and open the report</span>
+npm run compare:all
+
+<span class="cmt"># Reports</span>
+npm run test:everything
+npx playwright show-report</code></pre>
+  </section>
+
+  <footer>
+    Sphere Web Automation · Playwright + TypeScript · Built for Aastrika.
+  </footer>
+</main>

@@ -1,0 +1,919 @@
+<title>Complete Competency Script Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#17283C; --navy-400:#18293D; --navy-300:#2D3E54; --navy-100:#7E8A9A; --navy-50:#BEC5CE;
+    --teal:#1E8F8E; --teal-600:#186E6E; --teal-700:#135858; --teal-50:#E3F7F6; --teal-100:#B8ECE9;
+    --gold:#F0A500; --gold-600:#C88800; --gold-700:#9A6800; --gold-50:#FEF6E0;
+    --offwhite:#F6F7F9; --line:#D8DEE5; --mid:#7C8696; --ink:#0D1218;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7; --err:#B91C1C; --err-bg:#FEE2E2;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Open Sans",Segoe UI,Arial,sans-serif;
+    font-size:9.9pt; line-height:1.47; color:var(--ink); background:#fff;
+    margin:0;
+  }
+  .page{ padding:0 16mm; }
+
+  h1{font-size:20pt;font-weight:700;color:var(--navy);margin:0 0 6px;letter-spacing:-.2px;}
+  h2{font-size:14.5pt;font-weight:700;color:var(--navy);margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid var(--teal);}
+  h3{font-size:11.5pt;font-weight:600;color:var(--navy);margin:15px 0 6px;}
+  h4{font-size:10.5pt;font-weight:600;color:var(--navy-300);margin:12px 0 5px;}
+  p{margin:0 0 8px;}
+  .lead{font-size:10.4pt;color:var(--navy-300);}
+  .cap{font-family:Lato,Arial,sans-serif;font-size:8.2pt;color:var(--mid);margin:4px 0 0;}
+  code,.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:8.8pt;}
+  code{background:var(--offwhite);border:1px solid var(--line);border-radius:4px;padding:1px 4px;color:var(--navy);}
+  a{color:var(--teal-600);}
+
+  .cover{height:247mm;display:flex;flex-direction:column;justify-content:center;background:var(--navy);color:#fff;padding:0 20mm;margin:-14mm 0 0;}
+  .cover .kicker{font-family:Lato;font-size:10pt;letter-spacing:3px;text-transform:uppercase;color:var(--teal-100);margin-bottom:18px;}
+  .cover h1{font-size:34pt;color:#fff;line-height:1.15;margin-bottom:14px;}
+  .cover .sub{font-size:13pt;color:var(--navy-50);max-width:150mm;line-height:1.5;}
+  .cover .rule{width:72px;height:5px;background:var(--gold);margin:26px 0;border-radius:3px;}
+  .cover .meta{font-family:Lato;font-size:9.5pt;color:var(--navy-50);line-height:1.9;}
+  .cover .meta b{color:#fff;font-weight:700;}
+
+  .sec{page-break-before:always;padding-top:1mm;}
+  .nobreak{page-break-inside:avoid;}
+
+  .callout{border-left:4px solid var(--teal);background:var(--teal-50);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;font-size:9.5pt;}
+  .callout.gold{border-left-color:var(--gold);background:var(--gold-50);}
+  .callout.red{border-left-color:var(--err);background:var(--err-bg);}
+  .callout .t{font-weight:700;color:var(--navy);display:block;margin-bottom:2px;}
+
+  table{width:100%;border-collapse:collapse;margin:8px 0 11px;font-size:8.6pt;page-break-inside:auto;}
+  thead{display:table-header-group;}
+  th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:6px 8px;border:.5pt solid var(--navy);font-size:8.6pt;}
+  td{padding:5px 8px;border:.5pt solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--offwhite);}
+  tr{page-break-inside:avoid;}
+  td.n{width:24px;text-align:center;font-weight:700;color:var(--teal-700);background:var(--teal-50)!important;}
+  .t-sel td:nth-child(3){font-family:"JetBrains Mono",Consolas,monospace;font-size:7.9pt;line-height:1.45;word-break:break-word;}
+
+  .pill{display:inline-block;padding:1px 8px;border-radius:9999px;font-size:8pt;font-weight:600;font-family:Lato;}
+  .p-ok{background:var(--ok-bg);color:var(--ok);}
+  .p-warn{background:var(--warn-bg);color:var(--warn);}
+  .p-err{background:var(--err-bg);color:var(--err);}
+  .p-teal{background:var(--teal-50);color:var(--teal-700);}
+  .p-gold{background:var(--gold-50);color:var(--gold-700);}
+
+  .grid2{display:flex;gap:12px;margin:10px 0;}
+  .card{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff;}
+  .card .h{font-weight:700;color:var(--navy);font-size:9.8pt;margin-bottom:5px;}
+  .card ul{margin:0;padding-left:15px;}
+  .card li{margin-bottom:3px;font-size:9.2pt;}
+
+  .fig{margin:12px 0 4px;page-break-inside:avoid;}
+  .fig svg{width:100%;height:auto;display:block;}
+
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:9px 0;}
+  ol.steps li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px;font-size:9.4pt;page-break-inside:avoid;}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:9999px;background:var(--navy);color:#fff;font-size:8pt;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  ol.steps li b{color:var(--navy);}
+
+  .toc{margin:12px 0;}
+  .toc div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:5px 2px;font-size:9.6pt;}
+  .toc div span:first-child{color:var(--navy);font-weight:600;}
+  .toc div span:last-child{color:var(--mid);font-family:Lato;font-size:9pt;}
+
+  pre{background:var(--navy);color:#E8EDF3;border-radius:8px;padding:9px 12px;font-family:"JetBrains Mono",Consolas,monospace;font-size:8pt;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;}
+  pre .c{color:#7E9AB8;}
+  pre .k{color:#6FD7D5;}
+  pre .g{color:#F2C14E;}
+  pre .r{color:#FF9A9A;}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════ COVER ══ -->
+<div class="cover">
+  <div class="kicker">Sphere Web Automation</div>
+  <h1>Complete Competency Script<br>Step-by-Step Walkthrough</h1>
+  <div class="rule"></div>
+  <div class="sub">How <span class="mono">tests/CompleteCompetency.spec.ts</span> climbs every level of one named competency — and the five independent guards it carries against the portal quietly handing back a different competency's assessment.</div>
+  <div class="rule" style="width:40px;height:2px;background:#2D3E54;"></div>
+  <div class="meta">
+    <b>Script</b> &nbsp; tests/CompleteCompetency.spec.ts &nbsp;·&nbsp; 1,739 lines &nbsp;·&nbsp; <b>1 test</b>, 37 helpers, <b>7 expect()</b><br>
+    <b>Target</b> &nbsp; /app/user/competency &nbsp;<span style="color:#F0A500;">(login + COMPETENCY_NAME required)</span><br>
+    <b>Run</b> &nbsp;&nbsp;&nbsp;&nbsp; COMPETENCY_NAME="…"  npm run run:complete-competency<br>
+    <b>Date</b> &nbsp;&nbsp;&nbsp; 12 September 2026
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CONTENTS ══ -->
+<div class="page sec">
+  <h2>Contents</h2>
+  <div class="toc">
+    <div><span>1 &nbsp; What this script does</span><span>Purpose, scope, entry points</span></div>
+    <div><span>2 &nbsp; The identity problem</span><span>Diagram — five guards against one bug</span></div>
+    <div><span>3 &nbsp; The climb</span><span>Diagram — one iteration, level by level</span></div>
+    <div><span>4 &nbsp; Configuration and inputs</span><span>Credentials forced at module load</span></div>
+    <div><span>5 &nbsp; Finding and opening a level</span><span>Three routes, and the card-tagging trick</span></div>
+    <div><span>6 &nbsp; Answering a quiz</span><span>Diagram — three key sources, one poison rule</span></div>
+    <div><span>7 &nbsp; Making a click stick</span><span>The radio subsystem, and why it exists</span></div>
+    <div><span>8 &nbsp; The Gemini fallback</span><span>Throttle, quota, model fallback</span></div>
+    <div><span>9 &nbsp; What green actually proves</span><span>Seven assertions and the Passbook cross-check</span></div>
+    <div><span>10 &nbsp; Artifacts, run variants, failure modes</span><span>Troubleshooting reference</span></div>
+  </div>
+
+  <h3>How to read this document</h3>
+  <p>Like the course-completion spec, this is a <b>driver</b> rather than an element sweep: one test that works through a real piece of the product until the portal says it is done. But it is the more interesting of the two to read, because it is shaped end to end by a single hazard — and Section 2 is about that hazard rather than about any function.</p>
+  <p>Sections 5 to 8 open up the machinery. Section 9 is the honest accounting, and it is unusually short: this script asserts more, and more precisely, than any other driver in the suite.</p>
+
+  <div class="callout">
+    <span class="t">Line numbers in this document are live</span>
+    Every reference points at <code>tests/CompleteCompetency.spec.ts</code> as it stands today — 1,739 lines, including the per-line explanatory comments carried across the suite.
+  </div>
+
+  <div class="callout gold">
+    <span class="t">Its sibling is <span class="mono">Competency.spec.ts</span>, and they are not the same thing</span>
+    The file header is explicit: <i>"This is a SEPARATE script: it does not modify Competency.spec.ts."</i> The sibling splits the climb into one test per step for granular reporting; this one runs the whole climb as a single test against <b>one competency you name in the terminal</b>. Where they share logic — the poison rule, the Gemini plumbing, the question matcher — the shared parts live in <code>helpers/questionMatch.ts</code> or are deliberately duplicated so a change made for one cannot break the other.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 1. WHAT IT DOES ══ -->
+<div class="page sec">
+  <h2>1 &nbsp; What this script does</h2>
+  <p class="lead">You give it the name of one competency. It clears every level of that competency, end to end, and then checks the portal's own Passbook to confirm the portal agrees.</p>
+
+  <p>A competency on Sphere is a ladder: up to five levels, each one an assessment, each locked until the level below it is cleared. Clearing all of them is how a learner demonstrates a skill, and it is the single most consequential workflow in the product — which is why there is a spec that does nothing else.</p>
+
+  <h3>The shape of a run</h3>
+  <ol class="steps">
+    <li><b>Force the credentials, before anything else.</b> Lines 29&#8211;44 run at module load, ahead of any fixture, so the auth harness resolves the account this flow intends rather than whatever <code>.env</code> happens to hold.</li>
+    <li><b>Open the competency dashboard</b> and prove there is a session to drive — <code>assertLoggedIn()</code> throws a numbered, copy-pasteable fix rather than letting the run fail obscurely later.</li>
+    <li><b>Climb.</b> For each level 1 to 5: open it, confirm it is the right competency, answer the quiz, read the verdict, return to the dashboard. Stop on the first level that does not clear, or when there is no further level — which is success, not failure.</li>
+    <li><b>Check the Passbook.</b> The climb reports what the quizzes said; the Passbook is what the portal actually recorded. A run is only believable when the two agree.</li>
+  </ol>
+
+  <h3>Two inputs, and a hard rule about environments</h3>
+  <table>
+    <thead><tr><th style="width:26%">Input</th><th>What happens without it</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">COMPETENCY_NAME</td>
+        <td>The test <b>throws immediately</b>, with the exact command to run. No default, and no silent skip.</td>
+      </tr>
+      <tr>
+        <td class="mono">BASE_URL</td>
+        <td>Defaults to production staging. But the localhost mirror <b>cannot do password login</b>, so pointing at it without CDP throws with three ways to fix it rather than failing at the login form.</td>
+      </tr>
+      <tr>
+        <td class="mono">GEMINI_API_KEY</td>
+        <td>Optional. Only used when a level's answer key is missing or poisoned; the run prints whether it is available before it starts.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">In CDP mode it drives <i>your</i> tab, and may retarget the whole run</span>
+    <code>beforeAll</code> does something unusual. Sphere keeps its session in per-tab <code>sessionStorage</code>, so a freshly opened tab lands on the public home page even in an authenticated browser. Rather than fight that, the script <b>reuses a tab you already have open</b>, preferring one on the environment you asked for and inside the app. If your only logged-in tab is on a different environment, it says so and <b>adopts that origin for the whole run</b> — because navigating your tab cross-origin would drop the session it needs. It also never closes a tab it did not open.
+  </div>
+
+  <h3>Entry points</h3>
+  <table>
+    <thead><tr><th style="width:44%">Command</th><th>What it runs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:complete-competency</td><td><b>The working entry point.</b> Headed, against staging, using whatever <code>COMPETENCY_NAME</code> is already set.</td></tr>
+      <tr><td class="mono">USE_CDP=1 &#8230;</td><td>Local development: attach to a Chrome you logged into by hand. Required on localhost, which cannot do password login.</td></tr>
+      <tr><td class="mono">.\run-competency.ps1 "&#8230;"</td><td><span class="pill p-err">missing</span> The wrapper the file header documents. It is <b>not in this repository</b> &#8212; see the note below.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout red">
+    <span class="t">The documented entry point does not exist</span>
+    The file header names <code>.\run-competency.ps1</code> as the easiest way to run the spec, and as the <code>-Local</code> form for CDP. It also appears inside both of the thrown error messages a user is most likely to read &#8212; the one for a missing competency name, and the one for a localhost <code>BASE_URL</code>. There is no such file anywhere in the repository.
+    <br><br>
+    So anyone who follows the header, or who forgets <code>COMPETENCY_NAME</code> and does what the error tells them, is sent to a command that cannot run. Either restore the wrapper, or point the header and both error strings at <code>npm run run:complete-competency</code> and the <code>USE_CDP=1</code> form. The second is a small change and would make the failure messages truthful.
+  </div>
+
+  <pre><span class="c"># PowerShell — the manual form from the file header</span>
+$env:BASE_URL="https://sphere.aastrika.org"
+$env:COMPETENCY_NAME="Care of the newborn"
+npx playwright test tests/CompleteCompetency.spec.ts --headed</pre>
+
+  <div class="callout">
+    <span class="t">Forty minutes, one test</span>
+    <code>test.setTimeout(40 * 60 * 1000)</code>. Five levels of quiz is slow on its own; when the answer key is poisoned and Gemini is answering, the self-throttle adds 6.5 seconds between questions. The ceiling is generous so a slow climb finishes rather than being cut off mid-ladder.
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ 2. IDENTITY PROBLEM ══ -->
+<div class="page sec">
+  <h2>2 &nbsp; The identity problem</h2>
+  <p class="lead">One bug shaped this entire file. Understanding it explains most of the code you would otherwise find over-engineered.</p>
+
+  <p>Ask the dashboard for the "neonatal" competency and it will, under the right conditions, hand back the assessment for "Normal delivery" instead. That alone would be a nuisance. What makes it dangerous is what happens next: <b>the quiz is answered from its own answer key</b>, so the wrong competency's assessment is answered correctly, passes, and reports success. Nothing downstream notices. The run goes green for a competency it never touched.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 574" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="g1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#17283C"/>
+        </marker>
+      </defs>
+
+      <!-- hazard -->
+      <rect x="40" y="26" width="820" height="72" rx="9" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.8"/>
+      <text x="58" y="48" font-size="11.5" font-weight="700" fill="#B91C1C">THE HAZARD &#8212; a wrong competency still passes</text>
+      <text x="58" y="68" font-size="9" fill="#B91C1C">Ask for &#8220;neonatal&#8221;, get handed &#8220;Normal delivery&#8221;. The quiz is answered from its OWN key, so it passes,</text>
+      <text x="58" y="82" font-size="9" fill="#B91C1C">and the run reports success for a competency it never climbed. A green result would be a lie.</text>
+
+      <line x1="450" y1="98" x2="450" y2="112" stroke="#17283C" stroke-width="1.4" marker-end="url(#g1)"/>
+      <text x="466" y="110" font-size="8.4" fill="#7C8696">five independent guards, in the order a run meets them</text>
+
+      <!-- guard 1 -->
+      <rect x="40" y="116" width="820" height="62" rx="8" fill="#FFFFFF" stroke="#1E8F8E" stroke-width="1.6"/>
+      <circle cx="72" cy="147" r="14" fill="#1E8F8E"/><text x="72" y="152" font-size="12" font-weight="700" fill="#FFF" text-anchor="middle">1</text>
+      <text x="98" y="140" font-size="10.5" font-weight="700" fill="#135858">The right card</text>
+      <text x="98" y="156" font-size="8.8" fill="#2D3E54">Walk UP from the competency's own title to the nearest ancestor that also holds an Assess button,</text>
+      <text x="98" y="169" font-size="8.8" fill="#2D3E54">and tag it. Never <tspan font-weight="700">.filter({ hasText })</tspan>, which also matches the wrapper around every competency.</text>
+      <text x="846" y="140" font-size="8.4" fill="#7C8696" text-anchor="end">openLevel() &#183; line 984</text>
+
+      <!-- guard 2 -->
+      <rect x="40" y="186" width="820" height="58" rx="8" fill="#FFFFFF" stroke="#1E8F8E" stroke-width="1.6"/>
+      <circle cx="72" cy="215" r="14" fill="#1E8F8E"/><text x="72" y="220" font-size="12" font-weight="700" fill="#FFF" text-anchor="middle">2</text>
+      <text x="98" y="208" font-size="10.5" font-weight="700" fill="#135858">The right level, when the modal states one</text>
+      <text x="98" y="224" font-size="8.8" fill="#2D3E54">A <tspan font-weight="700">stated</tspan> level that differs from the one being climbed stops the run. A modal that names no level</text>
+      <text x="98" y="237" font-size="8.8" fill="#2D3E54">is accepted &#8212; refusing those would stop climbs that are perfectly fine.</text>
+      <text x="846" y="208" font-size="8.4" fill="#7C8696" text-anchor="end">line 1156</text>
+
+      <!-- guard 3 -->
+      <rect x="40" y="252" width="820" height="62" rx="8" fill="#FEF6E0" stroke="#F0A500" stroke-width="2"/>
+      <circle cx="72" cy="283" r="14" fill="#F0A500"/><text x="72" y="288" font-size="12" font-weight="700" fill="#17283C" text-anchor="middle">3</text>
+      <text x="98" y="276" font-size="10.5" font-weight="700" fill="#9A6800">The same collectionId, every level</text>
+      <text x="98" y="292" font-size="8.8" fill="#2D3E54">Every level of one competency lives under one collectionId. Read it <tspan font-weight="700">after</tspan> the player opens, and</text>
+      <text x="98" y="305" font-size="8.8" fill="#2D3E54">compare against level 1's. A different id means the portal switched competencies &#8212; stop.</text>
+      <text x="846" y="276" font-size="8.4" fill="#7C8696" text-anchor="end">waitForCompetencyId() &#183; line 1224</text>
+
+      <!-- guard 4 -->
+      <rect x="40" y="322" width="820" height="58" rx="8" fill="#FFFFFF" stroke="#1E8F8E" stroke-width="1.6"/>
+      <circle cx="72" cy="351" r="14" fill="#1E8F8E"/><text x="72" y="356" font-size="12" font-weight="700" fill="#FFF" text-anchor="middle">4</text>
+      <text x="98" y="344" font-size="10.5" font-weight="700" fill="#135858">Sane level numbers</text>
+      <text x="98" y="360" font-size="8.8" fill="#2D3E54">No level outside 1&#8230;5, and no level climbed twice. Either would mean the run wandered into</text>
+      <text x="98" y="373" font-size="8.8" fill="#2D3E54">something other than the ladder it was asked to climb.</text>
+      <text x="846" y="344" font-size="8.4" fill="#7C8696" text-anchor="end">two expect() in the test body</text>
+
+      <!-- guard 5 -->
+      <rect x="40" y="388" width="820" height="62" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="2"/>
+      <circle cx="72" cy="419" r="14" fill="#15803D"/><text x="72" y="424" font-size="12" font-weight="700" fill="#FFF" text-anchor="middle">5</text>
+      <text x="98" y="412" font-size="10.5" font-weight="700" fill="#15803D">The Passbook &#8212; the portal's own record</text>
+      <text x="98" y="428" font-size="8.8" fill="#2D3E54">The climb reports what the quizzes said. The Passbook is what the portal stored. The named</text>
+      <text x="98" y="441" font-size="8.8" fill="#2D3E54">competency must be listed, at a level no lower than the highest one just cleared.</text>
+      <text x="846" y="412" font-size="8.4" fill="#7C8696" text-anchor="end">test.step + two expect()</text>
+
+      <g stroke="#17283C" stroke-width="1.2" marker-end="url(#g1)">
+        <line x1="450" y1="178" x2="450" y2="182"/>
+        <line x1="450" y1="244" x2="450" y2="248"/>
+        <line x1="450" y1="314" x2="450" y2="318"/>
+        <line x1="450" y1="380" x2="450" y2="384"/>
+      </g>
+
+      <line x1="450" y1="450" x2="450" y2="464" stroke="#15803D" stroke-width="1.6" marker-end="url(#g1)"/>
+      <rect x="180" y="468" width="540" height="36" rx="8" fill="#FFFFFF" stroke="#15803D" stroke-width="1.6"/>
+      <text x="450" y="491" font-size="10" font-weight="700" fill="#15803D" text-anchor="middle">A green run is about the competency you named</text>
+
+      <text x="40" y="528" font-size="8.4" fill="#7C8696">Guards 1&#8211;3 stop the climb the moment something is wrong, so a bad level is never answered. Guards 4 and 5</text>
+      <text x="40" y="541" font-size="8.4" fill="#7C8696">run afterwards and turn anything that slipped through into a failed test rather than a quiet pass.</text>
+      <text x="40" y="562" font-size="8.4" fill="#B45309">A sixth guard, modalIsFor(), was removed on purpose &#8212; see the note overleaf.</text>
+    </svg>
+    <p class="cap">Figure 1 — five independent checks, all serving one purpose. The middle one is the load-bearing member; the last one is the only one that asks the portal rather than the screen.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ 2b. IDENTITY, IN PROSE ══ -->
+<div class="page sec">
+  <h2>2 &nbsp; The identity problem <span style="font-weight:400;color:#7C8696;font-size:11pt;">(continued)</span></h2>
+
+  <h3>The guard that was removed on purpose</h3>
+  <p>There used to be a sixth check. <code>modalIsFor()</code> compared the competency name against the intro modal, and against the page behind it. It is still called &#8212; at lines 1141, 1273 and 1359 &#8212; and it still takes the name, but it now returns <code>true</code> unconditionally. The reasoning in its body is worth reading in full, because both halves of it failed for different reasons:</p>
+  <table>
+    <thead><tr><th style="width:34%">What it checked</th><th>Why it had to go</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>The modal's own heading</td>
+        <td>The modal shows the <b>level's</b> title — "Level 1 : Understands health of males and females…" — never the competency's name. Requiring the name there rejected every valid level. <b>Too strict to be usable.</b></td>
+      </tr>
+      <tr>
+        <td>The page behind the modal</td>
+        <td>The dashboard lists <i>every</i> competency, so the name was always somewhere on the page. The check passed unconditionally and "confirmed" competencies it had never verified. <b>Too loose to mean anything.</b></td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Neither version could work, so the identity question moved to something the screen cannot fudge: the <code>collectionId</code> in the player URL. The parameter is kept and marked with <code>void name</code> — the comment says why, "deliberately unused, not forgotten" — so the call sites did not have to change.</p>
+
+  <div class="callout red">
+    <span class="t">Its doc comment still describes the old behaviour</span>
+    The JSDoc directly above <code>modalIsFor()</code> reads: <i>"Does the assessment now on screen belong to <code>name</code>? Checked on the modal first, then the page behind it…"</i> That is a description of the version that was deleted. The body immediately below it opens with "Deliberately NOT a name check" and returns <code>true</code>.
+    <br><br>
+    A reader who trusts the doc comment — or a tool that surfaces it on hover — will believe a name check is happening when none is. The fix is to replace the JSDoc with the body's own explanation, which is already written and already correct. As it stands the two most authoritative-looking parts of the function contradict each other.
+  </div>
+
+  <h3>Why the id is read late</h3>
+  <p><code>waitForCompetencyId()</code> is called <i>after</i> the quiz player has opened, not off the intro modal — and that ordering was learned the hard way. The comment in the test body records it:</p>
+  <pre><span class="c">// Read it AFTER the player has actually opened. Reading it here, straight</span>
+<span class="c">// off the intro modal, gave an empty id at level 2 and the check skipped</span>
+<span class="c">// itself — which is how a Pregnancy Identification quiz still got through.</span></pre>
+  <p>The intro modal appears <b>before</b> the app navigates to <code>/viewer/quiz/…</code>, so at that moment the URL carries no <code>collectionId</code> at all. An empty id is indistinguishable from "unknown", the guard treated it as nothing to check, and the wrong competency sailed past. So the helper now clicks Start Now itself — that click <i>is</i> what triggers the navigation — and then polls for up to 25 seconds for the id to appear.</p>
+
+  <h3>What a guard does when it fires</h3>
+  <p>None of the first three guards fails the test. Each one prints a <code>⛔</code> line explaining what it saw and <code>break</code>s out of the climb. The failure arrives afterwards, from the assertions in Section 9: a run that stopped at level 1 has fewer cleared levels than it should, or has none at all, and the expectations catch that.</p>
+  <p>That separation is deliberate and it is the right shape. The guards' job is to <b>stop doing damage</b> — do not answer a quiz you cannot identify — and the assertions' job is to <b>report</b>. Mixing them would mean a guard throwing from deep inside a helper, with a stack trace instead of the summary line that tells you which competency was opened instead.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 3. THE CLIMB ══ -->
+<div class="page sec">
+  <h2>3 &nbsp; The climb</h2>
+  <p class="lead">One iteration per level, up to five. Three of the four ways out are failures; the fourth — running out of levels — is how a successful run ends.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 610" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="c1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#17283C"/>
+        </marker>
+        <marker id="c2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#B91C1C"/>
+        </marker>
+        <marker id="c3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#15803D"/>
+        </marker>
+      </defs>
+
+      <text x="30" y="24" font-size="11" font-weight="700" fill="#17283C">for (let n = 1; n &lt;= MAX_LEVELS; n++)  &#183;  line 1597</text>
+
+      <!-- main flow -->
+      <rect x="44" y="38" width="400" height="28" rx="6" fill="#17283C"/>
+      <text x="244" y="57" font-size="9.4" font-weight="600" fill="#FFF" text-anchor="middle">goBackToDashboard()  &#8212;  start from a known place</text>
+
+      <rect x="44" y="80" width="400" height="42" rx="6" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.4"/>
+      <text x="244" y="98" font-size="9.4" font-weight="600" fill="#135858" text-anchor="middle">openNextAssessment(name, n)</text>
+      <text x="244" y="113" font-size="8.4" fill="#135858" text-anchor="middle">Required tab first, then the Job Description accordion</text>
+
+      <rect x="44" y="136" width="400" height="28" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="244" y="155" font-size="9" fill="#17283C" text-anchor="middle">lastLevel = actualLevel  &#8212;  READ from the screen, never assumed</text>
+
+      <rect x="44" y="178" width="400" height="42" rx="6" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.8"/>
+      <text x="244" y="196" font-size="9.4" font-weight="600" fill="#9A6800" text-anchor="middle">waitForCompetencyId()</text>
+      <text x="244" y="211" font-size="8.4" fill="#9A6800" text-anchor="middle">clicks Start Now, then polls the URL for a collectionId</text>
+
+      <rect x="44" y="234" width="400" height="42" rx="6" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.8"/>
+      <text x="244" y="252" font-size="9.4" font-weight="600" fill="#9A6800" text-anchor="middle">first level? record the id  :  it must equal the recorded one</text>
+      <text x="244" y="267" font-size="8.4" fill="#9A6800" text-anchor="middle">one competency, one collectionId, all the way up</text>
+
+      <rect x="44" y="290" width="400" height="36" rx="6" fill="#17283C"/>
+      <text x="244" y="306" font-size="9.6" font-weight="700" fill="#FFF" text-anchor="middle">runQuizOnce(level)  &#8594;  { passed, mode }</text>
+      <text x="244" y="319" font-size="8.2" fill="#BEC5CE" text-anchor="middle">mode is 'key' or 'gemini' &#8212; Section 6</text>
+
+      <rect x="44" y="340" width="400" height="28" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="244" y="359" font-size="9" fill="#17283C" text-anchor="middle">record { level, passed, mode }  &#183;  goBackToDashboard()</text>
+
+      <rect x="44" y="382" width="400" height="28" rx="6" fill="#FFFFFF" stroke="#17283C" stroke-width="1.4"/>
+      <text x="244" y="401" font-size="9.4" font-weight="600" fill="#17283C" text-anchor="middle">passed?</text>
+
+      <g stroke="#17283C" stroke-width="1.2" marker-end="url(#c1)">
+        <line x1="244" y1="66" x2="244" y2="76"/>
+        <line x1="244" y1="122" x2="244" y2="132"/>
+        <line x1="244" y1="164" x2="244" y2="174"/>
+        <line x1="244" y1="220" x2="244" y2="230"/>
+        <line x1="244" y1="276" x2="244" y2="286"/>
+        <line x1="244" y1="326" x2="244" y2="336"/>
+        <line x1="244" y1="368" x2="244" y2="378"/>
+      </g>
+
+      <!-- loop back -->
+      <path d="M44,396 H24 V52 H40" fill="none" stroke="#1E8F8E" stroke-width="1.6" marker-end="url(#c1)"/>
+      <text x="16" y="224" font-size="8.2" fill="#135858" text-anchor="middle" transform="rotate(-90 16 224)">yes &#8212; next level</text>
+
+      <!-- exits -->
+      <rect x="500" y="80" width="368" height="42" rx="6" fill="#DCFCE7" stroke="#15803D" stroke-width="1.6"/>
+      <text x="514" y="98" font-size="9.2" font-weight="700" fill="#15803D">No further level &#8212; competency complete</text>
+      <text x="514" y="113" font-size="8.4" fill="#15803D">The only exit that is SUCCESS. Not an error, not a skip.</text>
+      <path d="M444,101 H496" fill="none" stroke="#15803D" stroke-width="1.4" marker-end="url(#c3)"/>
+
+      <rect x="500" y="178" width="368" height="42" rx="6" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.4"/>
+      <text x="514" y="196" font-size="9.2" font-weight="700" fill="#B91C1C">&#9940; No collectionId at all</text>
+      <text x="514" y="211" font-size="8.4" fill="#B91C1C">Cannot confirm which competency this is &#8212; stop rather than guess.</text>
+      <path d="M444,199 H496" fill="none" stroke="#B91C1C" stroke-width="1.4" marker-end="url(#c2)"/>
+
+      <rect x="500" y="234" width="368" height="42" rx="6" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.4"/>
+      <text x="514" y="252" font-size="9.2" font-weight="700" fill="#B91C1C">&#9940; A DIFFERENT competency</text>
+      <text x="514" y="267" font-size="8.4" fill="#B91C1C">The id changed mid-climb. The log names both ids.</text>
+      <path d="M444,255 H496" fill="none" stroke="#B91C1C" stroke-width="1.4" marker-end="url(#c2)"/>
+
+      <rect x="500" y="382" width="368" height="42" rx="6" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.4"/>
+      <text x="514" y="400" font-size="9.2" font-weight="700" fill="#B91C1C">&#9940; Level not cleared</text>
+      <text x="514" y="415" font-size="8.4" fill="#B91C1C">Higher levels stay locked, so climbing further is pointless.</text>
+      <path d="M444,403 H496" fill="none" stroke="#B91C1C" stroke-width="1.4" marker-end="url(#c2)"/>
+      <text x="470" y="398" font-size="7.8" fill="#B91C1C" text-anchor="middle">no</text>
+
+      <!-- after the loop -->
+      <line x1="684" y1="424" x2="684" y2="438" stroke="#17283C" stroke-width="1.3"/>
+      <line x1="684" y1="122" x2="684" y2="174" stroke="#15803D" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <path d="M684,276 V376" fill="none" stroke="#B91C1C" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <path d="M684,438 H244 V452" fill="none" stroke="#17283C" stroke-width="1.3" marker-end="url(#c1)"/>
+
+      <rect x="44" y="456" width="824" height="52" rx="7" fill="#FFFFFF" stroke="#17283C" stroke-width="1.6"/>
+      <text x="456" y="475" font-size="9.6" font-weight="700" fill="#17283C" text-anchor="middle">Summary, then FOUR assertions on the climb</text>
+      <text x="456" y="491" font-size="8.4" fill="#2D3E54" text-anchor="middle">at least one level found &#183; every attempted level passed &#183; no level outside 1&#8230;5 &#183; no level climbed twice</text>
+      <text x="456" y="503" font-size="8.2" fill="#7C8696" text-anchor="middle">Every exit above lands here &#8212; which is how a guard that merely stopped the climb becomes a red test.</text>
+
+      <line x1="456" y1="508" x2="456" y2="520" stroke="#15803D" stroke-width="1.4" marker-end="url(#c1)"/>
+      <rect x="44" y="524" width="824" height="48" rx="7" fill="#DCFCE7" stroke="#15803D" stroke-width="1.8"/>
+      <text x="456" y="543" font-size="9.6" font-weight="700" fill="#15803D" text-anchor="middle">test.step — Verify the competency in the Passbook, then TWO more assertions</text>
+      <text x="456" y="559" font-size="8.4" fill="#15803D" text-anchor="middle">the portal must LIST the competency, at a level no lower than the highest one cleared</text>
+
+      <text x="44" y="596" font-size="8.4" fill="#7C8696">Note the loop never skips a level: it climbs 1, 2, 3… in order, and stops at the first one that does not clear.</text>
+    </svg>
+    <p class="cap">Figure 2 — the climb. Four ways out, one of them green. The band at the bottom is where every exit is finally judged.</p>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════ 4. CONFIG AND INPUTS ══ -->
+<div class="page sec">
+  <h2>4 &nbsp; Configuration and inputs</h2>
+  <p class="lead">Most of this file's configuration is unremarkable. The first fifteen lines are not — they run before anything else in the process, and they are the reason the account in the log is the account you configured.</p>
+
+  <h3>Credentials, resolved at module load</h3>
+  <p>Lines 29&#8211;44 execute when the module is imported, ahead of every fixture. That timing is the whole point: <code>resolveCreds()</code> inside the auth harness reads these variables at fixture time, so setting them here decides which account the run authenticates as.</p>
+  <pre>process.env.TEST_USER_EMAIL =
+  process.env.COMPETENCY_USER_EMAIL || process.env.TEST_USER_EMAIL || <span class="g">'sphereid041@yopmail.com'</span>;</pre>
+  <p>Three levels of precedence, most specific first:</p>
+  <table>
+    <thead><tr><th style="width:34%">Source</th><th>When it wins</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">COMPETENCY_USER_EMAIL / _PASSWORD</td><td>An opt-in override for this flow only. Always wins.</td></tr>
+      <tr><td class="mono">TEST_USER_EMAIL / _PASSWORD</td><td>Whatever <code>.env</code> or the shell already set, if no flow-specific override exists.</td></tr>
+      <tr><td class="mono">sphereid041@yopmail.com</td><td>The standard learner, as a last resort.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">The bug this shape fixed</span>
+    The source records it in its own comment: the assignment <b>used to be unconditional</b>. Editing <code>.env</code> changed nothing, the run silently stayed on <code>sphereid041</code>, and — the part that actually hurts — <b>the account printed in the log was not the account you had configured</b>. A run could be investigated for an hour against the wrong learner's data. The <code>||</code> chain is a small change that made the log trustworthy.
+  </div>
+
+  <h3>Environment: one hard rule</h3>
+  <p>This flow logs in with a password, and the localhost mirror does not support password login. So two things happen. First, <code>BASE_URL</code> is defaulted to staging at line 46 rather than left unset — the comment says <i>"don't silently auth-fail — make it obvious."</i> Second, the test body refuses a localhost target outright, <b>unless CDP mode is on</b>:</p>
+  <pre><span class="k">if</span> (/localhost|127\.0\.0\.1|:3000/.test(BASE_URL) &amp;&amp; process.env.USE_CDP !== <span class="g">'1'</span>) throw &#8230;</pre>
+  <p>The exception matters: attaching to a Chrome you logged into by hand works perfectly well on localhost, because no password is ever typed. The thrown error spells out all three routes rather than stating the problem and leaving you to work it out.</p>
+
+  <h3>Constants</h3>
+  <table>
+    <thead><tr><th style="width:30%">Constant</th><th style="width:14%">Value</th><th>What it governs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">MAX_LEVELS<br><span style="font-size:7.6pt;color:#7C8696;">line 85</span></td><td><b>5</b></td><td>The height of the ladder, and the upper bound the assertions check against. A level number outside 1&#8230;5 is treated as evidence the run wandered.</td></tr>
+      <tr><td class="mono">GEMINI_RPM_DELAY<br><span style="font-size:7.6pt;color:#7C8696;">line 94</span></td><td><b>6.5 s</b></td><td>Minimum spacing between AI calls, sized for the free tier's per-minute limit.</td></tr>
+      <tr><td class="mono">GEMINI_PRIMARY / _FALLBACK<br><span style="font-size:7.6pt;color:#7C8696;">lines 88, 90</span></td><td><span class="mono">2.5-flash<br>2.5-flash-lite</span></td><td>The two models, with separate quotas — Section 8.</td></tr>
+      <tr><td class="mono">COMPETENCY_URL<br><span style="font-size:7.6pt;color:#7C8696;">line 68</span></td><td><span class="mono">/app/user/competency</span></td><td>Declared with <code>let</code>, not <code>const</code>, because <code>setBaseUrl()</code> can rewrite it mid-run when the script adopts a CDP tab's origin.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Why <code>BASE_URL</code> is mutable here and nowhere else</span>
+    Every other spec treats <code>BASE_URL</code> as a constant. This one declares it <code>let</code> (line 62) and provides <code>setBaseUrl()</code> (line 71) to change it along with every URL derived from it. That exists for exactly one situation: you are running in CDP mode, your only logged-in tab is on a different environment, and the choice is between adopting that environment or destroying your session by navigating away from it. The script adopts, announces what it did, and carries on.
+  </div>
+</div>
+
+<!-- ════════════════════════════ 5. FINDING AND OPENING A LEVEL ══ -->
+<div class="page sec">
+  <h2>5 &nbsp; Finding and opening a level</h2>
+  <p class="lead">Three routes, tried in order, because the portal presents competencies differently depending on build and on whether the learner has started one.</p>
+
+  <table>
+    <thead><tr><th style="width:22%">Route</th><th style="width:10%">Line</th><th>How it works</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Required tab</b><br><span class="mono">openLevel</span></td><td class="mono">984</td>
+        <td>The short route. Find the competency's card on the Required tab and click its <b>Assess</b> (fresh) or <b>Re-Assess</b> (already started) button.</td>
+      </tr>
+      <tr>
+        <td><b>Competency TOC</b><br><span class="mono">openLevelFromToc</span></td><td class="mono">1266</td>
+        <td>On some environments Assess does not open a modal — it navigates to a table of contents listing every level as a link. This picks the right level from that list.</td>
+      </tr>
+      <tr>
+        <td><b>Job Description</b><br><span class="mono">openViaJobDescription</span></td><td class="mono">1310</td>
+        <td>The fallback when the Required tab has no card: competencies also live under Job Description, grouped by role in expansion panels. Slower, but it works when the Required tab is empty.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p><code>openNextAssessment()</code> (line 1382) is the two-line chooser: try the Required tab, and fall through to Job Description if it did not work.</p>
+
+  <h3>The card-tagging trick</h3>
+  <p>This is the most interesting twenty lines in the file, and it is guard 1 from Section 2. The problem is finding the button that belongs to <i>this</i> competency, and both obvious approaches fail:</p>
+  <div class="grid2">
+    <div class="card" style="border-color:#B91C1C;">
+      <div class="h" style="color:#B91C1C;">Too high</div>
+      <ul>
+        <li><code>.filter({ hasText: name })</code> matches every ancestor that contains the name</li>
+        <li>…including the wrapper around <b>all</b> competencies</li>
+        <li><code>.first()</code> then takes that wrapper</li>
+        <li>The button clicked belongs to whichever competency comes first</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:#B91C1C;">
+      <div class="h" style="color:#B91C1C;">Too low</div>
+      <ul>
+        <li>Going to the nearest card ancestor of the title…</li>
+        <li>…lands on the title's own little wrapper</li>
+        <li>which has no button in it at all</li>
+        <li>so nothing is clickable</li>
+      </ul>
+    </div>
+  </div>
+  <p>The right element is <b>the closest ancestor containing both the title and an Assess button</b>, and there is no CSS selector for that. So the script goes into the browser and finds it by walking:</p>
+  <ol class="steps">
+    <li>Clear any <code>data-pw-card</code> attribute left by a previous call — the tag is reused every iteration.</li>
+    <li>Find elements whose <b>own</b> normalised text <i>equals</i> the competency name. <code>===</code>, not <code>includes</code>: a container that merely mentions the name is not the title.</li>
+    <li>From each such title, climb up to 12 levels, checking at each step whether that ancestor holds a button reading exactly <code>Assess</code> or <code>Re-Assess</code>.</li>
+    <li>Tag the first ancestor that does with <code>data-pw-card="1"</code>, and return.</li>
+    <li>Back in Node, select <code>[data-pw-card]</code> — now a single, unambiguous element — and click its button.</li>
+  </ol>
+  <p>The Re-Assess button is looked for first; if it is absent the competency has never been started, so the script falls back to <code>/^assess$/i</code> — anchored, so it cannot match "Re-Assess" itself.</p>
+
+  <div class="callout">
+    <span class="t">Marking the DOM to make it selectable</span>
+    Setting an attribute from <code>page.evaluate()</code> purely so Playwright can select it afterwards is an unusual move, and worth recognising as a legitimate one. It is the answer whenever the element you want is defined by a <i>relationship</i> — nearest ancestor of A that also contains B — rather than by any property a selector can express. The alternative is a long, brittle chain of <code>xpath=ancestor::</code> steps that encodes the current markup depth.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ 6. ANSWERING A QUIZ ══ -->
+<div class="page sec">
+  <h2>6 &nbsp; Answering a quiz</h2>
+  <p class="lead">Competency quizzes are the ones the platform deliberately protects. The copy the browser receives has its answers stripped — so the script goes and gets the original.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 472" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="q1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#17283C"/>
+        </marker>
+      </defs>
+
+      <text x="30" y="24" font-size="11" font-weight="700" fill="#17283C">runQuizOnce(level)  &#183;  line 780</text>
+
+      <!-- source 1 -->
+      <rect x="40" y="38" width="400" height="74" rx="8" fill="#F6F7F9" stroke="#7C8696" stroke-width="1.4"/>
+      <text x="56" y="58" font-size="10" font-weight="700" fill="#2D3E54">1 &#183; What the browser was served</text>
+      <text x="56" y="74" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">consumeQuizAnswerKey()</text>
+      <text x="56" y="89" font-size="8.4" fill="#7C8696">Captured off the wire by the response interceptor.</text>
+      <text x="56" y="102" font-size="8.4" fill="#B45309">Usually POISONED &#8212; every isCorrect is false.</text>
+
+      <!-- source 2 -->
+      <rect x="460" y="38" width="400" height="74" rx="8" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.8"/>
+      <text x="476" y="58" font-size="10" font-weight="700" fill="#135858">2 &#183; The original, on S3</text>
+      <text x="476" y="74" font-size="8.4" fill="#2D3E54" font-family="JetBrains Mono, monospace">fetchRealAnswerKey()</text>
+      <text x="476" y="89" font-size="8.4" fill="#135858">hierarchy API &#8594; artifactUrl &#8594; the real JSON,</text>
+      <text x="476" y="102" font-size="8.4" fill="#135858">with its isCorrect flags intact. Tried FIRST.</text>
+
+      <path d="M240,112 V132 H450" fill="none" stroke="#17283C" stroke-width="1.3"/>
+      <path d="M660,112 V132 H450" fill="none" stroke="#17283C" stroke-width="1.3"/>
+      <line x1="450" y1="132" x2="450" y2="146" stroke="#17283C" stroke-width="1.3" marker-end="url(#q1)"/>
+
+      <!-- poison test -->
+      <rect x="230" y="148" width="440" height="46" rx="8" fill="#FFFFFF" stroke="#17283C" stroke-width="1.6"/>
+      <text x="450" y="167" font-size="9.6" font-weight="700" fill="#17283C" text-anchor="middle">isAnswerKeyPoisoned(key)</text>
+      <text x="450" y="183" font-size="8.4" fill="#7C8696" text-anchor="middle">80&#37; or more of the questions flag nothing correct &#8594; useless</text>
+
+      <!-- branch: the two modes are alternatives, not steps -->
+      <path d="M450,194 V208 H240 V216" fill="none" stroke="#15803D" stroke-width="1.4" marker-end="url(#q1)"/>
+      <path d="M450,194 V208 H660 V216" fill="none" stroke="#B45309" stroke-width="1.4" marker-end="url(#q1)"/>
+      <text x="300" y="205" font-size="8" fill="#15803D">usable</text>
+      <text x="570" y="205" font-size="8" fill="#B45309" text-anchor="end">poisoned, or none</text>
+
+      <!-- mode key -->
+      <rect x="40" y="220" width="400" height="86" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="1.8"/>
+      <text x="56" y="242" font-size="10" font-weight="700" fill="#15803D">mode: &#39;key&#39; &#8212; answerWithKey()</text>
+      <text x="56" y="262" font-size="8.4" fill="#15803D">Match each on-screen question against the key, take</text>
+      <text x="56" y="274" font-size="8.4" fill="#15803D">the option flagged correct, and find it BY TEXT.</text>
+      <text x="56" y="292" font-size="8.4" fill="#2D3E54">Free and deterministic &#8212; the normal outcome</text>
+      <text x="56" y="302" font-size="8.4" fill="#2D3E54">once the S3 route works.</text>
+
+      <!-- mode gemini -->
+      <rect x="460" y="220" width="400" height="86" rx="8" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.8"/>
+      <text x="476" y="242" font-size="10" font-weight="700" fill="#9A6800">mode: &#39;gemini&#39; &#8212; answerWithGeminiBatch()</text>
+      <text x="476" y="262" font-size="8.4" fill="#9A6800">Scrape each question off the screen and ask the</text>
+      <text x="476" y="274" font-size="8.4" fill="#9A6800">model, one question at a time, throttled.</text>
+      <text x="476" y="292" font-size="8.4" fill="#2D3E54">Reached when both copies are poisoned, or</text>
+      <text x="476" y="302" font-size="8.4" fill="#2D3E54">when there is no key at all.</text>
+
+      <!-- converge -->
+      <path d="M240,306 V326 H450" fill="none" stroke="#17283C" stroke-width="1.3"/>
+      <path d="M660,306 V326 H450" fill="none" stroke="#17283C" stroke-width="1.3"/>
+      <line x1="450" y1="326" x2="450" y2="338" stroke="#17283C" stroke-width="1.3" marker-end="url(#q1)"/>
+      <rect x="230" y="342" width="440" height="32" rx="7" fill="#17283C"/>
+      <text x="450" y="362" font-size="9.6" font-weight="600" fill="#FFF" text-anchor="middle">detectQuizPassed() &#8212; five pass wordings, 2 s each</text>
+
+      <line x1="450" y1="374" x2="450" y2="388" stroke="#17283C" stroke-width="1.3" marker-end="url(#q1)"/>
+      <rect x="230" y="392" width="440" height="30" rx="7" fill="#FFFFFF" stroke="#17283C" stroke-width="1.4"/>
+      <text x="450" y="412" font-size="9.4" font-weight="600" fill="#17283C" text-anchor="middle">return { passed, totalQuestions, mode }</text>
+
+      <text x="40" y="446" font-size="8.4" fill="#7C8696">The mode travels back to the test body and into the summary, so a run's log records which levels were</text>
+      <text x="40" y="459" font-size="8.4" fill="#7C8696">answered from a key and which needed the model. That distinction matters when reading a green result.</text>
+    </svg>
+    <p class="cap">Figure 3 — two key sources, one poison rule, two answering modes. The S3 route is tried first and is what keeps the AI out of most runs.</p>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════ 6b. ANSWERING, IN PROSE ══ -->
+<div class="page sec">
+  <h2>6 &nbsp; Answering a quiz <span style="font-weight:400;color:#7C8696;font-size:11pt;">(continued)</span></h2>
+
+  <h3>Getting the original key</h3>
+  <p><code>fetchRealAnswerKey()</code> (line 213) is the part worth understanding. It reconstructs the path from "a quiz is open in the viewer" to "the published JSON on S3", using nothing but the URL and the app's own headers:</p>
+  <ol class="steps">
+    <li><b>Two ids out of the viewer URL.</b> <code>/viewer/quiz/(do_…)</code> gives the quiz; <code>collectionId=(do_…)</code> gives the course it belongs to. Missing either means this path cannot work, and it returns <code>null</code> immediately.</li>
+    <li><b>Steal the headers.</b> <code>setupApiHeaderCapture()</code> (line 200) watches the app's outgoing requests and copies the <code>org</code>, <code>rootorg</code> and <code>hostpath</code> values off the first proxy call it sees. The comment is right that this is "far more reliable than hard-coding them, since they vary by environment".</li>
+    <li><b>Build <code>hostPath</code> as a flat token.</b> The API wants <code>sphere.aastrika.org</code> written as <code>sphere_aastrika_org</code> — scheme stripped, <code>:</code> and <code>/</code> replaced, trailing underscores trimmed. Used only as a fallback when no header was captured.</li>
+    <li><b>Ask for the hierarchy</b> with <code>hierarchyType=detail</code> — that parameter is what makes the response carry <code>artifactUrl</code> at all — using the <b>page's own request context</b>, so the session cookies ride along.</li>
+    <li><b>Walk the course tree</b> depth-first to find the node whose <code>identifier</code> is this quiz, and take its <code>artifactUrl</code>.</li>
+    <li><b>Download the artifact</b> and accept it only if it actually contains questions.</li>
+  </ol>
+
+  <div class="callout">
+    <span class="t">An explicit stack instead of recursion</span>
+    The tree walk uses <code>const stack = [root]</code> and a <code>while (stack.length)</code> loop rather than a recursive function, and the comment says why: the course tree can be deep and this must not blow the call stack. It is a small thing, but it is the kind of small thing that turns an occasional mysterious crash into no crash at all.
+  </div>
+
+  <h3>The poison rule</h3>
+  <p>Identical to the course-completion spec's, and deliberately so — the comment points at the shared origin. A question is poisoned when <b>every</b> one of its options is flagged <code>isCorrect: false</code>; a key is poisoned when 80&#37; or more of its questions are. The threshold rather than "all" means a handful of genuinely-unflagged questions does not throw away a usable key, and an empty key counts as poisoned so the caller has one condition to check rather than two.</p>
+  <p>The interception itself is deliberately loose about <i>where</i> the JSON came from:</p>
+  <pre><span class="c">// Match the quiz JSON on ANY host (prod serves it from sunbirdcontent.s3,</span>
+<span class="c">// but the localhost mirror may proxy it from a different origin). We still</span>
+<span class="c">// validate the payload shape below, so a loose URL match is safe.</span>
+<span class="k">if</span> (!/_quiz\.json/i.test(url) &amp;&amp; !/\/quiz\/.*\.json/i.test(url)) <span class="k">return</span>;</pre>
+  <p>Shape validation — a non-empty <code>questions</code> array — is what makes the loose URL match safe. The captured key is then <b>consumed</b>: <code>consumeQuizAnswerKey()</code> takes it and clears the slot, so level 1's key cannot silently be reused on level 2.</p>
+
+  <h3>Reading the verdict</h3>
+  <p><code>detectQuizPassed()</code> (line 949) tries five wordings — <i>passed the assessment</i>, <i>congratulations</i>, <i>you have passed</i>, <i>level cleared</i>, <i>assessment cleared</i> — each with a two-second window, and treats "none of them found" as a fail.</p>
+  <div class="callout gold">
+    <span class="t">A missing verdict reads as a failure</span>
+    That default is the safe direction for this script — a level is only recorded as cleared when the portal actually said so — but it is worth naming, because it means <b>a rendering change to the results screen shows up as a failed level, not as a broken test</b>. If a run reports a level failed and the log shows a full set of correct answers, the wording list is the first thing to check.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ 7. MAKING A CLICK STICK ══ -->
+<div class="page sec">
+  <h2>7 &nbsp; Making a click stick</h2>
+  <p class="lead">Ninety lines to select a radio button. That sounds absurd until you read what each of them is for — and what an unanswered question costs.</p>
+
+  <p>The stakes are stated at the top of <code>selectRadioOption()</code> (line 676): <i>"An unanswered question quietly costs a mark, which is how a level fails with a perfectly good answer key."</i> The script can know the right answer, click it, and still fail the level — because the click did not register and nothing said so.</p>
+
+  <h3>Three bugs are encoded here</h3>
+  <table>
+    <thead><tr><th style="width:30%">The bug</th><th>The fix, and why it is where it is</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Clicking a hidden group</b></td>
+        <td>The quiz keeps earlier questions' radio groups <b>mounted but hidden</b>. So <code>mat-radio-group</code> with <code>.first()</code> aimed every click at a stale, off-screen group and nothing ever registered. The fix is <code>mat-radio-group:visible</code> — and, critically, <code>radioIsChecked()</code> resolves the group the same way, so the clicker and the verifier always mean the same element.</td>
+      </tr>
+      <tr>
+        <td><b>Synthetic events</b></td>
+        <td>Angular Material acts on <i>trusted</i> events. The original version only ever fired synthetic ones from inside <code>page.evaluate()</code>, which Material ignored. A real Playwright click now comes first; the DOM-level manipulation is the last resort, not the first move.</td>
+      </tr>
+      <tr>
+        <td><b>Reading the state too early</b></td>
+        <td>The old code re-read the checked state in the same synchronous pass, <b>before Angular's change detection had run</b> — so a click that had worked looked failed, the next strategy fired, and the two could cancel each other out. Every strategy now waits 350&#8239;ms before reading back.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Four strategies, three passes</h3>
+  <p>Each pass escalates, and each step verifies before moving on:</p>
+  <ol class="steps">
+    <li><b>Click the label.</b> What a person does. Three wrapper shapes are tried — <code>label</code>, <code>.mdc-form-field</code>, <code>.mat-mdc-radio-touch-target</code> — and whichever exists gets the click.</li>
+    <li><b>Click the component itself.</b> <code>force</code> is applied only from the second pass onward: try it honestly first, and only overrule the actionability checks once the honest attempt has failed.</li>
+    <li><b>Check the native input.</b> <code>force: true</code> here always, because Material hides the real <code>&lt;input&gt;</code> behind a styled wrapper that would otherwise fail the visibility check.</li>
+    <li><b>Drive it from the DOM, and tell Angular.</b> Click the input; if it is still not checked, set <code>checked = true</code> by hand and dispatch <code>input</code> and <code>change</code> events so the Angular form control notices. Without those two events the DOM and the framework disagree, and the framework is the one that counts.</li>
+  </ol>
+
+  <h3>How "checked" is measured</h3>
+  <p><code>radioIsChecked()</code> asks three different questions and accepts any of them, because Material's state lives in three places and different builds update different ones:</p>
+  <pre><span class="k">return</span> target.classList.contains(<span class="g">'mat-mdc-radio-checked'</span>)
+  || target.getAttribute(<span class="g">'aria-checked'</span>) === <span class="g">'true'</span>
+  || !!target.querySelector(<span class="g">'input[type="radio"]:checked'</span>);</pre>
+
+  <div class="callout">
+    <span class="t">It says "UNANSWERED" out loud</span>
+    After twelve failed attempts the function logs <code>⚠️ this question is UNANSWERED</code> and returns <code>false</code>. That wording is chosen carefully: the caller falls back to option A, so the run continues and may still pass — but the log now contains the one word that explains a level failing with a correct answer key. Without it the failure would be invisible.
+  </div>
+
+  <p>Intermediate retries are logged too (<code>↻ Option N did not take — retry 2/3</code>), so the log shows how hard the script had to fight. A level that cleared after several of those is worth a look even though it passed.</p>
+</div>
+
+<!-- ═════════════════════════════════════════ 8. GEMINI FALLBACK ══ -->
+<div class="page sec">
+  <h2>8 &nbsp; The Gemini fallback</h2>
+  <p class="lead">Reached only when both copies of the key are poisoned. Smaller and simpler than the course-completion spec's version, because the shape of the problem is different.</p>
+
+  <p>A competency quiz has five to ten questions and there are at most five levels, so the total volume is modest. That is why this file asks <b>one question at a time</b> (<code>askGeminiOne</code>, line 410) rather than batching a whole assessment into a single prompt: per-question prompts are more accurate, and the quota can absorb them here.</p>
+
+  <table>
+    <thead><tr><th style="width:26%">Piece</th><th style="width:10%">Line</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">throttle()</td><td class="mono">322</td><td>Sleeps so no two calls are closer than <code>GEMINI_RPM_DELAY</code> (6.5&#8239;s), sized for the free tier's per-minute limit. Skipped on the first call.</td></tr>
+      <tr><td class="mono">callGemini()</td><td class="mono">334</td><td>One REST call, returning a result object rather than throwing — a network failure here is an ordinary outcome.</td></tr>
+      <tr><td class="mono">parseRetryDelayMs()</td><td class="mono">514</td><td>Digs the server's suggested wait out of a rate-limit body, so the script waits exactly as long as it is told to rather than guessing.</td></tr>
+      <tr><td class="mono">parseAnswerMap()</td><td class="mono">368</td><td>Turns the model's reply into usable indices. Models are inconsistent about formatting, so this has to be forgiving.</td></tr>
+      <tr><td class="mono">askGeminiOne()</td><td class="mono">410</td><td>One question, one answer. Handles the model fallback from <code>2.5-flash</code> to <code>2.5-flash-lite</code>.</td></tr>
+      <tr><td class="mono">geminiQuotaExhausted</td><td class="mono">319</td><td>A module-level flag. Once the per-day quota is gone, later requests are skipped outright instead of being retried into the same wall.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">Two models means two daily budgets</span>
+    <code>gemini-2.5-flash</code> and <code>gemini-2.5-flash-lite</code> have separate free-tier quotas, so falling back to the lighter model is not only about staying available under a per-minute limit — it roughly doubles what a day's runs can consume before the AI path stops working altogether.
+  </div>
+
+  <h3>What it means for a result</h3>
+  <p>The mode of each level is recorded and printed in the summary:</p>
+  <pre>📊 "Care of the newborn" — levels cleared this run: 3
+   [{"level":1,"passed":true,"mode":"key"},{"level":2,"passed":true,"mode":"key"},
+    {"level":3,"passed":true,"mode":"gemini"}]</pre>
+  <p>A level cleared via <code>key</code> is a deterministic result: the same run would pass again. A level cleared via <code>gemini</code> depended on a third-party model answering clinical multiple-choice questions correctly, and might not repeat. Both count as passes, and the summary is the only place that distinction survives — which is a good reason to read it rather than just the result line.</p>
+</div>
+
+<!-- ═══════════════════════════ 9. WHAT GREEN ACTUALLY PROVES ══ -->
+<div class="page sec">
+  <h2>9 &nbsp; What green actually proves</h2>
+  <p class="lead">Seven assertions, six of them unconditional. For a driver script that is unusually strong — and the last two are the ones that make a green run believable.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:22%">What it checks</th><th style="width:38%">The assertion</th><th>Why it is there</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>The dashboard rendered</b></td>
+        <td>expect(getByText(/competency dashboard/i).first())<br>.toBeVisible({ timeout: 30_000 })</td>
+        <td><span class="pill p-ok">assert</span> A 30-second window, because the dashboard is slow to paint. Fails fast if the run never got as far as the page it needs.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td><td><b>A level was found</b></td>
+        <td>expect(levels.length).toBeGreaterThan(0)</td>
+        <td><span class="pill p-ok">assert</span> Zero levels means the competency was never located at all — a different failure from "a level did not pass", and worth separating.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>Every attempted level passed</b></td>
+        <td>expect(levels.every((l) =&gt; l.passed)).toBe(true)</td>
+        <td><span class="pill p-ok">assert</span> The core claim. Note it covers every level <i>attempted</i>, not a fixed count — a competency with three levels passes on three.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>Level numbers are sane</b></td>
+        <td>expect(bad).toHaveLength(0)<br><span style="font-size:7.6pt;">where bad = levels outside 1&#8230;5</span></td>
+        <td><span class="pill p-ok">assert</span> Guard 4. A level number off the ladder means the run wandered somewhere else. The message lists the offenders.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td><td><b>No level twice</b></td>
+        <td>expect(new Set(cleared).size).toBe(cleared.length)</td>
+        <td><span class="pill p-ok">assert</span> A <code>Set</code> drops duplicates, so a size mismatch means the same level was climbed twice — the other signature of a wandering run.</td>
+      </tr>
+      <tr>
+        <td class="n">6</td><td><b>The Passbook lists it</b></td>
+        <td>expect(passbook.found).toBe(true)</td>
+        <td><span class="pill p-ok">assert</span> <b>The one that matters most.</b> Everything above is the script reporting on itself; this asks the portal. The message says it plainly: "the portal did not record this climb".</td>
+      </tr>
+      <tr>
+        <td class="n">7</td><td><b>At the right level</b></td>
+        <td>expect(passbook.level)<br>.toBeGreaterThanOrEqual(highest)</td>
+        <td><span class="pill p-warn">conditional</span> Runs only when the Passbook entry actually states a level. <code>GreaterThanOrEqual</code>, not equality, because a previous run may legitimately have climbed higher.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The Passbook check</h3>
+  <p>It is wrapped in <code>test.step()</code>, so the HTML report shows it as its own collapsible section rather than as a tail of console noise. Inside, it looks for a row naming the competency across four container shapes — <code>mat-card</code>, anything with a <i>card</i> class, a <code>tr</code>, anything with a <i>row</i> class — with a 20-second window because the Passbook loads slowly.</p>
+  <p>And when it does not find one, it does the thing that makes a failure diagnosable instead of mysterious:</p>
+  <pre><span class="c">   🔍 Passbook entries seen:</span>
+<span class="c">      [0] Normal delivery — Level 2</span>
+<span class="c">      [1] Pregnancy identification — Level 1</span>
+<span class="c">      …</span></pre>
+  <p>Ten entries, printed verbatim. If the portal recorded a <i>different</i> competency — the exact hazard from Section 2 — that list is where you see it.</p>
+
+  <div class="grid2">
+    <div class="card" style="border-color:#15803D;">
+      <div class="h" style="color:#15803D;">Green means this</div>
+      <ul>
+        <li>The named competency was found and opened</li>
+        <li>Every level attempted was passed</li>
+        <li>All levels belonged to <b>one</b> competency, by collectionId</li>
+        <li>Levels were 1&#8230;5, each climbed once</li>
+        <li><b>The portal recorded the climb in the Passbook</b></li>
+        <li>At a level no lower than the highest cleared</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:#B45309;">
+      <div class="h" style="color:#B45309;">Green does <i>not</i> mean this</div>
+      <ul>
+        <li>That every level of the competency was climbed — running out is success, so a portal that stops offering levels early passes</li>
+        <li>That answers were right for the right reasons, where <code>mode</code> was <code>gemini</code></li>
+        <li>That no question was left unanswered — those fall back to option A and can still pass</li>
+        <li>That the Passbook level is exactly right, only that it is not lower</li>
+        <li>That the same run would pass again on an AI-answered level</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout gold">
+    <span class="t">"No further level" is indistinguishable from "the portal stopped offering levels"</span>
+    When <code>openNextAssessment()</code> returns <code>ok: false</code>, the script logs <code>🏁 competency complete</code> and breaks — treating it as success. That is right in the normal case: a three-level competency has nothing at level 4. But it is the same signal a portal gives when a level exists and simply cannot be opened, and assertion 2 only requires <i>one</i> level to have been found.
+    <br><br>
+    In practice assertion 7 catches most of it — the Passbook level would be lower than expected — but only when the entry states a level. If this run is a release gate, recording the expected level count per competency and asserting against it would close the gap.
+  </div>
+
+  <h3>Against the rest of the suite</h3>
+  <table>
+    <thead><tr><th style="width:30%">Suite</th><th style="width:12%">Tests</th><th style="width:16%">Assertions</th><th>What green is evidence of</th></tr></thead>
+    <tbody>
+      <tr><td><b>Complete Competency</b> <span class="pill p-ok">this one</span></td><td>1</td><td><b>6 + 1</b></td><td>One competency was genuinely climbed, and the portal agrees. The only driver in the suite that cross-checks its own result against stored state.</td></tr>
+      <tr><td>Course Completion</td><td>1</td><td>1</td><td>A course was completed end to end. Broader, but self-reported.</td></tr>
+      <tr><td>Course TOC</td><td>21</td><td>15 + 3</td><td>Every control on one page renders and responds.</td></tr>
+      <tr><td>My Courses</td><td>49</td><td>17 + 1</td><td>The learner's home page renders whatever the account has.</td></tr>
+    </tbody>
+  </table>
+  <p>The Passbook check is the difference. Every other driver in this suite finishes by believing its own log; this one goes and asks the system of record, and fails if the two disagree.</p>
+</div>
+
+<!-- ═════════════════ 10. ARTIFACTS, RUN VARIANTS, FAILURE MODES ══ -->
+<div class="page sec">
+  <h2>10 &nbsp; Artifacts, run variants, failure modes</h2>
+
+  <h3>Reading the console</h3>
+  <p>There is no bespoke report for this spec — the standard reporters run, and the console is where the detail lives.</p>
+  <table class="t-sel">
+    <thead><tr><th style="width:8%">Mark</th><th style="width:32%">Line</th><th>What it tells you</th></tr></thead>
+    <tbody>
+      <tr><td style="font-size:12pt;text-align:center;">👤</td><td>Account: sphereid041@yopmail.com</td><td>Which account the run will use. In CDP mode it says instead that the account is whoever is signed into that tab — because no login is performed.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">♻️</td><td>Reusing your tab: https://…/page/home</td><td>CDP mode adopted an existing tab. If the origin differs from <code>BASE_URL</code>, the next lines say the run retargeted itself.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">🧗</td><td>Attempting level 2 of "Care of the newborn"</td><td>One per iteration. The fastest way to see how far a run got.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">🔓</td><td>REAL answer key from S3: 8 questions</td><td>The hierarchy route worked and bypassed the poisoned copy. The best line in the log.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">🆔</td><td>Competency id: do_1141…</td><td>Recorded at level 1; every later level is compared against it.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">⛔</td><td>Level 2 belongs to a DIFFERENT competency</td><td>A guard fired. The line names both ids, so you can see what was opened instead.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">⚠️</td><td>this question is UNANSWERED</td><td>A radio click never registered after twelve attempts. Explains a level failing despite a good key.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">📗</td><td>Passbook: "Care of the newborn Level 3"</td><td>What the portal actually recorded.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Failure modes</h3>
+  <table>
+    <thead><tr><th style="width:28%">Symptom</th><th style="width:32%">Cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>No competency name provided</code></td>
+        <td><code>COMPETENCY_NAME</code> is unset.</td>
+        <td>Set it. Note the error text points at <code>run-competency.ps1</code>, which is not in this repository — use <code>npm run run:complete-competency</code> instead.</td>
+      </tr>
+      <tr>
+        <td><code>BASE_URL is "http://localhost:3000"…</code></td>
+        <td>The localhost mirror cannot do password login.</td>
+        <td>Either target a real environment, or set <code>USE_CDP=1</code> and attach to a Chrome you logged into by hand.</td>
+      </tr>
+      <tr>
+        <td><code>Not signed in on …</code></td>
+        <td>CDP mode attached to a tab with no session. Thrown by <code>assertLoggedIn()</code> <i>before</i> the run hunts for cards.</td>
+        <td>Follow the three numbered steps in the error. The check exists because an unauthenticated dashboard shows a shell with a spinner, which otherwise looks exactly like "competency not found".</td>
+      </tr>
+      <tr>
+        <td><code>Assess / Re-Assess button not visible</code></td>
+        <td>The card-tagging walk found the title but no ancestor holding a button, or the competency is not on the Required tab.</td>
+        <td>The run then tries the Job Description route automatically. If both fail, check the exact competency title — the title match is <b>exact</b> after normalisation, not a substring.</td>
+      </tr>
+      <tr>
+        <td><code>⛔ no collectionId in …</code></td>
+        <td>The player never navigated, so the URL carries no id.</td>
+        <td>Usually the intro modal's Start Now did not take. Watch the run headed; the 25-second poll is generous, so a timeout here means the click, not the wait.</td>
+      </tr>
+      <tr>
+        <td><code>⛔ Level N belongs to a DIFFERENT competency</code></td>
+        <td>Exactly the hazard this file exists to catch.</td>
+        <td>A real product defect, and the most valuable failure this spec produces. The log names both ids — file it with those.</td>
+      </tr>
+      <tr>
+        <td>A level fails with a full set of correct answers</td>
+        <td>Either a radio click never registered, or the results screen changed wording.</td>
+        <td>Grep the log for <code>UNANSWERED</code>. If there is none, the wording list in <code>detectQuizPassed()</code> is the next thing to check.</td>
+      </tr>
+      <tr>
+        <td>Every level uses <code>mode: gemini</code></td>
+        <td>The S3 route is failing — usually the captured API headers, or a changed hierarchy response shape.</td>
+        <td>Check for the <code>🔓</code> line. Without it, <code>fetchRealAnswerKey()</code> returned null and every level is depending on the model.</td>
+      </tr>
+      <tr>
+        <td>The Passbook assertion fails after a clean climb</td>
+        <td>The portal did not record what the quizzes reported.</td>
+        <td>The printed list of Passbook entries is the evidence. This is a genuine product finding, not a test problem.</td>
+      </tr>
+      <tr>
+        <td>The run hits the 40-minute timeout</td>
+        <td>Usually the Gemini path on several levels, at 6.5&#8239;s per question plus rate-limit waits.</td>
+        <td>Fix the key route rather than raising the timeout — see the row above about <code>mode: gemini</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Where to start when a run goes red</span>
+    Read the summary line first — <code>levels cleared this run</code> plus the JSON array. It tells you how far the climb got and how each level was answered, and that is usually enough to know whether you are looking at a product defect, a stale selector, or a quota problem.
+  </div>
+</div>

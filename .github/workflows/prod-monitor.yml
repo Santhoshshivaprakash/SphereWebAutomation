@@ -1,0 +1,54 @@
+name: Prod Synthetic Monitor
+
+# Runs a tiny login + authenticated-page smoke against PRODUCTION on a schedule.
+# On failure, the email reporter sends an alert via SMTP. If the job itself breaks
+# before the reporter runs (e.g. npm ci fails), GitHub's built-in workflow-failure
+# email notification covers it.
+on:
+  schedule:
+    - cron: '*/15 * * * *' # every 15 minutes (GitHub may delay a few min)
+  workflow_dispatch: {}      # allow manual runs from the Actions tab
+
+concurrency:
+  group: prod-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BASE_URL: https://sphere.aastrika.org
+      MONITOR_EMAIL: ${{ secrets.MONITOR_EMAIL }}
+      MONITOR_PASSWORD: ${{ secrets.MONITOR_PASSWORD }}
+      # SMTP alerting (used by reporters/email-reporter.ts)
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+      ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run synthetic monitor
+        run: npm run test:monitor
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-monitor-report
+          path: playwright-report/
+          retention-days: 7

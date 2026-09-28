@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sphere Web Automation — How We Built It</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&display=swap');
+
+  :root{
+    --navy:#17283C; --navy400:#2D3E54; --navy100:#7E8A9A;
+    --teal:#1E8F8E; --teal600:#186E6E; --teal50:#E3F7F6;
+    --gold:#F0A500; --gold700:#9A6800; --gold50:#FEF6E0;
+    --ink:#0D1218; --midgray:#7C8696; --line:#D8DEE5; --page:#F6F7F9;
+    --success:#15803D; --success-bg:#DCFCE7; --error:#B91C1C; --error-bg:#FEE2E2;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family:'Open Sans',Arial,sans-serif; color:var(--ink); font-size:11pt; line-height:1.5; }
+
+  /* Cover */
+  .cover{ padding:120px 64px 64px; border-top:14px solid var(--navy); page-break-after:always; }
+  .cover .kicker{ font-family:'Lato',sans-serif; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--teal); font-weight:700; font-size:11pt; margin-bottom:18px; }
+  .cover h1{ font-size:34pt; line-height:1.12; color:var(--navy); font-weight:700; margin:0 0 10px; }
+  .cover .sub{ font-size:15pt; color:var(--navy400); margin:0 0 40px; max-width:640px; }
+  .cover .rule{ height:4px; width:120px; background:var(--gold); margin:0 0 40px; }
+  .cover .meta{ font-family:'Lato',sans-serif; color:var(--midgray); font-size:10.5pt; }
+  .cover .meta b{ color:var(--navy); }
+  .cover .pill{ display:inline-block; background:var(--teal50); color:var(--teal600);
+    border-radius:9999px; padding:6px 14px; font-size:9.5pt; font-weight:600; margin-top:26px; }
+
+  main{ padding:0 64px 40px; }
+  h1.sec{ font-size:18pt; color:var(--navy); font-weight:700; margin:34px 0 4px; padding-top:6px; }
+  h1.sec .n{ color:var(--teal); }
+  h2{ font-size:13.5pt; color:var(--navy); font-weight:600; margin:22px 0 6px; }
+  h3{ font-size:11.5pt; color:var(--navy400); font-weight:700; margin:16px 0 4px; }
+  p{ margin:6px 0; }
+  .divider{ height:2px; background:var(--teal); opacity:.35; margin:6px 0 2px; border:0; }
+  ul,ol{ margin:6px 0 6px 0; padding-left:22px; }
+  li{ margin:3px 0; }
+  code{ font-family:'JetBrains Mono',Consolas,monospace; background:var(--page);
+    border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:9.5pt; color:var(--navy); }
+  .mono{ font-family:'JetBrains Mono',Consolas,monospace; background:var(--navy); color:#E8EDF3;
+    border-radius:8px; padding:14px 16px; font-size:9.5pt; line-height:1.55; white-space:pre; overflow:auto; }
+  a{ color:var(--teal600); }
+
+  /* Callouts */
+  .callout{ border-left:4px solid var(--teal); background:var(--teal50); padding:12px 16px;
+    border-radius:0 8px 8px 0; margin:12px 0; }
+  .callout.warn{ border-left-color:var(--gold); background:var(--gold50); }
+  .callout .lbl{ font-family:'Lato',sans-serif; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; font-size:8.5pt; color:var(--teal600); margin-bottom:3px; }
+  .callout.warn .lbl{ color:var(--gold700); }
+
+  /* Tables */
+  table{ width:100%; border-collapse:collapse; margin:12px 0; font-size:10pt; }
+  th{ background:var(--navy); color:#fff; text-align:left; font-weight:600; padding:9px 12px; }
+  td{ padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:nth-child(even) td{ background:var(--page); }
+  .ok{ color:var(--success); font-weight:700; }
+  .bad{ color:var(--error); font-weight:700; }
+
+  /* ToC */
+  .toc{ background:var(--page); border:1px solid var(--line); border-radius:12px; padding:18px 22px; margin:18px 0 8px; }
+  .toc h2{ margin-top:0; }
+  .toc ol{ columns:2; column-gap:36px; }
+  .toc li{ font-size:10.5pt; }
+
+  .section{ page-break-inside:avoid; }
+  .caption{ font-family:'Lato',sans-serif; color:var(--midgray); font-size:9pt; }
+  .kpis{ display:flex; gap:14px; margin:14px 0; flex-wrap:wrap; }
+  .kpi{ flex:1 1 150px; border:1px solid var(--line); border-radius:10px; padding:14px 16px; background:#fff; }
+  .kpi .big{ font-size:22pt; font-weight:700; color:var(--navy); line-height:1; }
+  .kpi.gold{ background:var(--gold50); border-color:#F3D68A; }
+  .kpi.gold .big{ color:var(--gold700); }
+  .kpi .lbl{ font-family:'Lato',sans-serif; color:var(--midgray); font-size:9pt; margin-top:6px; }
+</style>
+</head>
+<body>
+
+  <!-- ══════════ COVER ══════════ -->
+  <section class="cover">
+    <div class="kicker">Test Automation · Aastrika Sphere</div>
+    <h1>Sphere Web Automation</h1>
+    <div class="rule"></div>
+    <p class="sub">How we built it — achievements and the step-by-step work delivered across the account, course, competency, sign-up and course-page suites.</p>
+    <p class="meta"><b>Prepared for:</b> Aastrika / Sphere QA &nbsp;·&nbsp; <b>Platform:</b> Sunbird-iGOT &nbsp;·&nbsp; <b>Stack:</b> Playwright + TypeScript</p>
+    <p class="meta"><b>Date:</b> July 2026</p>
+    <span class="pill">Automated · CDP-authenticated · Bilingual (EN / HI)</span>
+  </section>
+
+  <main>
+    <!-- ToC -->
+    <div class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li>What this project is</li>
+        <li>How it logs in (CDP)</li>
+        <li>Environments</li>
+        <li>The test suites &amp; what we achieved</li>
+        <li>Reporting</li>
+        <li>How to run</li>
+        <li>Known limitation: yopmail</li>
+        <li>Achievements at a glance</li>
+      </ol>
+    </div>
+
+    <!-- 1 -->
+    <div class="section">
+      <h1 class="sec"><span class="n">01 ·</span> What this project is</h1>
+      <hr class="divider">
+      <p>An <b>automated testing suite</b> for the <b>Sphere</b> website — the Aastrika / Sunbird-iGOT nursing e-learning platform. Rather than a person clicking through the site by hand, these scripts drive a real browser: they log in, open and complete courses, fill forms, and verify every button and screen behaves as expected.</p>
+      <p><b>Tools:</b> Playwright (browser automation) with TypeScript. <b>Coverage:</b> account/profile, course pages, course completion, competency assessments, sign-up, login, and the terms-and-conditions journey. <b>Output:</b> an Excel report and a Tarento-branded HTML report after every run.</p>
+    </div>
+
+    <!-- 2 -->
+    <div class="section">
+      <h1 class="sec"><span class="n">02 ·</span> How it logs in — the CDP trick</h1>
+      <hr class="divider">
+      <p>Most pages require a logged-in session. Copying a session into the automation failed (the server rejects copied sessions), so we use <b>CDP (Chrome DevTools Protocol)</b>:</p>
+      <ol>
+        <li>Open a Chrome window with remote debugging switched on.</li>
+        <li>Log in to Sphere once, by hand, in that window.</li>
+        <li>The tests <b>connect to that already-logged-in window</b> and drive it.</li>
+      </ol>
+      <div class="callout warn">
+        <div class="lbl">Golden rule</div>
+        Always run from the <code>SphereWebAutomation</code> folder — never the parent <code>Automation</code> folder — or Playwright loads the wrong copy of itself and every test fails.
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="section">
+      <h1 class="sec"><span class="n">03 ·</span> Which site each test runs against</h1>
+      <hr class="divider">
+      <table>
+        <tr><th>Test group</th><th>Runs against</th><th>Why</th></tr>
+        <tr><td>Account, Course, Competency, Course TOC</td><td>Production (logged-in CDP Chrome)</td><td>These pages render blank on the localhost mirror — they need the real site</td></tr>
+        <tr><td>Sign-up, Login, OTP, Positive Flow</td><td>Staging (<code>STAGING_URL</code>)</td><td>They create new accounts, which can't be done on localhost</td></tr>
+      </table>
+      <p class="caption">Environments switch via two settings in <code>.env</code>: <code>BASE_URL</code> (logged-in pages) and <code>STAGING_URL</code> (sign-up flows).</p>
+    </div>
+
+    <!-- 4 -->
+    <div class="section">
+      <h1 class="sec"><span class="n">04 ·</span> The test suites &amp; what we achieved</h1>
+      <hr class="divider">
+
+      <h2>Account page — 68 checks, all passing</h2>
+      <p><b>Covers:</b> user name &amp; position, every left-nav link, all fields (name, phone, email, DOB, country, pincode), Organization &amp; Academic sections, Language Preference, My Certificates, Logout, and rendering on mobile / tablet / desktop.</p>
+      <p><b>How we achieved it:</b> fixed 21 broken checks to reach <span class="ok">68/68</span>; made every check work in <b>English and Hindi</b>; made the suite <b>open the Account page once and run all checks on that single session</b>; and added pop-up dismissal so one test can't block the next.</p>
+
+      <h2>Sign-up (create-account)</h2>
+      <p><b>Covers:</b> pick language → fill form → verify by email OTP → confirm name → accept Terms.</p>
+      <p><b>How we achieved it:</b> fixed a loading overlay that swallowed the OTP-submit click; <b>added a new journey</b> — create a user, click <b>Decline</b> on Terms (returns to the public page), <b>log in again</b>, then <b>Accept</b> the Terms; and throttled the email checks so the throwaway-email service doesn't bot-block us.</p>
+
+      <h2>Course completion</h2>
+      <p><b>Covers:</b> plays every video to the end, answers quizzes/assessments (answer key + AI fallback), unlocks gated finals, waits for the Congratulations &amp; Ratings pop-ups, and downloads the certificate.</p>
+      <p><b>How we achieved it:</b> completed <b>“Care of Newborn &amp; Newborn Resuscitation”</b> and <span class="ok">generated its certificate</span>; fixed the download by waiting for the certificate to finish drawing on screen before saving.</p>
+
+      <h2>Competency — self-healing</h2>
+      <p><b>Covers:</b> the competency dashboard and completing assessment levels.</p>
+      <p><b>How we achieved it:</b> if the dashboard shows “no result” (wrong role), the test auto-navigates to Account → Organization Details, sets <b>Background = Healthcare Worker</b> and <b>Designation = ANM/MPW</b>, saves, and reloads — then competencies appear. Broke it into <b>many per-step test cases</b>, uses the real <b>Job Description → role → Assess</b> path, navigates via the <b>Competency menu button</b> (a direct URL redirects home), and added a <b>Passbook</b> check.</p>
+
+      <h2>Course TOC page — 16 skips turned into coverage</h2>
+      <p><b>Covers:</b> title, CNE hours, duration, rating, author, the Details / Certificate / Share icons, Resume/Start, the Overview / Modules / Discussion tabs, module list, Description, and License terms.</p>
+      <p><b>How we achieved it:</b> the old tests skipped 16 of 22 by hunting for PDF/quiz viewers that live inside modules. We <b>rewrote them to check the real overview elements</b> — moving from 1 passing to <span class="ok">19 passing</span>. Found the real controls: the icons are <code>div.toc-icon-action</code> (click the box, not the label), the module list is <code>mat-list-item</code>, and the author is a coloured link.</p>
+
+      <h2>Positive Flow — 26 clear steps</h2>
+      <p><b>Covers:</b> sign up → verify OTP → accept Terms → complete the profile (DOB, country/state/city, Healthcare Worker, designation, RN/RM number, organization type &amp; name) → Done.</p>
+      <p><b>How we achieved it:</b> turned one big test into <b>26 small test cases</b>, one per clicked element, so the report shows exactly how far the flow gets and where it stops.</p>
+    </div>
+
+    <!-- 5 -->
+    <div class="section">
+      <h1 class="sec"><span class="n">05 ·</span> Reporting</h1>
+      <hr class="divider">
+      <p>Every run writes into three tidy folders and produces two report styles.</p>
+      <div class="mono">test-reports/
+  ├─ excel-reports/     spreadsheet of every test (pass / fail / skip)
+  ├─ course-reports/    course-completion reports
+  └─ certificates/      downloaded certificates
+brand-reports/          Tarento-styled HTML reports</div>
+      <p>Grouped runs merge into one report: <code>report:auth</code> (sign-up/login on staging) + <code>report:app</code> (account/course/competency on production) + <code>report:course</code> (completion) + <code>report:merge</code> (stitch together). A full combined run produced <span class="ok">149 passing tests</span>.</p>
+    </div>
+
+    <!-- 6 -->
+    <div class="section">
+      <h1 class="sec"><span class="n">06 ·</span> How to run</h1>
+      <hr class="divider">
+      <p>From the <code>SphereWebAutomation</code> folder (open your logged-in Chrome on port 9222 first for the CDP suites):</p>
+      <div class="mono">npm run run:account          # Account page
+npm run run:course-toc       # Course TOC page
+npm run run:competency       # Competency
+npm run run:login            # Login (staging)
+npm run run:create-account   # Sign-up (staging)
+
+# complete a course + get its certificate
+$env:COURSE_NAME="Care of Newborn &amp; Newborn Resuscitation"; npx playwright test tests/CourseComplete.spec.ts
+
+npm run report:sanity        # the full merged report</div>
+    </div>
+
+    <!-- 7 -->
+    <div class="section">
+      <h1 class="sec"><span class="n">07 ·</span> Known limitation — yopmail</h1>
+      <hr class="divider">
+      <p>The sign-up tests read a one-time code (OTP) from a <b>throwaway email inbox (yopmail)</b>. When many sign-ups run quickly, yopmail flags us as a bot and shows a <b>CAPTCHA</b> that automation can’t solve — so the OTP step fails and the sign-up flow stops there.</p>
+      <div class="callout">
+        <div class="lbl">Not a code bug</div>
+        The app <i>does</i> send the email (it returns “OTP sent”); we simply can’t read it while yopmail is blocking us. We confirmed the OTP is <b>not</b> returned in the app’s API response, so the email is the only source.
+      </div>
+      <p><b>Options for later:</b> (1) <b>wait it out</b> — the block clears in ~15–60 min; (2) <b>slower checks</b> — throttling is already added to stay under the bot limit; (3) <b>switch email provider</b> — a CAPTCHA-free service (e.g. 1secmail) as a last resort.</p>
+    </div>
+
+    <!-- 8 -->
+    <div class="section">
+      <h1 class="sec"><span class="n">08 ·</span> Achievements at a glance</h1>
+      <hr class="divider">
+      <div class="kpis">
+        <div class="kpi"><div class="big">68/68</div><div class="lbl">Account checks passing</div></div>
+        <div class="kpi gold"><div class="big">149</div><div class="lbl">Tests passing in the merged run</div></div>
+        <div class="kpi"><div class="big">16→0</div><div class="lbl">Course-TOC skips resolved</div></div>
+        <div class="kpi"><div class="big">1</div><div class="lbl">Certificate generated</div></div>
+      </div>
+      <table>
+        <tr><th>Area</th><th>Delivered</th></tr>
+        <tr><td>Account</td><td>21 failures fixed → 68/68; bilingual EN/HI; single-session run</td></tr>
+        <tr><td>Sign-up</td><td>OTP-overlay fix; new Decline → re-login → Accept journey; email throttling</td></tr>
+        <tr><td>Course completion</td><td>Course completed end-to-end; certificate generated &amp; download fixed</td></tr>
+        <tr><td>Competency</td><td>Self-healing role fix; per-step cases; Job-Description flow; Passbook check</td></tr>
+        <tr><td>Course TOC</td><td>Rewritten to real overview elements; 1 → 19 passing</td></tr>
+        <tr><td>Positive Flow</td><td>One test → 26 granular per-step cases</td></tr>
+        <tr><td>Reporting</td><td>Grouped + merged reports; correct environment routing</td></tr>
+        <tr><td>Diagnostics</td><td>yopmail CAPTCHA root-caused; throttling added</td></tr>
+      </table>
+      <p class="caption">Everything is type-checked, and the Excel + branded reports generate automatically on each run. · Styled to the Tarento brand.</p>
+    </div>
+  </main>
+</body>
+</html>

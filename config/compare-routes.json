@@ -1,0 +1,74 @@
+{
+  "_comment": [
+    "Feature inventory for scripts/compare-env.mjs (npm run compare).",
+    "Every entry is loaded on BOTH environments and compared side by side.",
+    "  id     — short slug, used in filenames and the report anchor",
+    "  name   — the feature label shown in the report",
+    "  path   — path appended to each environment's base URL",
+    "  auth   — true = only captured when the run is authenticated (--auth)",
+    "  wait   — extra settle time in ms after networkidle (slow widgets)",
+    "  note   — one line shown in the report saying what this entry covers",
+    "  steps  — actions to walk INTO the screen before capturing. Without them a",
+    "           route is compared exactly as it first lands, so a wizard shows only",
+    "           its first page. Step forms:",
+    "             { \"click\": \"English\" }            button name, visible text, or a css/xpath selector",
+    "             { \"fill\": \"input[type=email]\", \"value\": \"x@y.com\" }",
+    "             { \"waitFor\": \"Personal Details\" }  wait for text/selector to appear",
+    "             { \"wait\": 1200 }                   plain pause in ms",
+    "           Steps are read-only by design: click and type to REACH a screen, but",
+    "           do not submit anything that would create data on production.",
+    "  skip   — set true to park a route without deleting it",
+    "Add a feature by adding an entry here — no code change needed.",
+    "  ignore — regex patterns for known third-party noise; matching console errors and failing requests are dropped before the diff."
+  ],
+  "routes": [
+    { "id": "public-home", "name": "Public home", "path": "/public/home", "auth": false,
+      "note": "The logged-out landing page: hero, stats, top courses, footer." },
+
+    { "id": "public-login", "name": "Login page", "path": "/public/login", "auth": false,
+      "note": "The login shell as it lands — the OTP/password form is not submitted." },
+
+    { "id": "signup-language", "name": "Create account — step 1 (language)", "path": "/app/create-account", "auth": false,
+      "note": "First screen of the signup wizard: the language chooser." },
+
+    { "id": "signup-details", "name": "Create account — step 2 (details form)", "path": "/app/create-account", "auth": false,
+      "note": "The signup form itself, reached by choosing English and pressing Next. Nothing is submitted.",
+      "steps": [
+        { "click": "English" },
+        { "click": "Next", "wait": 1200 }
+      ] },
+
+    { "id": "app-home", "name": "Learner home", "path": "/page/home", "auth": true, "wait": 1500,
+      "note": "The signed-in home: course rails, banners, progress cards." },
+
+    { "id": "my-courses", "name": "My courses", "path": "/app/user/my_courses", "auth": true, "wait": 1500,
+      "note": "The learner's enrolled-course list as it lands (first tab only)." },
+
+    { "id": "competency", "name": "Competency passbook", "path": "/app/user/competency", "auth": true, "wait": 2000,
+      "note": "The competency dashboard as it lands — levels are not opened." },
+
+    { "id": "profile", "name": "Profile", "path": "/app/profile-view", "auth": true, "wait": 1500,
+      "note": "Account → Personal Details. Nothing is saved." },
+
+    { "id": "profile-certificates", "name": "Profile — My certificates", "path": "/app/profile-view", "auth": true, "wait": 1500,
+      "note": "The certificates tab, reached by clicking it in the Account sidebar.",
+      "steps": [
+        { "click": "My Certificates", "wait": 1200 }
+      ] }
+  ],
+  "api": [
+    { "id": "courses", "name": "Live courses", "method": "POST", "path": "/api/content/v1/search",
+      "body": { "request": { "filters": { "primaryCategory": ["Course"], "status": ["Live"] }, "fields": ["name", "identifier"], "limit": 1 } },
+      "count": "result.count" },
+    { "id": "competencies", "name": "Competency areas", "method": "POST", "path": "/api/content/v1/search",
+      "body": { "request": { "filters": { "primaryCategory": ["Competency"], "status": ["Live"] }, "fields": ["name"], "limit": 1 } },
+      "count": "result.count" },
+    { "id": "resources", "name": "Learning resources", "method": "POST", "path": "/api/content/v1/search",
+      "body": { "request": { "filters": { "primaryCategory": ["Learning Resource"], "status": ["Live"] }, "fields": ["name"], "limit": 1 } },
+      "count": "result.count" }
+  ],
+  "ignore": {
+    "console": [],
+    "requests": []
+  }
+}

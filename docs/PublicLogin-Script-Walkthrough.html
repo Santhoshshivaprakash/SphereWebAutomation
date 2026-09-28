@@ -1,0 +1,1094 @@
+<title>Public Login Script Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#17283C; --navy-400:#18293D; --navy-300:#2D3E54; --navy-100:#7E8A9A; --navy-50:#BEC5CE;
+    --teal:#1E8F8E; --teal-600:#186E6E; --teal-700:#135858; --teal-50:#E3F7F6; --teal-100:#B8ECE9;
+    --gold:#F0A500; --gold-600:#C88800; --gold-700:#9A6800; --gold-50:#FEF6E0;
+    --offwhite:#F6F7F9; --line:#D8DEE5; --mid:#7C8696; --ink:#0D1218;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7; --err:#B91C1C; --err-bg:#FEE2E2;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Open Sans",Segoe UI,Arial,sans-serif;
+    font-size:9.9pt; line-height:1.47; color:var(--ink); background:#fff;
+    margin:0;
+  }
+  .page{ padding:0 16mm; }
+
+  h1{font-size:20pt;font-weight:700;color:var(--navy);margin:0 0 6px;letter-spacing:-.2px;}
+  h2{font-size:14.5pt;font-weight:700;color:var(--navy);margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid var(--teal);}
+  h3{font-size:11.5pt;font-weight:600;color:var(--navy);margin:15px 0 6px;}
+  h4{font-size:10.5pt;font-weight:600;color:var(--navy-300);margin:12px 0 5px;}
+  p{margin:0 0 8px;}
+  .lead{font-size:10.4pt;color:var(--navy-300);}
+  .cap{font-family:Lato,Arial,sans-serif;font-size:8.2pt;color:var(--mid);margin:4px 0 0;}
+  code,.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:8.8pt;}
+  code{background:var(--offwhite);border:1px solid var(--line);border-radius:4px;padding:1px 4px;color:var(--navy);}
+  a{color:var(--teal-600);}
+
+  .cover{height:247mm;display:flex;flex-direction:column;justify-content:center;background:var(--navy);color:#fff;padding:0 20mm;margin:-14mm 0 0;}
+  .cover .kicker{font-family:Lato;font-size:10pt;letter-spacing:3px;text-transform:uppercase;color:var(--teal-100);margin-bottom:18px;}
+  .cover h1{font-size:34pt;color:#fff;line-height:1.15;margin-bottom:14px;}
+  .cover .sub{font-size:13pt;color:var(--navy-50);max-width:150mm;line-height:1.5;}
+  .cover .rule{width:72px;height:5px;background:var(--gold);margin:26px 0;border-radius:3px;}
+  .cover .meta{font-family:Lato;font-size:9.5pt;color:var(--navy-50);line-height:1.9;}
+  .cover .meta b{color:#fff;font-weight:700;}
+
+  .sec{page-break-before:always;padding-top:1mm;}
+  .nobreak{page-break-inside:avoid;}
+
+  .callout{border-left:4px solid var(--teal);background:var(--teal-50);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;font-size:9.5pt;}
+  .callout.gold{border-left-color:var(--gold);background:var(--gold-50);}
+  .callout.red{border-left-color:var(--err);background:var(--err-bg);}
+  .callout .t{font-weight:700;color:var(--navy);display:block;margin-bottom:2px;}
+
+  table{width:100%;border-collapse:collapse;margin:8px 0 11px;font-size:8.6pt;page-break-inside:auto;}
+  thead{display:table-header-group;}
+  th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:6px 8px;border:.5pt solid var(--navy);font-size:8.6pt;}
+  td{padding:5px 8px;border:.5pt solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--offwhite);}
+  tr{page-break-inside:avoid;}
+  td.n{width:24px;text-align:center;font-weight:700;color:var(--teal-700);background:var(--teal-50)!important;}
+  .t-sel td:nth-child(3){font-family:"JetBrains Mono",Consolas,monospace;font-size:7.9pt;line-height:1.45;word-break:break-word;}
+
+  .pill{display:inline-block;padding:1px 8px;border-radius:9999px;font-size:8pt;font-weight:600;font-family:Lato;}
+  .p-ok{background:var(--ok-bg);color:var(--ok);}
+  .p-warn{background:var(--warn-bg);color:var(--warn);}
+  .p-err{background:var(--err-bg);color:var(--err);}
+  .p-teal{background:var(--teal-50);color:var(--teal-700);}
+  .p-gold{background:var(--gold-50);color:var(--gold-700);}
+
+  .grid2{display:flex;gap:12px;margin:10px 0;}
+  .card{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff;}
+  .card .h{font-weight:700;color:var(--navy);font-size:9.8pt;margin-bottom:5px;}
+  .card ul{margin:0;padding-left:15px;}
+  .card li{margin-bottom:3px;font-size:9.2pt;}
+
+  .fig{margin:12px 0 4px;page-break-inside:avoid;}
+  .fig svg{width:100%;height:auto;display:block;}
+
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:9px 0;}
+  ol.steps li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px;font-size:9.4pt;page-break-inside:avoid;}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:9999px;background:var(--navy);color:#fff;font-size:8pt;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  ol.steps li b{color:var(--navy);}
+
+  .toc{margin:12px 0;}
+  .toc div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:5px 2px;font-size:9.6pt;}
+  .toc div span:first-child{color:var(--navy);font-weight:600;}
+  .toc div span:last-child{color:var(--mid);font-family:Lato;font-size:9pt;}
+
+  pre{background:var(--navy);color:#E8EDF3;border-radius:8px;padding:9px 12px;font-family:"JetBrains Mono",Consolas,monospace;font-size:8pt;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;}
+  pre .c{color:#7E9AB8;}
+  pre .k{color:#6FD7D5;}
+  pre .g{color:#F2C14E;}
+  pre .r{color:#FF9A9A;}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════ COVER ══ -->
+<div class="cover">
+  <div class="kicker">Sphere Web Automation</div>
+  <h1>Public Login Script<br>Step-by-Step Walkthrough</h1>
+  <div class="rule"></div>
+  <div class="sub">A control-by-control map of how <span class="mono">tests/public-login.spec.ts</span> verifies the Sphere login page — every mode toggle, modal, locator and edge case, with page-anatomy, state-machine and assertion-depth diagrams.</div>
+  <div class="rule" style="width:40px;height:2px;background:#2D3E54;"></div>
+  <div class="meta">
+    <b>Script</b> &nbsp; tests/public-login.spec.ts &nbsp;·&nbsp; 453 lines &nbsp;·&nbsp; 27 declarations → 29 tests in 10 groups<br>
+    <b>Target</b> &nbsp; https://sphere.aastrika.org/public/login &nbsp;(no login required)<br>
+    <b>Run</b> &nbsp;&nbsp;&nbsp;&nbsp; npm run run:login<br>
+    <b>Date</b> &nbsp;&nbsp;&nbsp; 12 September 2026
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CONTENTS ══ -->
+<div class="page sec">
+  <h2>Contents</h2>
+  <div class="toc">
+    <div><span>1 &nbsp; What this script does</span><span>Purpose, scope, and what it deliberately does not do</span></div>
+    <div><span>2 &nbsp; Configuration, helpers, credentials</span><span>The four helpers and why each exists</span></div>
+    <div><span>3 &nbsp; Page anatomy</span><span>Diagram — all 10 groups mapped onto the page</span></div>
+    <div><span>4 &nbsp; The three page states</span><span>Diagram — OTP mode, password mode, help modal</span></div>
+    <div><span>5 &nbsp; Assertion depth</span><span>Diagram — where every click test stops</span></div>
+    <div><span>6 &nbsp; Group 1 — Header</span><span>3 tests</span></div>
+    <div><span>7 &nbsp; Groups 2 &amp; 3 — Welcome, Mode Toggle</span><span>2 + 3 tests</span></div>
+    <div><span>8 &nbsp; Group 4 — OTP login flow</span><span>4 tests</span></div>
+    <div><span>9 &nbsp; Group 5 — Password login flow</span><span>5 tests</span></div>
+    <div><span>10 &nbsp; Groups 6 &amp; 7 — Create Account, Help modal</span><span>2 + 4 tests</span></div>
+    <div><span>11 &nbsp; Group 8 — Input validation edge cases</span><span>1 test, 10 payloads</span></div>
+    <div><span>12 &nbsp; Groups 9 &amp; 10 — Responsive, Page health</span><span>3 + 2 tests</span></div>
+    <div><span>13 &nbsp; What green actually proves</span><span>The tally, and the login that is never asserted</span></div>
+    <div><span>14 &nbsp; Artifacts and run variants</span><span>Reports, console output, grep recipes</span></div>
+    <div><span>15 &nbsp; Failure modes and fixes</span><span>Troubleshooting reference</span></div>
+  </div>
+
+  <h3>How to read this document</h3>
+  <p>Sections 6 through 12 walk the script in file order, one table per <code>describe</code> group. Each row gives the <b>action</b>, the exact <b>locator</b>, and the <b>assertion</b> — with a marker for what the test can actually catch:</p>
+  <table>
+    <thead><tr><th style="width:20%">Marker</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-ok">hard</span></td><td>An <code>expect()</code> always runs. A missing or wrong element fails the test.</td></tr>
+      <tr><td><span class="pill p-gold">present-only</span></td><td>Asserts the control <i>exists</i>, then clicks it through <code>safeClick</code> and logs the outcome. A broken click or a wrong destination does not fail.</td></tr>
+      <tr><td><span class="pill p-teal">log</span></td><td>No <code>expect()</code> at all — the test records values to the console for a human to read.</td></tr>
+    </tbody>
+  </table>
+  <p>That middle category is the defining shape of this suite, so Section 5 diagrams it and Section 13 tallies it.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 1. WHAT IT DOES ══ -->
+<div class="page sec">
+  <h2>1 &nbsp; What this script does</h2>
+  <p class="lead">It verifies that the login page presents every control a returning user needs, in both of its input modes — and it is the source of truth for the selectors the rest of the project logs in with.</p>
+
+  <p><code>/public/login</code> is the gate every returning learner passes through. It offers two ways in — a one-time code or a password — plus a help modal, a create-account escape hatch and a forgotten-password path. This spec walks all of it: each control, each mode, each modal, plus responsive rendering and page health.</p>
+
+  <h3>Its second, quieter job</h3>
+  <p>This file is where the project's login selectors are proven — <code>tests/helpers/login.ts</code> says so in its own header: <i>"Selectors mirror the ones verified in public-login.spec.ts."</i> So a change that breaks a locator here breaks every authenticated suite downstream — and this spec is the cheapest place to find out. That is a large part of its value, and it explains the file's shape: broad locator coverage, shallow outcome assertions.</p>
+
+  <h3>What it deliberately does not do</h3>
+  <div class="callout red">
+    <span class="t">No test in this file asserts that a login succeeded</span>
+    The "Login" test fills real credentials, clicks the button, waits 2500 ms, then <b>logs</b> the resulting URL and any toast — there is no assertion about where the browser ended up. The same is true of "Get OTP", "Forgot Password?", "Create an Account" and the back arrow. This is by design (the suite owns no account whose state it can rely on), but it means a broken authentication backend would not turn this suite red. That assertion lives in <code>tests/login-check.spec.ts</code>.
+  </div>
+
+  <h3>The four things it verifies</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="h">Controls exist</div>
+      <ul>
+        <li>Both mode radios, Get OTP, Login</li>
+        <li>Forgot Password, Create an Account</li>
+        <li>Page title names Sphere or Aastrika</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Modes behave</div>
+      <ul>
+        <li>Password mode reveals the password field</li>
+        <li>Toggling back to OTP removes it entirely</li>
+        <li>Password input is genuinely masked</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Modal and health</div>
+      <ul>
+        <li>Help opens the chat-support modal</li>
+        <li>Its X button really dismisses it</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Entry points</h3>
+  <table>
+    <thead><tr><th style="width:34%">Command</th><th>What it runs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:login</td><td>All 29 tests, headed, against staging. The full walkthrough this document describes.</td></tr>
+      <tr><td class="mono">npm run report:ci</td><td>This spec plus <code>PublicPage.spec.ts</code>, headless — the public-surface CI gate.</td></tr>
+      <tr><td class="mono">npm run login:check</td><td><b>A different spec</b> — the one that actually asserts a successful sign-in with real credentials.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">Two files share the same describe name</span>
+    The outer block here is called <code>'Public Page - Complete Element Coverage'</code> — identical to the one in <code>PublicPage.spec.ts</code>. A <code>--grep</code> on that string matches both files. Grep an inner group name (<code>"Password Login Flow"</code>, <code>"Help Chat Support Modal"</code>) or pass the file path to target this spec alone.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 2. CONFIG ══ -->
+<div class="page sec">
+  <h2>2 &nbsp; Configuration, helpers, credentials</h2>
+
+  <h3>2.1 &nbsp; Target and navigation</h3>
+  <pre><span class="c">// tests/public-login.spec.ts:5</span>
+const BASE_URL   = process.env.BASE_URL ?? <span class="g">'https://sphere.aastrika.org'</span>;
+const PUBLIC_URL = <span class="g">`${BASE_URL}/public/login`</span>;
+
+<span class="c">// :49 — runs before all 29 tests</span>
+await page.goto(PUBLIC_URL);
+await page.waitForLoadState(<span class="g">'networkidle'</span>);</pre>
+  <p>Note the wait condition: <code>networkidle</code>, not <code>domcontentloaded</code>. The login page is a small Angular shell whose controls appear only once its bootstrap requests settle, so waiting for the network to go quiet is what makes the very first assertion in each test reliable. It also makes each test's setup slower than the public home page's, which is an acceptable trade at 29 tests.</p>
+  <p>Unlike <code>PublicPage.spec.ts</code>, this file does <b>not</b> normalise the origin — a <code>BASE_URL</code> with a trailing slash produces a double-slashed URL. In practice Angular's router tolerates it, but it is a difference worth knowing if you point the suite somewhere unusual.</p>
+
+  <h3>2.2 &nbsp; The four helpers</h3>
+  <table>
+    <thead><tr><th style="width:20%">Helper</th><th style="width:8%">Line</th><th>What it solves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">scrollAndClick</td><td class="mono">:10</td>
+        <td><code>scrollIntoViewIfNeeded()</code> then <code>click()</code>, unguarded. Used where a failure should surface.</td>
+      </tr>
+      <tr>
+        <td class="mono">identifierInput</td><td class="mono">:19</td>
+        <td>Returns the phone/email box. <b>The first <code>&lt;input&gt;</code> on this page is the OTP/Password radio</b>, which cannot be filled — so a naive <code>input.first()</code> throws. This helper filters to text, email, tel and untyped inputs before taking the first.</td>
+      </tr>
+      <tr>
+        <td class="mono">helpControl</td><td class="mono">:26</td>
+        <td>Returns the Help control. It is a clickable <code>&lt;div&gt;</code> wrapping a help-icon image, <b>not a <code>&lt;button&gt;</code></b> — so <code>getByRole('button')</code> never finds it. Matches the exact text "Help", or any image with help in its alt.</td>
+      </tr>
+      <tr>
+        <td class="mono">safeClick</td><td class="mono">:35</td>
+        <td>Wraps <code>scrollAndClick</code> in try/catch. On success it logs <code>✅ Clicked: &lt;label&gt;</code>; on failure it logs a warning and <b>the test continues</b>. This one helper is why so much of the suite is present-only.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <pre><span class="c">// :35 — a click that can never fail the test</span>
+async function <span class="k">safeClick</span>(page, locator, label) {
+  try {
+    await scrollAndClick(page, locator);
+    console.log(<span class="g">`✅ Clicked: ${label}`</span>);
+  } catch (err) {
+    console.log(<span class="g">`⚠️  Could not click ${label}: ${err.message.split('\n')[0]}`</span>);
+  }
+}</pre>
+
+  <div class="callout">
+    <span class="t">Two helpers encode real discoveries about this page</span>
+    <code>identifierInput</code> and <code>helpControl</code> both exist because the obvious locator was wrong, and both carry a comment in the source explaining why. They are worth reading before writing any new test here: the first input is not the text box, and the Help control is not a button. Reuse the helpers rather than re-deriving the locators.
+  </div>
+
+  <h3>2.3 &nbsp; Test credentials</h3>
+  <table>
+    <thead><tr><th style="width:28%">Value</th><th style="width:22%">Used in</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">testcase003@yopmail.com</td><td>OTP flow test 4, Password flow test 5</td><td>Hard-coded, not read from env. Whether this account still exists on the target environment is never asserted.</td></tr>
+      <tr><td class="mono">Sunbird@123</td><td>Password flow tests 2, 3, 5</td><td>The project's standard test password — the same one <code>create-account.spec.ts</code> sets.</td></tr>
+      <tr><td class="mono">9876543210</td><td>OTP flow test 1</td><td>A format sample, only ever typed and read back. Never submitted.</td></tr>
+    </tbody>
+  </table>
+  <p>Because no test asserts the outcome of a submission, stale credentials do not fail the suite — they simply change what gets logged. That is consistent with the file's design, but it does mean the credentials can silently rot.</p>
+
+  <h3>2.4 &nbsp; One thing this spec does not inherit from its sibling</h3>
+  <div class="callout gold">
+    <span class="t">No bilingual matching here</span>
+    <code>PublicPage.spec.ts</code> routes every text assertion through a <code>tr()</code> helper because the portal serves Hindi by default. This file has no equivalent — every matcher is an English-only regex (<code>/login with otp/i</code>, <code>/get otp/i</code>, <code>/forgot password\??/i</code>). On an environment rendering the login page in Hindi, the text-based assertions would not match. The suite passes today because the environments it runs against serve this page in English; if that changes, the fix is the same <code>tr()</code> pattern the sibling file already implements.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 3. ANATOMY ══ -->
+<div class="page sec">
+  <h2>3 &nbsp; Page anatomy</h2>
+  <p class="lead">All 10 groups mapped onto the login page and its two overlay states.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 614" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <!-- main browser -->
+      <rect x="250" y="26" width="330" height="520" rx="10" fill="#fff" stroke="#2D3E54" stroke-width="2"/>
+      <rect x="250" y="26" width="330" height="24" rx="10" fill="#2D3E54"/>
+      <rect x="250" y="40" width="330" height="10" fill="#2D3E54"/>
+      <circle cx="266" cy="38" r="4" fill="#7E8A9A"/><circle cx="280" cy="38" r="4" fill="#7E8A9A"/><circle cx="294" cy="38" r="4" fill="#7E8A9A"/>
+      <text x="424" y="42" fill="#BEC5CE" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono, monospace">sphere.aastrika.org/public/login</text>
+
+      <!-- G1 header -->
+      <rect x="260" y="58" width="310" height="32" rx="5" fill="#F6F7F9" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="272" y="79" fill="#17283C" font-size="12" font-weight="700">‹</text>
+      <rect x="288" y="66" width="48" height="14" rx="3" fill="#17283C"/>
+      <circle cx="540" cy="74" r="9" fill="#fff" stroke="#2D3E54"/><text x="540" y="77" fill="#2D3E54" font-size="6.5" text-anchor="middle">?</text>
+      <text x="516" y="77" fill="#2D3E54" font-size="7.5" text-anchor="end">Help</text>
+      <text x="240" y="70" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">1 · Header</text>
+      <text x="240" y="81" fill="#7C8696" font-size="8.5" text-anchor="end">3 tests · logo, back arrow, Help</text>
+      <line x1="244" y1="74" x2="258" y2="74" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G2 welcome -->
+      <rect x="260" y="96" width="310" height="44" rx="5" fill="#fff" stroke="#D8DEE5"/>
+      <text x="276" y="117" fill="#17283C" font-size="13" font-weight="700">Welcome!</text>
+      <text x="276" y="132" fill="#7C8696" font-size="8">Login with your Aastrika account</text>
+      <text x="240" y="112" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">2 · Welcome Section</text>
+      <text x="240" y="123" fill="#7C8696" font-size="8.5" text-anchor="end">2 tests · heading, sub-heading</text>
+      <line x1="244" y1="116" x2="258" y2="116" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G3 mode toggle -->
+      <rect x="260" y="146" width="310" height="38" rx="5" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.5"/>
+      <circle cx="284" cy="165" r="5" fill="#1E8F8E"/><circle cx="284" cy="165" r="2" fill="#fff"/>
+      <text x="296" y="168" fill="#135858" font-size="8.5" font-weight="600">Login with OTP</text>
+      <circle cx="424" cy="165" r="5" fill="#fff" stroke="#7C8696"/>
+      <text x="436" y="168" fill="#2D3E54" font-size="8.5">Login with Password</text>
+      <text x="240" y="160" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">3 · Login Mode Toggle</text>
+      <text x="240" y="171" fill="#7C8696" font-size="8.5" text-anchor="end">3 tests · the page's one state switch</text>
+      <line x1="244" y1="164" x2="258" y2="164" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G4 OTP flow -->
+      <rect x="260" y="190" width="310" height="86" rx="5" fill="#fff" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="276" y="208" fill="#7C8696" font-size="7.5">Phone number / Email</text>
+      <rect x="276" y="212" width="278" height="22" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="284" y="227" fill="#7C8696" font-size="7.5">testcase003@yopmail.com</text>
+      <rect x="276" y="242" width="278" height="22" rx="4" fill="#F0A500"/>
+      <text x="415" y="257" fill="#17283C" font-size="8.5" font-weight="700" text-anchor="middle">Get OTP</text>
+      <text x="240" y="222" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">4 · OTP Login Flow</text>
+      <text x="240" y="233" fill="#7C8696" font-size="8.5" text-anchor="end">4 tests · the default mode</text>
+      <line x1="244" y1="226" x2="258" y2="226" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G6 create account -->
+      <rect x="260" y="282" width="310" height="60" rx="5" fill="#fff" stroke="#D8DEE5"/>
+      <line x1="286" y1="298" x2="396" y2="298" stroke="#D8DEE5"/><text x="415" y="301" fill="#7C8696" font-size="8" text-anchor="middle">or</text>
+      <line x1="434" y1="298" x2="544" y2="298" stroke="#D8DEE5"/>
+      <rect x="276" y="310" width="278" height="22" rx="4" fill="#fff" stroke="#17283C"/>
+      <text x="415" y="325" fill="#17283C" font-size="8.5" font-weight="700" text-anchor="middle">Create an Account</text>
+      <text x="240" y="306" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">6 · Create Account</text>
+      <text x="240" y="317" fill="#7C8696" font-size="8.5" text-anchor="end">2 tests · separator + button</text>
+      <line x1="244" y1="310" x2="258" y2="310" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- groups 8/9/10 span -->
+      <rect x="260" y="352" width="310" height="180" rx="5" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <text x="415" y="374" fill="#9A6800" font-size="10.5" font-weight="700" text-anchor="middle">GROUPS 8 · 9 · 10 — whole-page</text>
+      <text x="276" y="398" fill="#9A6800" font-size="9" font-weight="700">8 · Input Validation Edge Cases &nbsp;— 1 test</text>
+      <text x="276" y="412" fill="#9A6800" font-size="8.5">10 payloads typed into the identifier field: empty, space,</text>
+      <text x="276" y="424" fill="#9A6800" font-size="8.5">single char, phone, +country code, email, uppercase email,</text>
+      <text x="276" y="436" fill="#9A6800" font-size="8.5">special chars, 256 chars, and an XSS payload. Logged only.</text>
+      <text x="276" y="458" fill="#9A6800" font-size="9" font-weight="700">9 · Responsive Layout &nbsp;— 3 tests</text>
+      <text x="276" y="472" fill="#9A6800" font-size="8.5">390×844 · 768×1024 · 1440×900 — each asserts the Welcome</text>
+      <text x="276" y="484" fill="#9A6800" font-size="8.5">heading AND the sub-heading are still visible.</text>
+      <text x="276" y="506" fill="#9A6800" font-size="9" font-weight="700">10 · Page Health &nbsp;— 2 tests</text>
+      <text x="276" y="520" fill="#9A6800" font-size="8.5">console errors (logged only) · page title (asserted).</text>
+
+      <!-- password mode inset -->
+      <rect x="608" y="96" width="272" height="204" rx="8" fill="#fff" stroke="#2D3E54" stroke-width="2"/>
+      <rect x="608" y="96" width="272" height="24" rx="8" fill="#2D3E54"/>
+      <rect x="608" y="110" width="272" height="10" fill="#2D3E54"/>
+      <text x="744" y="112" fill="#fff" font-size="9" font-weight="700" text-anchor="middle">STATE B — password mode</text>
+      <circle cx="628" cy="138" r="5" fill="#fff" stroke="#7C8696"/><text x="640" y="141" fill="#7C8696" font-size="8">Login with OTP</text>
+      <circle cx="744" cy="138" r="5" fill="#1E8F8E"/><circle cx="744" cy="138" r="2" fill="#fff"/>
+      <text x="756" y="141" fill="#135858" font-size="8" font-weight="600">Login with Password</text>
+      <rect x="624" y="152" width="240" height="20" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/><text x="632" y="166" fill="#7C8696" font-size="7.5">Phone number / Email</text>
+      <rect x="624" y="178" width="240" height="20" rx="4" fill="#F6F7F9" stroke="#1E8F8E"/><text x="632" y="192" fill="#7C8696" font-size="7.5">•••••••••••</text>
+      <circle cx="850" cy="188" r="7" fill="#E3F7F6"/><text x="850" y="191" fill="#135858" font-size="7" text-anchor="middle">👁</text>
+      <text x="864" y="212" fill="#186E6E" font-size="7.5" text-anchor="end">Forgot Password?</text>
+      <rect x="624" y="222" width="240" height="22" rx="4" fill="#F0A500"/><text x="744" y="237" fill="#17283C" font-size="8.5" font-weight="700" text-anchor="middle">Login</text>
+      <text x="624" y="264" fill="#17283C" font-size="9.5" font-weight="700">5 · Password Login Flow — 5 tests</text>
+      <text x="624" y="278" fill="#7C8696" font-size="8">A nested beforeEach clicks "Login with Password"</text>
+      <text x="624" y="290" fill="#7C8696" font-size="8">before every test in this group.</text>
+
+      <!-- help modal inset -->
+      <rect x="608" y="316" width="272" height="216" rx="8" fill="#fff" stroke="#2D3E54" stroke-width="2"/>
+      <rect x="608" y="316" width="272" height="24" rx="8" fill="#2D3E54"/>
+      <rect x="608" y="330" width="272" height="10" fill="#2D3E54"/>
+      <text x="744" y="332" fill="#fff" font-size="9" font-weight="700" text-anchor="middle">STATE C — help modal open</text>
+      <rect x="624" y="352" width="240" height="128" rx="8" fill="#F6F7F9" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="854" y="368" fill="#2D3E54" font-size="9" text-anchor="end" font-weight="700">✕</text>
+      <text x="640" y="376" fill="#17283C" font-size="9" font-weight="700">Aastrika Sphere chat support</text>
+      <rect x="640" y="392" width="208" height="22" rx="4" fill="#fff" stroke="#1E8F8E"/>
+      <text x="744" y="407" fill="#135858" font-size="8" text-anchor="middle" font-weight="600">Chat with us on WhatsApp</text>
+      <rect x="640" y="422" width="208" height="22" rx="4" fill="#fff" stroke="#1E8F8E"/>
+      <text x="744" y="437" fill="#135858" font-size="8" text-anchor="middle" font-weight="600">Chat with us</text>
+      <text x="640" y="464" fill="#7C8696" font-size="7.5">both buttons may open a popup tab — captured,</text>
+      <text x="640" y="474" fill="#7C8696" font-size="7.5">logged and closed by the test</text>
+      <text x="624" y="500" fill="#17283C" font-size="9.5" font-weight="700">7 · Help Chat Support Modal — 4 tests</text>
+      <text x="624" y="514" fill="#7C8696" font-size="8">A nested beforeEach clicks the Help control before</text>
+      <text x="624" y="526" fill="#7C8696" font-size="8">every test in this group.</text>
+
+      <!-- connectors -->
+      <path d="M572,165 C596,165 590,150 606,142" stroke="#1E8F8E" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+      <path d="M545,74 C580,74 580,330 606,368" stroke="#1E8F8E" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+
+      <text x="450" y="580" fill="#17283C" font-size="10.5" font-weight="700" text-anchor="middle">10 groups &nbsp;·&nbsp; 27 test declarations &nbsp;·&nbsp; 29 tests at runtime (Responsive templates three)</text>
+      <text x="450" y="598" fill="#7C8696" font-size="8.5" text-anchor="middle">wireframe is schematic — it shows which region and which state each group owns, not the real layout</text>
+    </svg>
+    <p class="cap">Figure 1 — Every <code>describe</code> group mapped to the control it covers. Groups 5 and 7 operate on states the page only reaches after a click, shown as insets.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 4. STATES ══ -->
+<div class="page sec">
+  <h2>4 &nbsp; The three page states</h2>
+  <p class="lead">Every test starts in the same state. Two groups use a nested <code>beforeEach</code> to move somewhere else first.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 430" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="s1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2D3E54"/></marker>
+        <marker id="s2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1E8F8E"/></marker>
+        <marker id="s3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C88800"/></marker>
+      </defs>
+
+      <rect x="300" y="8" width="300" height="46" rx="8" fill="#17283C"/>
+      <text x="450" y="27" fill="#fff" font-size="11.5" font-weight="700" text-anchor="middle">outer beforeEach &nbsp;— all 29 tests</text>
+      <text x="450" y="44" fill="#BEC5CE" font-size="9" text-anchor="middle" font-family="JetBrains Mono, monospace">goto(PUBLIC_URL) → waitForLoadState('networkidle')</text>
+      <path d="M450,54 L450,78" stroke="#2D3E54" stroke-width="2" marker-end="url(#s1)"/>
+
+      <!-- STATE A -->
+      <rect x="300" y="84" width="300" height="88" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2.5"/>
+      <rect x="300" y="84" width="300" height="24" rx="8" fill="#1E8F8E"/>
+      <rect x="300" y="98" width="300" height="10" fill="#1E8F8E"/>
+      <text x="450" y="101" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">STATE A — OTP mode (the default)</text>
+      <text x="316" y="126" fill="#2D3E54" font-size="9">identifier field &nbsp;·&nbsp; Get OTP button &nbsp;·&nbsp; no password field</text>
+      <text x="316" y="144" fill="#17283C" font-size="9" font-weight="700">Groups 1 · 2 · 3 · 4 · 6 · 8 · 9 · 10 &nbsp;test here</text>
+      <text x="316" y="160" fill="#7C8696" font-size="8.5">20 of the 29 tests never leave this state.</text>
+
+      <!-- to B -->
+      <path d="M300,128 L200,128 L200,206" stroke="#1E8F8E" stroke-width="2" fill="none" marker-end="url(#s2)"/>
+      <text x="196" y="122" fill="#186E6E" font-size="8.5" font-weight="700" text-anchor="end">click "Login with Password"</text>
+      <!-- to C -->
+      <path d="M600,128 L700,128 L700,206" stroke="#C88800" stroke-width="2" fill="none" marker-end="url(#s3)"/>
+      <text x="706" y="122" fill="#9A6800" font-size="8.5" font-weight="700">click Help</text>
+
+      <!-- STATE B -->
+      <rect x="40" y="212" width="320" height="118" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <rect x="40" y="212" width="320" height="24" rx="8" fill="#1E8F8E"/>
+      <rect x="40" y="226" width="320" height="10" fill="#1E8F8E"/>
+      <text x="200" y="229" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">STATE B — password mode</text>
+      <text x="56" y="254" fill="#2D3E54" font-size="9">password field appears &nbsp;·&nbsp; Forgot Password? &nbsp;·&nbsp; Login</text>
+      <rect x="56" y="264" width="288" height="30" rx="6" fill="#E3F7F6"/>
+      <text x="68" y="277" fill="#135858" font-size="8.5" font-weight="700">nested beforeEach at line 200</text>
+      <text x="68" y="289" fill="#186E6E" font-size="8" font-family="JetBrains Mono, monospace">scrollAndClick(getByText(/login with password/i))</text>
+      <text x="56" y="312" fill="#17283C" font-size="9" font-weight="700">Group 5 &nbsp;— 5 tests start here automatically</text>
+      <text x="56" y="325" fill="#7C8696" font-size="8.5">Group 3's tests 2 and 3 also visit, then toggle back.</text>
+
+      <!-- STATE C -->
+      <rect x="540" y="212" width="320" height="118" rx="8" fill="#fff" stroke="#F0A500" stroke-width="2"/>
+      <rect x="540" y="212" width="320" height="24" rx="8" fill="#F0A500"/>
+      <rect x="540" y="226" width="320" height="10" fill="#F0A500"/>
+      <text x="700" y="229" fill="#17283C" font-size="11" font-weight="700" text-anchor="middle">STATE C — help modal open</text>
+      <text x="556" y="254" fill="#2D3E54" font-size="9">chat-support modal overlays the page</text>
+      <rect x="556" y="264" width="288" height="30" rx="6" fill="#FEF6E0"/>
+      <text x="568" y="277" fill="#9A6800" font-size="8.5" font-weight="700">nested beforeEach at line 305</text>
+      <text x="568" y="289" fill="#C88800" font-size="8" font-family="JetBrains Mono, monospace">scrollAndClick(helpControl(page))</text>
+      <text x="556" y="312" fill="#17283C" font-size="9" font-weight="700">Group 7 &nbsp;— 4 tests start here automatically</text>
+      <text x="556" y="325" fill="#7C8696" font-size="8.5">Group 1's test 3 opens it once to prove it opens.</text>
+
+      <!-- back to A -->
+      <path d="M200,330 L200,360 L450,360" stroke="#1E8F8E" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+      <path d="M700,330 L700,360 L450,360" stroke="#C88800" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+      <path d="M450,360 L450,374" stroke="#2D3E54" stroke-width="1.5" marker-end="url(#s1)"/>
+      <rect x="230" y="380" width="440" height="44" rx="8" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="450" y="398" fill="#17283C" font-size="10" font-weight="700" text-anchor="middle">no state ever leaks between tests</text>
+      <text x="450" y="414" fill="#7C8696" font-size="8.5" text-anchor="middle">Each test gets a fresh { page } fixture, so the outer beforeEach always lands on State A.</text>
+    </svg>
+    <p class="cap">Figure 2 — Three states, two transitions. The nested <code>beforeEach</code> hooks are what let Groups 5 and 7 read as flat lists of element checks rather than repeating a setup click in every test.</p>
+  </div>
+
+  <h3>Why the nested hooks matter</h3>
+  <p>Without them, all five password tests and all four modal tests would each have to open their state by hand — nine repetitions of the same two lines, and nine places to update when the toggle's markup changes. The hooks put the setup in one place per group.</p>
+  <p>They also shift what a failure means. If <code>scrollAndClick(getByText(/login with password/i))</code> throws in the Group 5 hook, <b>all five tests in that group fail at once</b>, all with the same hook error. That is the correct signal — the mode toggle is broken, not five separate controls — but it is worth recognising when reading a report: five reds from one cause.</p>
+
+  <div class="callout">
+    <span class="t">Group 3 is the one that tests the transition itself</span>
+    Groups 5 and 7 <i>use</i> the transitions; Group 3 <i>tests</i> them. Its third test is the strongest assertion in the file about state — after toggling to password mode and back, it asserts <code>expect(count).toBe(0)</code> on <code>input[type="password"]</code>: the field must be gone from the DOM, not merely hidden. If Group 3 is green and Group 5 fails in its hook, the problem is the password screen, not the toggle.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 5. DEPTH ══ -->
+<div class="page sec">
+  <h2>5 &nbsp; Assertion depth</h2>
+  <p class="lead">Nine tests click something that navigates or submits. Understanding where each one stops is the key to reading this suite.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 396" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="d1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2D3E54"/></marker>
+        <marker id="d2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B91C1C"/></marker>
+      </defs>
+
+      <!-- stages -->
+      <rect x="20" y="60" width="180" height="74" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="2"/>
+      <text x="110" y="82" fill="#15803D" font-size="11" font-weight="700" text-anchor="middle">1 · CONTROL EXISTS</text>
+      <text x="110" y="101" fill="#15803D" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono, monospace">expect(x).toBeVisible()</text>
+      <text x="110" y="120" fill="#15803D" font-size="9" text-anchor="middle" font-weight="700">asserted — fails if missing</text>
+
+      <path d="M200,97 L238,97" stroke="#2D3E54" stroke-width="2" marker-end="url(#d1)"/>
+
+      <rect x="244" y="60" width="180" height="74" rx="8" fill="#FEF3C7" stroke="#B45309" stroke-width="2"/>
+      <text x="334" y="82" fill="#B45309" font-size="11" font-weight="700" text-anchor="middle">2 · CLICK HAPPENS</text>
+      <text x="334" y="101" fill="#B45309" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono, monospace">safeClick(page, x, label)</text>
+      <text x="334" y="120" fill="#B45309" font-size="9" text-anchor="middle" font-weight="700">try/catch — a throw only logs</text>
+
+      <path d="M424,97 L462,97" stroke="#2D3E54" stroke-width="2" marker-end="url(#d1)"/>
+
+      <rect x="468" y="60" width="180" height="74" rx="8" fill="#FEF3C7" stroke="#B45309" stroke-width="2"/>
+      <text x="558" y="82" fill="#B45309" font-size="11" font-weight="700" text-anchor="middle">3 · RESULT OBSERVED</text>
+      <text x="558" y="101" fill="#B45309" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono, monospace">console.log(page.url())</text>
+      <text x="558" y="120" fill="#B45309" font-size="9" text-anchor="middle" font-weight="700">printed, never compared</text>
+
+      <path d="M648,97 L686,97" stroke="#B91C1C" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#d2)"/>
+
+      <rect x="692" y="60" width="188" height="74" rx="8" fill="#FEE2E2" stroke="#B91C1C" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="786" y="82" fill="#B91C1C" font-size="11" font-weight="700" text-anchor="middle">4 · OUTCOME CORRECT</text>
+      <text x="786" y="101" fill="#B91C1C" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono, monospace">expect(url).toMatch(…)</text>
+      <text x="786" y="120" fill="#B91C1C" font-size="9" text-anchor="middle" font-weight="700">NOT DONE IN THIS FILE</text>
+
+      <!-- brace -->
+      <path d="M20,146 L20,158 L648,158 L648,146" stroke="#15803D" stroke-width="1.5" fill="none"/>
+      <text x="334" y="174" fill="#15803D" font-size="9.5" font-weight="700" text-anchor="middle">this suite's scope</text>
+      <path d="M692,146 L692,158 L880,158 L880,146" stroke="#B91C1C" stroke-width="1.5" fill="none"/>
+      <text x="786" y="174" fill="#B91C1C" font-size="9.5" font-weight="700" text-anchor="middle">tests/login-check.spec.ts</text>
+
+      <!-- the nine tests -->
+      <rect x="20" y="196" width="860" height="184" rx="8" fill="#fff" stroke="#D8DEE5"/>
+      <text x="36" y="218" fill="#17283C" font-size="10.5" font-weight="700">The nine tests that stop at stage 3</text>
+      <g font-size="8.5" fill="#2D3E54">
+        <text x="36" y="240">·  Back arrow</text>                 <text x="250" y="240" fill="#7C8696">logs the URL after clicking</text>
+        <text x="36" y="258">·  Get OTP (valid input)</text>      <text x="250" y="258" fill="#7C8696">logs the URL — never checks an OTP screen appeared</text>
+        <text x="36" y="276">·  Forgot Password?</text>           <text x="250" y="276" fill="#7C8696">logs URL before and after — never checks they differ</text>
+        <text x="36" y="294" font-weight="700" fill="#B91C1C">·  Login</text>  <text x="250" y="294" fill="#B91C1C" font-weight="700">logs the URL and any toast — never checks the user got in</text>
+        <text x="36" y="312">·  Create an Account</text>          <text x="250" y="312" fill="#7C8696">logs URL before and after</text>
+        <text x="36" y="330">·  Chat with us on WhatsApp</text>   <text x="250" y="330" fill="#7C8696">captures a popup if one opens, logs its URL, closes it</text>
+        <text x="36" y="348">·  Chat with us</text>               <text x="250" y="348" fill="#7C8696">same popup handling</text>
+        <text x="36" y="366">·  Eye icon · Get OTP (empty)</text> <text x="250" y="366" fill="#7C8696">no click assertion at all — state is logged</text>
+      </g>
+      <rect x="612" y="228" width="252" height="140" rx="6" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="628" y="248" fill="#17283C" font-size="9.5" font-weight="700">Why it is built this way</text>
+      <text x="628" y="266" fill="#7C8696" font-size="8">The suite runs against a live shared</text>
+      <text x="628" y="278" fill="#7C8696" font-size="8">environment and owns no account whose</text>
+      <text x="628" y="290" fill="#7C8696" font-size="8">state it controls. Asserting "Login lands</text>
+      <text x="628" y="302" fill="#7C8696" font-size="8">on /page/home" would fail whenever the</text>
+      <text x="628" y="314" fill="#7C8696" font-size="8">test account expires, gets a T&amp;C gate, or</text>
+      <text x="628" y="326" fill="#7C8696" font-size="8">is rate-limited — none of which are login</text>
+      <text x="628" y="338" fill="#7C8696" font-size="8">page defects.</text>
+      <text x="628" y="358" fill="#135858" font-size="8" font-weight="700">So outcome assertions live in the spec</text>
+      <text x="628" y="369" fill="#135858" font-size="8" font-weight="700">that owns its credentials instead.</text>
+    </svg>
+    <p class="cap">Figure 3 — Every click test in this file reaches stage 3 and stops. Stage 4 is covered by <code>login-check.spec.ts</code>, which takes its credentials from the environment and asserts the browser left <code>/public/</code>.</p>
+  </div>
+
+  <div class="callout gold">
+    <span class="t">What this means in practice</span>
+    A green run of this suite says: <b>every control is present, correctly labelled, and clickable without throwing.</b> It does not say the login works. When triaging an auth incident, this file tells you whether the page is intact; <code>login-check.spec.ts</code> tells you whether anyone can get in. Run both, in that order.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 6. HEADER ══ -->
+<div class="page sec">
+  <h2>6 &nbsp; Group 1 — Header</h2>
+  <p class="lead"><span class="mono">Header</span> &nbsp;·&nbsp; 3 tests &nbsp;·&nbsp; line 58</p>
+  <p><b>What it proves:</b> the page is branded, offers a way back, and its help channel opens. Two of the three locators here exist only because the obvious approach failed.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td>
+        <td><b>Logo is visible</b><br>Four alternatives in one locator.</td>
+        <td>img[alt*="logo" i],<br>img[alt*="aastrika" i],<br>[class*="logo"] img,<br>ws-app-public-nav-bar img → .first()</td>
+        <td><span class="pill p-ok">hard</span> <code>toBeVisible()</code>. Covers alt text, a logo-class wrapper, and the Angular nav-bar component's own image.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td>
+        <td><b>Back arrow is visible and clickable</b><br>Matched by its Material icon ligature text.</td>
+        <td>getByRole('button').filter({ hasText: /chevron_left|arrow_back/i })<br>.or(getByRole('button').first()) → .first()</td>
+        <td><span class="pill p-gold">present-only</span> — visibility is asserted; the click goes through <code>safeClick</code> and the resulting URL is logged after 800 ms.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td>
+        <td><b>Help opens the chat-support modal</b><br>The strongest test in the group — two hard assertions.</td>
+        <td>helpControl(page) → getByText('Help', { exact: true }).or(img[alt*="help" i])<br>then getByText(/aastrika sphere chat support/i)</td>
+        <td><span class="pill p-ok">hard</span> ×2 — the control is visible, and after clicking it the modal heading is visible. A modal that fails to open fails this test.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The Material icon trick in test 2</h3>
+  <p>Angular Material renders icons as <b>ligature text</b> inside a <code>&lt;mat-icon&gt;</code>: the element literally contains the string <code>chevron_left</code>, which the icon font draws as an arrow. So the back button has no accessible name a human would recognise — but it does have matchable text:</p>
+  <pre>page.getByRole(<span class="g">'button'</span>).filter({ hasText: <span class="g">/chevron_left|arrow_back/i</span> })
+    .or(page.getByRole(<span class="g">'button'</span>).first())    <span class="c">// fallback: the first button on the page</span>
+    .first();</pre>
+  <p>The <code>.or()</code> fallback is a pragmatic hedge — if the icon is ever swapped for an SVG or an aria-label, the locator degrades to "the first button", which on this page is the back control. It keeps the test running, at the cost of possibly asserting on the wrong button if the header is ever reordered.</p>
+
+  <h3>Why <code>helpControl</code> is a helper, not an inline locator</h3>
+  <p>The source comment is explicit: the Help control is <i>a clickable div with a "help-icon" img, not a <code>&lt;button&gt;</code></i>, so <code>getByRole('button')</code> will not find it. Because Group 7's <code>beforeEach</code> also needs to open the modal, the locator is factored out — one definition, two call sites, and a comment recording the discovery so nobody re-derives it.</p>
+
+  <div class="callout">
+    <span class="t">Test 3 is the header's real assertion</span>
+    Tests 1 and 2 confirm the page is dressed correctly. Test 3 confirms something <i>works</i> — a click produces a modal, asserted, not logged. It is one of only two places in the whole file where a click's consequence is hard-asserted; the other is the modal's close button in Group 7.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 7. WELCOME+TOGGLE ══ -->
+<div class="page sec">
+  <h2>7 &nbsp; Groups 2 &amp; 3 — Welcome and Mode Toggle</h2>
+
+  <h3>Group 2 — Welcome Section &nbsp;<span class="pill p-teal">2 tests · line 96</span></h3>
+  <p>The page's two copy elements. Both are plain hard visibility checks, and both are reused as the assertion in all three responsive tests later.</p>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"Welcome!" heading</b></td><td>getByText(/^welcome!?$/i).first()</td><td><span class="pill p-ok">hard</span> visible. Anchored at both ends with an optional <code>!</code>, so it cannot match a longer sentence containing the word.</td></tr>
+      <tr><td class="n">2</td><td><b>"Login with your Aastrika account" sub-heading</b></td><td>getByText(/login with your aastrika account/i).first()</td><td><span class="pill p-ok">hard</span> visible.</td></tr>
+    </tbody>
+  </table>
+  <p>The anchoring in test 1 is the detail worth copying. <code>/^welcome!?$/i</code> matches the heading and nothing else; an unanchored <code>/welcome/i</code> would also match "Welcome back", a toast, or any paragraph mentioning the word — and would then assert on whichever came first in the DOM.</p>
+
+  <h3>Group 3 — Login Mode Toggle &nbsp;<span class="pill p-teal">3 tests · line 114</span></h3>
+  <p>The page's only state switch, and the group that tests it directly rather than merely using it.</p>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Action</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>"Login with OTP" option</b><br>The default mode.</td>
+        <td>getByText(/login with otp/i).first()</td>
+        <td><span class="pill p-ok">hard</span> visible. Note the test's <i>name</i> says "selected by default" but the body only asserts visibility — the radio's checked state is never read.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td><td><b>Password mode reveals the password field</b><br>Click the radio, then prove the field appeared.</td>
+        <td>getByText(/login with password/i).first()<br>then getByLabel(/enter password/i).or(input[type="password"]).first()</td>
+        <td><span class="pill p-ok">hard</span> ×2 — the option is visible, and after a 400 ms settle the password field is visible.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>Toggling back to OTP removes the field</b><br>Password → OTP, then count what is left.</td>
+        <td>click /login with password/i, wait 300 ms<br>click /login with otp/i, wait 300 ms<br>then <code>input[type="password"].count()</code></td>
+        <td><span class="pill p-ok">hard</span> <code>expect(count).toBe(0)</code> — the field must be <b>absent from the DOM</b>, not merely hidden.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Test 3 is the most precise assertion in the file</span>
+    <code>toBe(0)</code> on a locator count is a stronger statement than <code>not.toBeVisible()</code>. A password input left in the DOM but hidden with CSS would satisfy "not visible" while still holding the user's typed password in a live form control — exactly the kind of thing that leaks a credential into a subsequent request. Counting to zero rules that out.
+  </div>
+
+  <div class="callout gold">
+    <span class="t">A gap worth naming in test 1</span>
+    "Login with OTP radio is selected by default" asserts only that the label is on screen. The actual default — that OTP mode is pre-selected, so a user who types an identifier and presses Get OTP gets an OTP — is not checked. Reading the radio's checked state would be a one-line addition, and it would make the test match its own title.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 8. OTP FLOW ══ -->
+<div class="page sec">
+  <h2>8 &nbsp; Group 4 — OTP login flow</h2>
+  <p class="lead"><span class="mono">OTP Login Flow</span> &nbsp;·&nbsp; 4 tests &nbsp;·&nbsp; line 151 &nbsp;·&nbsp; tests State A, the default mode</p>
+  <p><b>What it proves:</b> the identifier field accepts both kinds of identity Sphere allows, and the Get OTP button is present and clickable. Whether an OTP is actually sent is not checked.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td>
+        <td><b>Identifier accepts phone and email</b><br>Types each, reads it back. The strongest test in the group.</td>
+        <td>getByLabel(/phone number.*email/i)<br>.or(input[type="text"], input[type="email"], input[type="tel"])<br>→ .first()</td>
+        <td><span class="pill p-ok">hard</span> ×3 — visible; <code>toHaveValue('9876543210')</code>; then cleared and <code>toHaveValue('testcase003@yopmail.com')</code>. One field, both identity types.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td>
+        <td><b>"Get OTP" button is visible</b></td>
+        <td>getByRole('button', { name: /get otp/i })</td>
+        <td><span class="pill p-ok">hard</span> <code>toBeVisible()</code>.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td>
+        <td><b>"Get OTP" disabled when empty</b><br>Clears the field, then reads the button's state.</td>
+        <td>identifierInput(page).fill('')<br>then getOtpBtn.isDisabled().catch(() =&gt; false)</td>
+        <td><span class="pill p-teal">log</span> — prints <code>Empty-state — Get OTP disabled: true/false</code>. <b>No <code>expect()</code>.</b> The gate can be broken and this test still passes.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td>
+        <td><b>"Get OTP" clickable with valid input</b><br>Fills a real address and submits.</td>
+        <td>identifierInput(page).fill('testcase003@yopmail.com')<br>then safeClick(getOtpBtn)</td>
+        <td><span class="pill p-gold">present-only</span> — the click is wrapped in <code>safeClick</code>, then the URL is logged after 1500 ms. No assertion that an OTP screen appeared.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Why test 1 uses a different locator from tests 3 and 4</h3>
+  <p>Test 1 leads with <code>getByLabel(/phone number.*email/i)</code> — the accessible label, which is the most semantically correct handle — and falls back to the type-based selector. Tests 3 and 4 call the <code>identifierInput</code> helper, which is type-based only. Both resolve to the same field on today's markup. Using the helper everywhere would be marginally more consistent and would put the "first input is the radio" knowledge in exactly one place.</p>
+
+  <h3>Test 3 is the clearest hardening opportunity in the file</h3>
+  <pre><span class="c">// :175 — as written, this cannot fail</span>
+const disabled = await getOtpBtn.isDisabled().catch(() =&gt; false);
+console.log(<span class="g">`✅ Empty-state — Get OTP disabled: ${disabled}`</span>);
+
+<span class="c">// what it would take to make it real:</span>
+expect(disabled).toBe(true);</pre>
+  <p>Whether the button is gated on input is genuine product behaviour with a definite correct answer, and unlike the navigation tests it needs no account and no backend. The <code>✅</code> in the log line is also slightly misleading — it prints regardless of what the value turned out to be.</p>
+
+  <div class="callout">
+    <span class="t">What test 4 does and does not cover</span>
+    It proves the submit path is reachable: a valid identifier can be typed and the button accepts a click without throwing. It does not prove an OTP was requested, sent, or received — and it will log a perfectly normal-looking URL whether the request succeeded or returned a 500. End-to-end OTP delivery is covered by <code>create-account.spec.ts</code> and <code>OTP.spec.ts</code>, which read the real mailbox.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 9. PASSWORD FLOW ══ -->
+<div class="page sec">
+  <h2>9 &nbsp; Group 5 — Password login flow</h2>
+  <p class="lead"><span class="mono">Password Login Flow</span> &nbsp;·&nbsp; 5 tests &nbsp;·&nbsp; line 198 &nbsp;·&nbsp; <span class="pill p-teal">nested beforeEach → State B</span></p>
+
+  <pre><span class="c">// :200 — runs before each of the five tests below</span>
+test.<span class="k">beforeEach</span>(async ({ page }) =&gt; {
+  await scrollAndClick(page, page.getByText(<span class="g">/login with password/i</span>).first());
+  await page.waitForTimeout(400);
+});</pre>
+  <p>Every test here therefore starts with the password field on screen. The hook is unguarded — if the toggle breaks, all five tests fail together with the same hook error.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>Identifier still visible in password mode</b><br>Switching modes must not hide the identity field.</td>
+        <td>getByLabel(/phone number.*email/i).or(input.first()) → .first()</td>
+        <td><span class="pill p-ok">hard</span> visible.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td><td><b>Password field masks input</b><br>Fills it, then reads the type attribute.</td>
+        <td>input[type="password"].first()<br>then <code>getAttribute('type')</code></td>
+        <td><span class="pill p-ok">hard</span> ×2 — visible, and <code>expect(type).toBe('password')</code>. A field that renders the password in clear text fails here.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>Eye icon toggles visibility</b><br>Attempts the reveal control.</td>
+        <td>mat-icon:has-text("visibility"),<br>mat-icon:has-text("visibility_off"),<br>button[aria-label*="password" i] → .first()</td>
+        <td><span class="pill p-teal">log</span> — presence is logged, and if present it is clicked and the input's type is logged after. <b>No <code>expect()</code> anywhere.</b></td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>"Forgot Password?" link</b></td>
+        <td>getByText(/forgot password\??/i).first()</td>
+        <td><span class="pill p-gold">present-only</span> — visibility asserted; <code>safeClick</code>, then URL before and after are both logged but never compared.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td><td><b>"Login" button submits</b><br>Fills real credentials and clicks.</td>
+        <td>identifierInput ← testcase003@yopmail.com<br>input[type="password"] ← Sunbird@123<br>getByRole('button', { name: /^login$/i })<br>then mat-snack-bar-container, [role="alert"], .toast, .error-message</td>
+        <td><span class="pill p-gold">present-only</span> — visibility asserted; <code>safeClick</code>, then after 2500 ms the URL and any toast text are logged. <b>Nothing about the outcome is asserted.</b></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Test 2 is doing real security work</h3>
+  <p>Asserting <code>type === 'password'</code> after filling the field confirms the browser's native masking is active. It is a small check with a real failure mode behind it: a field whose type was switched to <code>text</code> — by a mis-wired reveal toggle, say — would show the password on screen and, worse, expose it to any screen-capture or screen-sharing in progress. This is one of the few assertions in the file that would catch a genuine defect rather than a missing element.</p>
+
+  <h3>Test 3's known weak point</h3>
+  <pre>if (eyeVisible) {
+  await scrollAndClick(page, eyeIcon);
+  <span class="c">// reads input index 1 — assumes the password box is the second input</span>
+  const afterType = await page.locator(<span class="g">'input'</span>).nth(1).getAttribute(<span class="g">'type'</span>).catch(() =&gt; null);
+  console.log(<span class="g">`   Password input type after toggle: ${afterType}`</span>);
+}</pre>
+  <p>Two things stand out. It reads <code>input</code> by raw index — and index 1 is a guess that holds only while the DOM order is radio, identifier, password. And the result is printed, not asserted, though the whole point of the toggle is that the type flips <code>password</code> → <code>text</code>: a definite, checkable outcome that would pair naturally with test 2.</p>
+
+  <div class="callout red">
+    <span class="t">Test 5 is where "present-only" matters most</span>
+    This test types a real email and a real password into the real login form of a live environment and clicks Login. Whatever happens next — success, "invalid credentials", a rate-limit, a 500 — the test passes and prints it. The captured toast is genuinely useful when reading a run by hand, but nothing gates on it. If you want this suite to notice that logins have stopped working, this is the test to change; if you want that coverage without changing this file, run <code>npm run login:check</code>, which asserts the browser left <code>/public/</code>.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 10. CREATE + MODAL ══ -->
+<div class="page sec">
+  <h2>10 &nbsp; Groups 6 &amp; 7 — Create Account and Help modal</h2>
+
+  <h3>Group 6 — Create Account &nbsp;<span class="pill p-teal">2 tests · line 277</span></h3>
+  <p>The escape hatch for a visitor who does not yet have an account.</p>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"or" separator</b></td><td>getByText(/^or$/i).first()</td><td><span class="pill p-ok">hard</span> visible. Anchored — an unanchored <code>/or/i</code> would match almost every word on the page.</td></tr>
+      <tr><td class="n">2</td><td><b>"Create an Account" button</b></td><td>getByRole('button', { name: /create an account/i }).or(getByText(/create an account/i)).first()</td><td><span class="pill p-gold">present-only</span> — visibility asserted; <code>safeClick</code>, URLs before and after logged.</td></tr>
+    </tbody>
+  </table>
+  <p>The role-then-text <code>.or()</code> is the same hedge used for the Help control: match the accessible button if there is one, fall back to the text node if it is a styled div.</p>
+
+  <h3>Group 7 — Help Chat Support Modal &nbsp;<span class="pill p-teal">4 tests · line 303</span> &nbsp;<span class="pill p-teal">nested beforeEach → State C</span></h3>
+  <pre><span class="c">// :305 — opens the modal before each of the four tests</span>
+await scrollAndClick(page, helpControl(page));
+await page.waitForTimeout(500);</pre>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Modal heading</b></td><td>getByText(/aastrika sphere chat support/i)</td><td><span class="pill p-ok">hard</span> visible — confirms the hook's click landed.</td></tr>
+      <tr>
+        <td class="n">2</td><td><b>"Chat with us on WhatsApp"</b><br>May open a new tab.</td>
+        <td>getByText(/chat with us on whatsapp/i).first()<br>+ <code>page.waitForEvent('popup', { timeout: 3000 })</code></td>
+        <td><span class="pill p-gold">present-only</span> — visibility asserted; the popup (if any) has its URL logged and is closed. If none opens, logs "may have navigated in-page".</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>"Chat with us"</b><br>Must not match the hidden third-party widget.</td>
+        <td>getByRole('button', {name:/^chat with us$/i})<br>.or(getByText(/^chat with us$/i))<br><b>.filter({ visible: true })</b> → .first()</td>
+        <td><span class="pill p-gold">present-only</span> — same popup handling as test 2.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>Close (X) dismisses the modal</b><br>The group's real assertion.</td>
+        <td>button:has(mat-icon:has-text("close")),<br>[aria-label*="close" i],<br>button:has-text("×") → .first()</td>
+        <td><span class="pill p-ok">hard</span> ×2 — close button visible, and after clicking, <code>expect(stillOpen).toBe(false)</code> on the modal heading.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The <code>.filter({ visible: true })</code> in test 3</h3>
+  <p>The source comment explains it: a hidden third-party chat widget elsewhere on the page also contains the text "chat with us". Without the filter, <code>.first()</code> could resolve to that invisible element, and the test would fail on a modal button that is perfectly fine. Anchoring the regex (<code>/^chat with us$/i</code>) narrows it further so it cannot match the longer WhatsApp label from test 2. Two constraints, two distinct false matches ruled out.</p>
+
+  <h3>Popup handling, and why it cannot fail</h3>
+  <pre>const popupPromise = page.waitForEvent(<span class="g">'popup'</span>, { timeout: 3000 }).catch(() =&gt; null);
+await safeClick(page, waBtn, <span class="g">'Chat with us on WhatsApp'</span>);
+const popup = await popupPromise;
+if (popup) { console.log(popup.url()); await popup.close(); }
+else       { console.log(<span class="g">'   No popup detected'</span>); }</pre>
+  <p>The listener is registered <i>before</i> the click — a popup opening faster than the listener attaches would be missed. The <code>.catch(() =&gt; null)</code> turns the 3 s timeout into a null rather than a rejection, so both branches are normal outcomes.</p>
+
+  <div class="callout">
+    <span class="t">Test 4 is the second of only two hard-asserted consequences in the file</span>
+    Alongside "Help opens the modal" in Group 1, this is the other place where a click's effect is asserted rather than logged. Together they bracket the modal: it opens when asked, and it closes when dismissed. A modal that cannot be dismissed traps a user on a page they were trying to log in from — worth the hard assertion.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 11. EDGE CASES ══ -->
+<div class="page sec">
+  <h2>11 &nbsp; Group 8 — Input validation edge cases</h2>
+  <p class="lead"><span class="mono">Input Validation Edge Cases</span> &nbsp;·&nbsp; 1 test, 10 payloads &nbsp;·&nbsp; line 372 &nbsp;·&nbsp; <span class="pill p-teal">log — zero assertions</span></p>
+
+  <p><b>What it does:</b> types ten different values into the identifier field, reads back what the field kept, and records whether Get OTP was enabled for each. It is a <b>reconnaissance</b> test — it produces a table of observed behaviour, not a verdict.</p>
+
+  <table>
+    <thead><tr><th class="n">#</th><th style="width:26%">Payload</th><th style="width:20%">Label in the log</th><th>What it probes</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td class="mono">'' (empty)</td><td>empty</td><td>The baseline — is the submit gated at all?</td></tr>
+      <tr><td class="n">2</td><td class="mono">' ' (single space)</td><td>single space</td><td>Is whitespace trimmed, or treated as content that unlocks the button?</td></tr>
+      <tr><td class="n">3</td><td class="mono">'a'</td><td>single char</td><td>Is there a minimum length?</td></tr>
+      <tr><td class="n">4</td><td class="mono">'1234567890'</td><td>10-digit phone</td><td>The standard Indian mobile format.</td></tr>
+      <tr><td class="n">5</td><td class="mono">'+919876543210'</td><td>phone with country code</td><td>Is the <code>+</code> prefix accepted, stripped, or rejected?</td></tr>
+      <tr><td class="n">6</td><td class="mono">'test@example.com'</td><td>standard email</td><td>The other valid identity type.</td></tr>
+      <tr><td class="n">7</td><td class="mono">'TEST@EXAMPLE.COM'</td><td>uppercase email</td><td>Is case normalised? Emails are case-insensitive in the domain part.</td></tr>
+      <tr><td class="n">8</td><td class="mono">'!@#$%^&amp;*()'</td><td>special chars</td><td>Does a nonsense string enable submission?</td></tr>
+      <tr><td class="n">9</td><td class="mono">'a'.repeat(256)</td><td>very long (256 chars)</td><td>Is there a maxlength? The log truncates the echo to 40 chars.</td></tr>
+      <tr><td class="n">10</td><td class="mono">'&lt;script&gt;alert(1)&lt;/script&gt;'</td><td>XSS payload</td><td>Is the input escaped, stripped, or stored verbatim?</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The loop</h3>
+  <pre>for (const c of cases) {
+  await input.fill(<span class="g">''</span>);
+  await input.fill(c.val);
+  await page.waitForTimeout(150);
+  const actual  = await input.inputValue();                      <span class="c">// what the field KEPT</span>
+  const enabled = await getOtpBtn.isEnabled().catch(() =&gt; true);  <span class="c">// did the gate open?</span>
+  const preview = actual.length &gt; 40 ? <span class="g">`${actual.slice(0, 40)}...`</span> : actual;
+  console.log(<span class="g">`   • ${c.label.padEnd(25)} → accepted="${preview}" | Get OTP enabled=${enabled}`</span>);
+}</pre>
+  <p>Two observations per payload: what survived the field's own filtering, and whether the button unlocked. The <code>padEnd(25)</code> aligns the output into a readable column, which is the point — this test's product is a table a human scans.</p>
+
+  <h3>What the output looks like</h3>
+  <pre>   • empty                     → accepted="" | Get OTP enabled=false
+   • single space              → accepted=" " | Get OTP enabled=true
+   • single char               → accepted="a" | Get OTP enabled=true
+   • 10-digit phone            → accepted="1234567890" | Get OTP enabled=true
+   • phone with country code   → accepted="+919876543210" | Get OTP enabled=true
+   • standard email            → accepted="test@example.com" | Get OTP enabled=true
+   • special chars             → accepted="!@#$%^&amp;*()" | Get OTP enabled=true
+   • XSS payload               → accepted="&lt;script&gt;alert(1)&lt;/script&gt;" | Get OTP enabled=true</pre>
+  <p class="cap">Illustrative shape — the real values depend on the build under test.</p>
+
+  <div class="callout gold">
+    <span class="t">Reading this test correctly</span>
+    A row showing <code>enabled=true</code> for <code>single space</code> or <code>special chars</code> is a finding — it means the client accepts an identifier that can never match an account, and the user learns that only after a round trip. But this test <b>will not tell you</b>: it prints the row and passes. The output is evidence for a human, and it is only worth generating if someone reads it.
+    <br><br>
+    The <code>&lt;script&gt;</code> row is a probe, not an XSS test. Seeing the payload echoed back into the input's value is expected and harmless — a real check would confirm the string is escaped where it is <i>rendered</i>, and nothing here does that. Treat it as a note that the field does no input sanitisation, which is normal for a text box.
+  </div>
+
+  <div class="callout">
+    <span class="t">If you want this to gate anything</span>
+    The cheapest meaningful assertion is on rows 1 and 2 — empty and whitespace-only must not enable Get OTP. Both are unambiguous, both need no backend, and both are already being measured. Everything else in the list is genuinely a judgement call about product intent, which is why logging is the honest default for them.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 12. RESP + HEALTH ══ -->
+<div class="page sec">
+  <h2>12 &nbsp; Groups 9 &amp; 10 — Responsive and Page health</h2>
+
+  <h3>Group 9 — Responsive Layout &nbsp;<span class="pill p-teal">3 tests · line 407</span></h3>
+  <p>One templated test per viewport. Unlike the signup suite's responsive block, these do not build new browser contexts — they resize the existing page, which is cheaper and sufficient for a layout smoke check.</p>
+  <table>
+    <thead><tr><th style="width:28%">Viewport</th><th style="width:18%">Size</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Mobile (iPhone 12)</td><td class="mono">390 × 844</td><td rowspan="3"><span class="pill p-ok">hard</span> ×2 per test — after <code>setViewportSize</code> and a 400 ms settle, both the <code>/^welcome!?$/i</code> heading and the <code>/login with your aastrika account/i</code> sub-heading must still be visible.</td></tr>
+      <tr><td class="mono">Tablet (iPad)</td><td class="mono">768 × 1024</td></tr>
+      <tr><td class="mono">Desktop</td><td class="mono">1440 × 900</td></tr>
+    </tbody>
+  </table>
+  <pre>for (const vp of viewports) {
+  test(<span class="g">`Renders on ${vp.name}`</span>, async ({ page }) =&gt; {
+    await page.setViewportSize({ width: vp.w, height: vp.h });
+    await page.waitForTimeout(400);
+    await expect(page.getByText(<span class="g">/^welcome!?$/i</span>).first()).toBeVisible();
+    await expect(page.getByText(<span class="g">/login with your aastrika account/i</span>).first()).toBeVisible();
+  });
+}</pre>
+  <p>This is why the file declares 27 tests but runs 29 — the loop templates three.</p>
+  <div class="callout">
+    <span class="t">Scope, stated honestly</span>
+    Asserting the two headings is a reachability check: it proves the page did not collapse or clip its copy at 390px. It says nothing about the form controls at that width — whether the Login button is reachable without horizontal scrolling, whether tap targets are large enough, whether the mode radios still fit on one line. Extending the assertion to the identifier field and the primary button would cost two lines and cover the part of the page users actually have to operate.
+  </div>
+
+  <h3>Group 10 — Page Health &nbsp;<span class="pill p-teal">2 tests · line 430</span></h3>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Check</th><th style="width:30%">Mechanism</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>No console errors on load</b></td>
+        <td>Attach a <code>console</code> listener, re-<code>goto</code>, wait for networkidle + 1000 ms, collect <code>msg.type() === 'error'</code></td>
+        <td><span class="pill p-teal">log</span> — prints the count and the first five messages (truncated to 200 chars each), then logs either "No console errors" or "⚠️ Console errors present". <b>No <code>expect()</code>.</b></td>
+      </tr>
+      <tr>
+        <td class="n">2</td><td><b>Page title</b></td>
+        <td><code>await page.title()</code></td>
+        <td><span class="pill p-ok">hard</span> <code>toMatch(/aastrika|sphere/i)</code>. Cheap, and a real canary for a wrong shell or an error page served with a 200.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">The console check here is weaker than its sibling</span>
+    <code>PublicPage.spec.ts</code> runs the same check but <b>asserts</b> — it filters out <code>Failed to load resource</code> noise and then requires the remaining list to be empty, so a genuine JavaScript exception fails the suite. This file collects the same data and only prints it. Copying the sibling's two lines would make an uncaught exception on the login page visible in the exit code rather than buried in the log:
+    <pre style="margin-top:6px;">const jsErrors = errors.filter((e) =&gt; !<span class="g">/Failed to load resource/i</span>.test(e));
+expect(jsErrors).toEqual([]);</pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 13. WHAT GREEN PROVES ══ -->
+<div class="page sec">
+  <h2>13 &nbsp; What green actually proves</h2>
+  <p class="lead">24 of 29 tests carry a real assertion. Five carry none. And none of the 29 asserts that anyone can log in.</p>
+
+  <table>
+    <thead><tr><th style="width:24%">Group</th><th style="width:9%">Tests</th><th style="width:9%">Hard</th><th style="width:14%">Present-only</th><th style="width:8%">Log</th><th>What is actually guaranteed</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Header</td><td>3</td><td><b>2</b></td><td>1</td><td>0</td><td>Logo, and that Help opens the modal. The back arrow's destination is not checked.</td></tr>
+      <tr><td>2 · Welcome</td><td>2</td><td><b>2</b></td><td>0</td><td>0</td><td>Fully guaranteed.</td></tr>
+      <tr><td>3 · Mode Toggle</td><td>3</td><td><b>3</b></td><td>0</td><td>0</td><td>Fully guaranteed — including that the password field leaves the DOM.</td></tr>
+      <tr><td>4 · OTP Login Flow</td><td>4</td><td><b>2</b></td><td>1</td><td>1</td><td>Identifier accepts phone and email; Get OTP exists. The empty-state gate and the submit are not asserted.</td></tr>
+      <tr><td>5 · Password Login Flow</td><td>5</td><td><b>2</b></td><td>2</td><td>1</td><td>Identifier stays visible; password is genuinely masked. Eye icon, Forgot Password and Login outcomes are not asserted.</td></tr>
+      <tr><td>6 · Create Account</td><td>2</td><td><b>1</b></td><td>1</td><td>0</td><td>The separator. The button's destination is not checked.</td></tr>
+      <tr><td>7 · Help Modal</td><td>4</td><td><b>2</b></td><td>2</td><td>0</td><td>The modal's heading and that X dismisses it. Both chat buttons are present-only.</td></tr>
+      <tr><td>8 · Edge Cases</td><td>1</td><td><b>0</b></td><td>0</td><td>1</td><td>Nothing. Produces a readable table of ten observed behaviours.</td></tr>
+      <tr><td>9 · Responsive</td><td>3</td><td><b>3</b></td><td>0</td><td>0</td><td>Both headings visible at all three widths. Form controls not checked.</td></tr>
+      <tr><td>10 · Page Health</td><td>2</td><td><b>1</b></td><td>0</td><td>1</td><td>The page title. Console errors are logged, not asserted.</td></tr>
+      <tr style="background:var(--teal-50)!important;"><td><b>Total</b></td><td><b>29</b></td><td><b>18</b></td><td><b>7</b></td><td><b>4</b></td><td><b>18 tests gate a build; 7 assert presence but not outcome; 4 only report.</b></td></tr>
+    </tbody>
+  </table>
+
+  <h3>The one sentence version</h3>
+  <div class="callout">
+    <span class="t">A green run means the login page is intact and operable</span>
+    Every control is present and correctly labelled, both input modes work, the password is masked, the help modal opens and closes, and the page renders from 390px to 1440px. That is genuinely valuable — it is the fastest way to know a deploy did not break the gate every returning user passes through, and it is the check that protects the selectors every authenticated suite depends on.
+  </div>
+  <div class="callout red">
+    <span class="t">A green run does not mean anyone can log in</span>
+    No assertion in this file examines where a click led. Run <code>npm run login:check</code> for that — it drives the same page through <code>tests/helpers/login.ts</code> with credentials from <code>LOGIN_ID</code> / <code>LOGIN_PASSWORD</code>, and asserts the browser left <code>/public/</code> for an authenticated route (<code>/page/home</code>, <code>/app/new-tnc</code>, or another <code>/app/…</code> page).
+  </div>
+
+  <h3>Where hardening would pay, in order</h3>
+  <ol class="steps">
+    <li><b>Get OTP disabled when empty</b> (Group 4, test 3). One line: <code>expect(disabled).toBe(true)</code> — definite behaviour, no backend needed, already measured.</li>
+    <li><b>Console errors</b> (Group 10, test 1). Two lines, copied verbatim from <code>PublicPage.spec.ts</code>. Turns a buried log line into a build signal.</li>
+    <li><b>Eye icon toggle</b> (Group 5, test 3). Assert the type flips <code>password</code> → <code>text</code>, using the typed locator rather than <code>input.nth(1)</code>.</li>
+    <li><b>OTP mode selected by default</b> (Group 3, test 1). Read the radio's checked state so the test matches its own name.</li>
+    <li><b>Empty and whitespace rows</b> in the edge-case loop. Assert those two; leave the other eight as observation.</li>
+  </ol>
+  <p>The navigation tests are best left alone. Asserting destinations on a live shared environment would fail this suite for reasons that are not login-page defects — precisely the trade <code>login-check.spec.ts</code> exists to take, with credentials it owns.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 14. ARTIFACTS ══ -->
+<div class="page sec">
+  <h2>14 &nbsp; Artifacts and run variants</h2>
+
+  <h3>14.1 &nbsp; What a run leaves behind</h3>
+  <table>
+    <thead><tr><th style="width:26%">Artifact</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">test-results/</td><td>A screenshot for every one of the 29 tests (<code>screenshot: 'on'</code>). Because Groups 5 and 7 run in non-default states, the set includes shots of password mode and the open modal.</td></tr>
+      <tr><td class="mono">playwright-report/ · video.webm</td><td>The HTML report; video is kept only for failures.</td></tr>
+      <tr><td class="mono">console output</td><td><b>The most informative artifact for this suite.</b> Every clicked destination, every popup URL, the server's response toast, the ten edge-case rows, and the console-error list. Seven of the 29 tests put their only real finding here.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>14.2 &nbsp; A healthy run, abridged</h3>
+  <pre><span class="k">✅ Page loaded: https://sphere.aastrika.org/public/login</span>
+   URL after back click: https://sphere.aastrika.org/public/home
+<span class="k">✅ Help modal opened with heading "Aastrika Sphere chat support"</span>
+<span class="k">✅ Switching to Password mode reveals the password field</span>
+<span class="k">✅ Toggled back to OTP — password fields on screen: 0</span>
+<span class="k">✅ Identifier field accepted phone number</span> / <span class="k">accepted email</span>
+<span class="c">✅ Empty-state — Get OTP disabled: true</span>
+<span class="k">✅ Password field present, input type="password" (masked)</span>
+<span class="k">✅ Clicked: Login</span>
+   URL after Login click: https://sphere.aastrika.org/public/login
+   <span class="r">Server response: "Invalid username or password"</span>
+   Opened popup URL: https://wa.me/91…
+   • empty                     → accepted="" | Get OTP enabled=false
+   • XSS payload               → accepted="&lt;script&gt;alert(1)&lt;/script&gt;" | Get OTP enabled=true
+<span class="k">✅ Welcome + sub-heading visible at Mobile (390x844)</span>
+   Console errors captured: 0</pre>
+  <p>Note the highlighted line: a failed login prints its server message and the run still passes — exactly the kind of finding this suite surfaces but does not act on.</p>
+
+  <h3>14.3 &nbsp; Run variants</h3>
+  <pre><span class="c"># the whole suite, headed, against staging</span>
+npm run run:login
+
+<span class="c"># one group — use an INNER name; the outer describe collides with PublicPage.spec.ts</span>
+npx playwright test tests/public-login.spec.ts --grep <span class="g">"Password Login Flow"</span>
+npx playwright test tests/public-login.spec.ts --grep <span class="g">"Help Chat Support Modal"</span>
+npx playwright test tests/public-login.spec.ts --grep <span class="g">"Input Validation"</span>
+
+<span class="c"># point at another environment</span>
+<span class="k">cross-env</span> BASE_URL=https://portal-staging.example.org \
+  npx playwright test tests/public-login.spec.ts --headed
+
+<span class="c"># headless, with the public page suite — the CI gate</span>
+npm run report:ci
+
+<span class="c"># the suite that actually asserts a login succeeds</span>
+npm run login:check
+
+<span class="c"># report / trace</span>
+npx playwright show-report
+npx playwright test tests/public-login.spec.ts --trace on</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 15. FAILURES ══ -->
+<div class="page sec">
+  <h2>15 &nbsp; Failure modes and fixes</h2>
+
+  <table>
+    <thead><tr><th style="width:26%">Symptom</th><th style="width:30%">Most likely cause</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>All 29 tests fail</b></td>
+        <td>The page never loaded, or Playwright was run from the repo root instead of <code>SphereWebAutomation\</code>.</td>
+        <td>Check the URL printed by <code>beforeEach</code>. Run <code>--grep "Page Health"</code> — a failing title test confirms the page itself is wrong.</td>
+      </tr>
+      <tr>
+        <td><b>All five Password Login Flow tests fail with the same error</b></td>
+        <td>The group's <code>beforeEach</code> could not click "Login with Password" — one cause, five reds.</td>
+        <td>Check whether Group 3 also failed. Green Group 3 plus red Group 5 hook means the toggle works but the password screen does not render.</td>
+      </tr>
+      <tr>
+        <td><b>All four Help Modal tests fail together</b></td>
+        <td>Same shape — the Group 7 hook could not open the modal.</td>
+        <td>Check Group 1 test 3, which opens the modal independently. If that is also red, the Help control moved; fix <code>helpControl()</code> at line 26 and both groups recover.</td>
+      </tr>
+      <tr>
+        <td><b>"Cannot fill element" on the identifier field</b></td>
+        <td>Something resolved to the OTP/Password radio — the first <code>&lt;input&gt;</code> on the page.</td>
+        <td>Use <code>identifierInput(page)</code>. This is the exact bug the helper at line 19 was written to prevent.</td>
+      </tr>
+      <tr>
+        <td><b>"Chat with us" test fails on a visible button</b></td>
+        <td>The locator resolved to the hidden third-party chat widget whose text also contains that phrase.</td>
+        <td>Keep <code>.filter({ visible: true })</code> and the anchored <code>/^chat with us$/i</code>. Both constraints are load-bearing.</td>
+      </tr>
+      <tr>
+        <td><b>Back arrow test asserts the wrong button</b></td>
+        <td>The <code>.or(getByRole('button').first())</code> fallback engaged because the Material ligature text changed.</td>
+        <td>Check the icon's rendered text in the DOM and add it to the <code>/chevron_left|arrow_back/i</code> alternation rather than relying on the positional fallback.</td>
+      </tr>
+      <tr>
+        <td><b>Every text assertion fails, page looks fine</b></td>
+        <td>The environment is serving this page in Hindi. This file has no bilingual matching.</td>
+        <td>Port the <code>tr()</code> helper and <code>HI</code> map from <code>PublicPage.spec.ts</code> and route the text matchers through it.</td>
+      </tr>
+      <tr>
+        <td><b>Login logs "Invalid username or password"</b></td>
+        <td>The hard-coded <code>testcase003@yopmail.com</code> no longer exists on the target environment.</td>
+        <td>Not a test failure — the suite stays green. Mint a fresh account (<code>npm run mint:fresh-user</code>) and update the literal, or move the credentials to env vars.</td>
+      </tr>
+      <tr>
+        <td><b>Flaky first assertion in a test</b></td>
+        <td>The Angular shell had not finished painting when the assertion ran.</td>
+        <td><code>beforeEach</code> already waits for <code>networkidle</code>. If a specific control is still racing, give that one assertion an explicit timeout rather than adding a blanket <code>waitForTimeout</code>.</td>
+      </tr>
+      <tr>
+        <td><b>A <code>--grep</code> runs far more tests than expected</b></td>
+        <td>You grepped the outer describe name, which is identical in <code>PublicPage.spec.ts</code>.</td>
+        <td>Grep an inner group name, or pass the file path explicitly.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">The one rule to keep</span>
+    This file's locators encode hard-won knowledge about a page whose controls are not what they look like — the first input is a radio, Help is not a button, the back arrow is icon ligature text, and a hidden widget shadows the chat button. <b>Reuse the helpers rather than re-deriving the locators</b>, and when you add a check, decide deliberately whether it asserts or observes. Both are legitimate here; what is not legitimate is a test whose name promises more than its body delivers.
+  </div>
+</div>

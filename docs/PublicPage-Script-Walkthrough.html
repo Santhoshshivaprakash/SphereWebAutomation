@@ -1,0 +1,1234 @@
+<title>Public Page Script Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#17283C; --navy-400:#18293D; --navy-300:#2D3E54; --navy-100:#7E8A9A; --navy-50:#BEC5CE;
+    --teal:#1E8F8E; --teal-600:#186E6E; --teal-700:#135858; --teal-50:#E3F7F6; --teal-100:#B8ECE9;
+    --gold:#F0A500; --gold-600:#C88800; --gold-700:#9A6800; --gold-50:#FEF6E0;
+    --offwhite:#F6F7F9; --line:#D8DEE5; --mid:#7C8696; --ink:#0D1218;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7; --err:#B91C1C; --err-bg:#FEE2E2;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Open Sans",Segoe UI,Arial,sans-serif;
+    font-size:9.9pt; line-height:1.47; color:var(--ink); background:#fff;
+    margin:0;
+  }
+  .page{ padding:0 16mm; }
+
+  h1{font-size:20pt;font-weight:700;color:var(--navy);margin:0 0 6px;letter-spacing:-.2px;}
+  h2{font-size:14.5pt;font-weight:700;color:var(--navy);margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid var(--teal);}
+  h3{font-size:11.5pt;font-weight:600;color:var(--navy);margin:15px 0 6px;}
+  h4{font-size:10.5pt;font-weight:600;color:var(--navy-300);margin:12px 0 5px;}
+  p{margin:0 0 8px;}
+  .lead{font-size:10.4pt;color:var(--navy-300);}
+  .cap{font-family:Lato,Arial,sans-serif;font-size:8.2pt;color:var(--mid);margin:4px 0 0;}
+  code,.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:8.8pt;}
+  code{background:var(--offwhite);border:1px solid var(--line);border-radius:4px;padding:1px 4px;color:var(--navy);}
+  a{color:var(--teal-600);}
+
+  .cover{height:247mm;display:flex;flex-direction:column;justify-content:center;background:var(--navy);color:#fff;padding:0 20mm;margin:-14mm 0 0;}
+  .cover .kicker{font-family:Lato;font-size:10pt;letter-spacing:3px;text-transform:uppercase;color:var(--teal-100);margin-bottom:18px;}
+  .cover h1{font-size:34pt;color:#fff;line-height:1.15;margin-bottom:14px;}
+  .cover .sub{font-size:13pt;color:var(--navy-50);max-width:150mm;line-height:1.5;}
+  .cover .rule{width:72px;height:5px;background:var(--gold);margin:26px 0;border-radius:3px;}
+  .cover .meta{font-family:Lato;font-size:9.5pt;color:var(--navy-50);line-height:1.9;}
+  .cover .meta b{color:#fff;font-weight:700;}
+
+  .sec{page-break-before:always;padding-top:1mm;}
+  .nobreak{page-break-inside:avoid;}
+
+  .callout{border-left:4px solid var(--teal);background:var(--teal-50);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;font-size:9.5pt;}
+  .callout.gold{border-left-color:var(--gold);background:var(--gold-50);}
+  .callout.red{border-left-color:var(--err);background:var(--err-bg);}
+  .callout .t{font-weight:700;color:var(--navy);display:block;margin-bottom:2px;}
+
+  table{width:100%;border-collapse:collapse;margin:8px 0 11px;font-size:8.6pt;page-break-inside:auto;}
+  thead{display:table-header-group;}
+  th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:6px 8px;border:.5pt solid var(--navy);font-size:8.6pt;}
+  td{padding:5px 8px;border:.5pt solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--offwhite);}
+  tr{page-break-inside:avoid;}
+  td.n{width:24px;text-align:center;font-weight:700;color:var(--teal-700);background:var(--teal-50)!important;}
+  .t-sel td:nth-child(3){font-family:"JetBrains Mono",Consolas,monospace;font-size:7.9pt;line-height:1.45;word-break:break-word;}
+
+  .pill{display:inline-block;padding:1px 8px;border-radius:9999px;font-size:8pt;font-weight:600;font-family:Lato;}
+  .p-ok{background:var(--ok-bg);color:var(--ok);}
+  .p-warn{background:var(--warn-bg);color:var(--warn);}
+  .p-err{background:var(--err-bg);color:var(--err);}
+  .p-teal{background:var(--teal-50);color:var(--teal-700);}
+  .p-gold{background:var(--gold-50);color:var(--gold-700);}
+
+  .grid2{display:flex;gap:12px;margin:10px 0;}
+  .card{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff;}
+  .card .h{font-weight:700;color:var(--navy);font-size:9.8pt;margin-bottom:5px;}
+  .card ul{margin:0;padding-left:15px;}
+  .card li{margin-bottom:3px;font-size:9.2pt;}
+
+  .fig{margin:12px 0 4px;page-break-inside:avoid;}
+  .fig svg{width:100%;height:auto;display:block;}
+
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:9px 0;}
+  ol.steps li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px;font-size:9.4pt;page-break-inside:avoid;}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:9999px;background:var(--navy);color:#fff;font-size:8pt;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  ol.steps li b{color:var(--navy);}
+
+  .toc{margin:12px 0;}
+  .toc div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:5px 2px;font-size:9.6pt;}
+  .toc div span:first-child{color:var(--navy);font-weight:600;}
+  .toc div span:last-child{color:var(--mid);font-family:Lato;font-size:9pt;}
+
+  pre{background:var(--navy);color:#E8EDF3;border-radius:8px;padding:9px 12px;font-family:"JetBrains Mono",Consolas,monospace;font-size:8pt;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;}
+  pre .c{color:#7E9AB8;}
+  pre .k{color:#6FD7D5;}
+  pre .g{color:#F2C14E;}
+  pre .r{color:#FF9A9A;}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════ COVER ══ -->
+<div class="cover">
+  <div class="kicker">Sphere Web Automation</div>
+  <h1>Public Page Script<br>Step-by-Step Walkthrough</h1>
+  <div class="rule"></div>
+  <div class="sub">A section-by-section, element-by-element map of how <span class="mono">tests/PublicPage.spec.ts</span> verifies the Sphere public home page — every locator, scroll, assertion and bilingual fallback, with page-anatomy and execution diagrams.</div>
+  <div class="rule" style="width:40px;height:2px;background:#2D3E54;"></div>
+  <div class="meta">
+    <b>Script</b> &nbsp; tests/PublicPage.spec.ts &nbsp;·&nbsp; 823 lines &nbsp;·&nbsp; 64 tests in 13 element groups + page-wide checks<br>
+    <b>Target</b> &nbsp; https://sphere.aastrika.org/public/home &nbsp;(no login required)<br>
+    <b>Run</b> &nbsp;&nbsp;&nbsp;&nbsp; npm run run:public<br>
+    <b>Date</b> &nbsp;&nbsp;&nbsp; 12 September 2026
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CONTENTS ══ -->
+<div class="page sec">
+  <h2>Contents</h2>
+  <div class="toc">
+    <div><span>1 &nbsp; What this script does</span><span>Purpose, scope, entry points</span></div>
+    <div><span>2 &nbsp; Configuration and inputs</span><span>URL normalisation, runner settings</span></div>
+    <div><span>3 &nbsp; The bilingual engine</span><span>Diagram — how tr() matches Hindi or English</span></div>
+    <div><span>4 &nbsp; The execution model</span><span>Diagram — one fresh page per test, four assertion patterns</span></div>
+    <div><span>5 &nbsp; Page anatomy</span><span>Diagram — all 13 groups mapped onto the page</span></div>
+    <div><span>6 &nbsp; Group 1 — Header</span><span>2 tests</span></div>
+    <div><span>7 &nbsp; Group 2 — Hero Banner</span><span>7 tests</span></div>
+    <div><span>8 &nbsp; Group 3 — Stats Row</span><span>4 tests</span></div>
+    <div><span>9 &nbsp; Group 4 — Top Courses</span><span>6 tests</span></div>
+    <div><span>10 &nbsp; Group 5 — CNE Courses</span><span>9 tests</span></div>
+    <div><span>11 &nbsp; Group 6 — Trusted By</span><span>7 tests</span></div>
+    <div><span>12 &nbsp; Group 7 — How Sphere Works</span><span>5 tests</span></div>
+    <div><span>13 &nbsp; Groups 8 &amp; 9 — Transform CTA, Initiative</span><span>2 + 4 tests</span></div>
+    <div><span>14 &nbsp; Groups 10 &amp; 11 — Footer: Quick Links, Help</span><span>3 + 3 tests</span></div>
+    <div><span>15 &nbsp; Groups 12 &amp; 13 — Footer: Social, Copyright</span><span>6 + 2 tests</span></div>
+    <div><span>16 &nbsp; Group 14 — Page-wide checks</span><span>4 tests</span></div>
+    <div><span>17 &nbsp; Hard vs soft: what green actually proves</span><span>The 22 conditional tests, named</span></div>
+    <div><span>18 &nbsp; Artifacts and run variants</span><span>Reports, screenshots, grep recipes</span></div>
+    <div><span>19 &nbsp; Failure modes and fixes</span><span>Troubleshooting reference</span></div>
+  </div>
+
+  <h3>How to read this document</h3>
+  <p>Sections 6 through 16 walk the script in file order, one table per <code>describe</code> group. Each row gives the <b>action</b>, the exact <b>locator</b>, and the <b>assertion</b> — plus a strength marker saying whether the test can actually fail:</p>
+  <table>
+    <thead><tr><th style="width:20%">Marker</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-ok">hard</span></td><td>An <code>expect()</code> always runs. If the element is missing or wrong, the test fails.</td></tr>
+      <tr><td><span class="pill p-warn">soft</span></td><td>The assertion sits inside <code>if (await …isVisible())</code>. A missing element means the test passes having checked nothing.</td></tr>
+      <tr><td><span class="pill p-teal">log</span></td><td>No <code>expect()</code> at all — the test records a value to the console for a human to read.</td></tr>
+    </tbody>
+  </table>
+  <p>Section 17 collects every soft and log test in one place, so you can see at a glance what a green run does and does not guarantee.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 1. WHAT IT DOES ══ -->
+<div class="page sec">
+  <h2>1 &nbsp; What this script does</h2>
+  <p class="lead">It is the shop-window check: everything a visitor sees <i>before</i> they have an account, verified element by element, in whichever language the portal happens to be serving.</p>
+
+  <p>The public home page at <code>/public/home</code> is the only page most first-time visitors ever see. It carries the value proposition, the live platform statistics, the course carousels, the partner credibility block, the explainer videos and the entire footer — and every one of those is a separate conversion risk if it breaks. This spec walks the page top to bottom and checks each element individually.</p>
+
+  <p>It needs no login, creates nothing, and changes no server state. That makes it the cheapest suite in the project to run and the safest to run often.</p>
+
+  <h3>The four things it verifies</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="h">Presence</div>
+      <ul>
+        <li>Logo, headings, subtexts</li>
+        <li>The four platform statistics with their exact numbers</li>
+        <li>Section headings down the whole page</li>
+        <li>Footer columns and copyright</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Navigation</div>
+      <ul>
+        <li>Log in opens a modal, Escape closes it</li>
+        <li>Create Account and Start Today navigate</li>
+        <li>Both View All links navigate</li>
+        <li>Course cards, Privacy policy, Terms of Use</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Integrity</div>
+      <ul>
+        <li>No broken images anywhere on the page</li>
+        <li>No JavaScript console errors</li>
+        <li>Page loads in under 10 seconds</li>
+        <li>Page title names Sphere or Aastrika</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Bilingual by design</h3>
+  <p>This is the defining constraint of the suite. <code>sphere.aastrika.org</code> serves the public page in <b>Hindi by default</b>, but the same build can render English. A suite written against English strings would fail wholesale on the live site; one written against Hindi would fail on a rebuilt English environment.</p>
+  <p>So every text assertion in the file goes through one helper, <code>tr()</code>, which matches <b>either</b> language. Section 3 explains how it works. Labels that render identically in both languages — course titles, partner names, numbers, email addresses — are matched directly.</p>
+
+  <h3>Entry points</h3>
+  <table>
+    <thead><tr><th style="width:36%">Command</th><th>What it runs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:public</td><td>All 64 tests, headed, against staging. The full walkthrough this document describes.</td></tr>
+      <tr><td class="mono">npm run report:ci</td><td>This spec plus <code>public-login.spec.ts</code>, headless on the Chrome project — the public-surface CI gate.</td></tr>
+      <tr><td class="mono">npx playwright test tests/PublicPage.spec.ts --grep "Footer"</td><td>Just the four footer groups. Any group name works as a grep target.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">Run it from the right folder</span>
+    Every Playwright command must be issued from <code>SphereWebAutomation\</code>, not the <code>D:\Automation</code> root.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 2. CONFIGURATION ══ -->
+<div class="page sec">
+  <h2>2 &nbsp; Configuration and inputs</h2>
+
+  <h3>2.1 &nbsp; How the target URL is built</h3>
+  <p>The spec takes an <i>origin</i> and appends the path itself, defending against two ways the environment variable is commonly mis-set:</p>
+  <pre><span class="c">// tests/PublicPage.spec.ts:16</span>
+const BASE_URL = (process.env.BASE_URL ?? <span class="g">'https://sphere.aastrika.org'</span>)
+  .replace(<span class="g">/\/+$/</span>, <span class="g">''</span>)               <span class="c">// strip trailing slashes</span>
+  .replace(<span class="g">/\/public\/home$/</span>, <span class="g">''</span>);   <span class="c">// strip an already-appended path</span>
+
+const PUBLIC_URL = <span class="g">`${BASE_URL}/public/home`</span>;</pre>
+  <table>
+    <thead><tr><th style="width:44%">BASE_URL as supplied</th><th>PUBLIC_URL that results</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">(unset)</td><td class="mono">https://sphere.aastrika.org/public/home</td></tr>
+      <tr><td class="mono">https://sphere.aastrika.org/</td><td class="mono">https://sphere.aastrika.org/public/home</td></tr>
+      <tr><td class="mono">https://sphere.aastrika.org/public/home</td><td class="mono">https://sphere.aastrika.org/public/home</td></tr>
+    </tbody>
+  </table>
+  <p>Without the second <code>replace</code>, the third row would produce <code>/public/home/public/home</code> — a 404 that would fail all 64 tests with a misleading "element not found" on every one.</p>
+
+  <h3>2.2 &nbsp; Runner settings inherited from playwright.config.ts</h3>
+  <table>
+    <thead><tr><th style="width:24%">Setting</th><th style="width:14%">Value</th><th>Why it matters here</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">fullyParallel</td><td class="mono">false</td><td>Tests run one at a time.</td></tr>
+      <tr><td class="mono">workers</td><td class="mono">1</td><td>A single browser tab at a time, so a run is a readable linear log. It also means 64 tests each reloading the page is the dominant cost — see the timing note below.</td></tr>
+      <tr><td class="mono">retries</td><td class="mono">0</td><td>A failure is reported as a failure, not retried away. A genuinely flaky element shows up as flaky.</td></tr>
+      <tr><td class="mono">timeout</td><td class="mono">300 s</td><td>Per-test ceiling. No test here comes close; the real limit is the 10 s expect timeout.</td></tr>
+      <tr><td class="mono">expect.timeout</td><td class="mono">10 s</td><td>How long every <code>toBeVisible()</code> polls before failing. This is the number that matters on a slow-loading carousel.</td></tr>
+      <tr><td class="mono">screenshot</td><td class="mono">'on'</td><td>A screenshot is captured for <b>every</b> test, pass or fail — so the report doubles as a visual record of the whole page.</td></tr>
+      <tr><td class="mono">video</td><td class="mono">retain-on-failure</td><td>Video is kept only for failures.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Why the suite takes a while for a read-only check</span>
+    <code>beforeEach</code> navigates to the public page afresh for all 64 tests, and eleven of them navigate away and come back. With one worker that is roughly 75 full page loads per run. It is still far cheaper than any signup suite, but it is not instant — <code>--grep</code> to a group when iterating.
+  </div>
+
+  <h3>2.3 &nbsp; The two scroll helpers</h3>
+  <table>
+    <thead><tr><th style="width:22%">Helper</th><th style="width:8%">Line</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">scrollAndClick</td><td class="mono">:74</td>
+        <td><code>scrollIntoViewIfNeeded()</code> then <code>click()</code>, both unguarded. Used where the element is expected to exist — a missing one should fail loudly.</td>
+      </tr>
+      <tr>
+        <td class="mono">safeScroll</td><td class="mono">:81</td>
+        <td>Scrolls with a 3 s timeout, swallows the error, and <b>returns whether the element is visible</b>. Used for elements that legitimately vary between builds — partner logos, collaboration marks, social icons. Without it, one absent logo costs a 15 s <code>scrollIntoViewIfNeeded</code> timeout and a red test for something that was never guaranteed.</td>
+      </tr>
+    </tbody>
+  </table>
+  <pre><span class="c">// :81 — returns a boolean instead of throwing</span>
+async function <span class="k">safeScroll</span>(locator): Promise&lt;boolean&gt; {
+  await locator.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() =&gt; {});
+  return locator.isVisible().catch(() =&gt; false);
+}</pre>
+  <p><code>safeScroll</code> is the single mechanism behind most of the suite's soft tests. It is a deliberate trade — fewer false failures, at the cost of a green result that may have checked nothing. Section 17 lists exactly where that applies.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 3. BILINGUAL ══ -->
+<div class="page sec">
+  <h2>3 &nbsp; The bilingual engine</h2>
+  <p class="lead">One helper, one lookup table, and every text assertion in the file becomes language-agnostic.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 378" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="t1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2D3E54"/></marker>
+        <marker id="t2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1E8F8E"/></marker>
+      </defs>
+
+      <rect x="40" y="12" width="250" height="44" rx="8" fill="#17283C"/>
+      <text x="165" y="32" fill="#fff" font-size="11.5" font-weight="700" text-anchor="middle">the test writes</text>
+      <text x="165" y="49" fill="#6FD7D5" font-size="10" text-anchor="middle" font-family="JetBrains Mono, monospace">tr('Log in')</text>
+      <path d="M290,34 L338,34" stroke="#2D3E54" stroke-width="2" marker-end="url(#t1)"/>
+
+      <rect x="344" y="6" width="516" height="62" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="360" y="26" fill="#17283C" font-size="11" font-weight="700">1 &nbsp;look up the HI map</text>
+      <text x="360" y="44" fill="#7C8696" font-size="9.5" font-family="JetBrains Mono, monospace">HI['Log in'] → ['लॉग इन करें', 'लॉगिन']</text>
+      <text x="360" y="59" fill="#7C8696" font-size="8.5">no entry? → the English key alone (course titles, numbers, emails need no translation)</text>
+
+      <path d="M602,68 L602,86" stroke="#2D3E54" stroke-width="2" marker-end="url(#t1)"/>
+
+      <rect x="344" y="92" width="516" height="56" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="360" y="112" fill="#17283C" font-size="11" font-weight="700">2 &nbsp;escape every variant for regex safety</text>
+      <text x="360" y="130" fill="#7C8696" font-size="9.5" font-family="JetBrains Mono, monospace">s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&amp;')</text>
+      <text x="360" y="143" fill="#B45309" font-size="8.5">without this, 'Help &amp; Contact' and '50+ Partner…' would be read as regex operators</text>
+
+      <path d="M602,148 L602,166" stroke="#2D3E54" stroke-width="2" marker-end="url(#t1)"/>
+
+      <rect x="344" y="172" width="516" height="58" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="360" y="192" fill="#17283C" font-size="11" font-weight="700">3 &nbsp;join with | into one case-insensitive RegExp</text>
+      <text x="360" y="210" fill="#7C8696" font-size="9.5" font-family="JetBrains Mono, monospace">new RegExp(alts.join('|'), 'i')</text>
+      <text x="360" y="225" fill="#7C8696" font-size="8.5">→ /Log in|लॉग इन करें|लॉगिन/i</text>
+
+      <path d="M602,230 L602,248" stroke="#1E8F8E" stroke-width="2" marker-end="url(#t2)"/>
+
+      <rect x="344" y="254" width="516" height="46" rx="8" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="602" y="273" fill="#135858" font-size="11.5" font-weight="700" text-anchor="middle">handed straight to Playwright</text>
+      <text x="602" y="291" fill="#186E6E" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono, monospace">getByRole('button', { name: /Log in|लॉग इन करें|लॉगिन/i })</text>
+
+      <!-- both environments -->
+      <path d="M440,300 L440,320" stroke="#1E8F8E" stroke-width="2" marker-end="url(#t2)"/>
+      <path d="M764,300 L764,320" stroke="#1E8F8E" stroke-width="2" marker-end="url(#t2)"/>
+      <rect x="320" y="326" width="240" height="40" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="1.5"/>
+      <text x="440" y="343" fill="#15803D" font-size="10.5" font-weight="700" text-anchor="middle">Hindi build (the live default)</text>
+      <text x="440" y="358" fill="#15803D" font-size="9" text-anchor="middle">matches लॉग इन करें &nbsp;→ green</text>
+      <rect x="644" y="326" width="240" height="40" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="1.5"/>
+      <text x="764" y="343" fill="#15803D" font-size="10.5" font-weight="700" text-anchor="middle">English build</text>
+      <text x="764" y="358" fill="#15803D" font-size="9" text-anchor="middle">matches Log in &nbsp;→ green</text>
+
+      <!-- left note -->
+      <rect x="40" y="92" width="250" height="208" rx="8" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="56" y="112" fill="#17283C" font-size="11" font-weight="700">The HI map &nbsp;— 33 entries</text>
+      <text x="56" y="132" fill="#7C8696" font-size="9">Captured live from sphere.aastrika.org,</text>
+      <text x="56" y="145" fill="#7C8696" font-size="9">where Hindi is the default language.</text>
+      <text x="56" y="168" fill="#2D3E54" font-size="9" font-weight="600">Some keys carry TWO variants:</text>
+      <text x="56" y="184" fill="#7C8696" font-size="8.5" font-family="JetBrains Mono, monospace">'Log in': ['लॉग इन करें', 'लॉगिन']</text>
+      <text x="56" y="198" fill="#7C8696" font-size="8.5" font-family="JetBrains Mono, monospace">'Create Account': [ …, 'एक नया खाता बनाएँ']</text>
+      <text x="56" y="212" fill="#7C8696" font-size="8.5">— the wording differs by placement on the page.</text>
+      <text x="56" y="236" fill="#2D3E54" font-size="9" font-weight="600">Two labels stay English even in Hindi:</text>
+      <text x="56" y="252" fill="#7C8696" font-size="8.5">"An initiative of" · "A collaboration with"</text>
+      <text x="56" y="266" fill="#7C8696" font-size="8.5">so those two tests match the literal string</text>
+      <text x="56" y="279" fill="#7C8696" font-size="8.5">directly, not through tr().</text>
+    </svg>
+    <p class="cap">Figure 1 — <code>tr()</code> turns one English key into a regex that matches either language, so the same assertion is green on a Hindi build and an English one.</p>
+  </div>
+
+  <h3>The whole helper, in six lines</h3>
+  <pre><span class="c">// :66</span>
+function <span class="k">tr</span>(en: string): RegExp {
+  const esc  = (s: string) =&gt; s.replace(<span class="g">/[.*+?^${}()|[\]\\]/g</span>, <span class="g">'\\$&amp;'</span>);
+  const alts = [en, ...(HI[en] || [])].map(esc);
+  return new RegExp(alts.join(<span class="g">'|'</span>), <span class="g">'i'</span>);
+}</pre>
+
+  <h3>Why each of the three steps is load-bearing</h3>
+  <ol class="steps">
+    <li><b>The English key always comes first</b> in the alternation. That is what makes an unmapped label work — <code>tr('Normal Labour &amp; Birth')</code> has no HI entry, so it degrades to a plain English match rather than throwing.</li>
+    <li><b>Escaping is not optional.</b> Real labels on this page contain <code>&amp;</code>, <code>+</code>, <code>?</code>, <code>!</code> and <code>.</code> — "Help &amp; Contact", "50+ Partner Organizations and Growing", "New User?", "Transform your Healthcare career through Sphere!". Unescaped, <code>50+</code> would mean "one or more zeroes" and would not match the text on screen.</li>
+    <li><b>The <code>i</code> flag</b> lets <code>tr('TOP COURSES')</code> match a heading the CSS may render in any case, and covers casing drift between builds.</li>
+  </ol>
+
+  <div class="callout">
+    <span class="t">Adding a label</span>
+    When a new string appears on the page, add one entry to the <code>HI</code> map at line 27 and use <code>tr('Your English Label')</code> in the test. Nothing else changes. If the label happens to render identically in both languages, skip the map entry entirely — <code>tr()</code> already handles that case.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 4. EXECUTION MODEL ══ -->
+<div class="page sec">
+  <h2>4 &nbsp; The execution model</h2>
+  <p class="lead">Unlike the signup suite, nothing here is serial. Every test starts from a clean page and is independent of every other.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 462" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="e1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2D3E54"/></marker>
+        <marker id="e2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1E8F8E"/></marker>
+      </defs>
+
+      <rect x="270" y="8" width="360" height="52" rx="8" fill="#17283C"/>
+      <text x="450" y="28" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">test.beforeEach &nbsp;— runs 64 times</text>
+      <text x="450" y="46" fill="#BEC5CE" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono, monospace">page.goto(PUBLIC_URL) → waitForLoadState('domcontentloaded')</text>
+
+      <path d="M450,60 L450,80" stroke="#2D3E54" stroke-width="2" marker-end="url(#e1)"/>
+      <rect x="230" y="86" width="440" height="34" rx="8" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="450" y="108" fill="#135858" font-size="10.5" font-weight="700" text-anchor="middle">every test receives its OWN { page } fixture — a fresh, isolated context</text>
+
+      <path d="M450,120 L450,140" stroke="#2D3E54" stroke-width="2" marker-end="url(#e1)"/>
+      <text x="450" y="156" fill="#17283C" font-size="11.5" font-weight="700" text-anchor="middle">the test body then follows ONE of four patterns</text>
+
+      <!-- pattern A -->
+      <rect x="20" y="172" width="208" height="180" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <rect x="20" y="172" width="208" height="26" rx="8" fill="#1E8F8E"/>
+      <text x="124" y="190" fill="#fff" font-size="10.5" font-weight="700" text-anchor="middle">A · ASSERT IN PLACE</text>
+      <text x="36" y="216" fill="#2D3E54" font-size="9" font-family="JetBrains Mono, monospace">locator → expect(…).toBeVisible()</text>
+      <text x="36" y="236" fill="#7C8696" font-size="9">Above-the-fold elements that need</text>
+      <text x="36" y="248" fill="#7C8696" font-size="9">no scrolling — logo, hero heading.</text>
+      <rect x="36" y="260" width="60" height="18" rx="9" fill="#DCFCE7"/>
+      <text x="66" y="273" fill="#15803D" font-size="8.5" font-weight="700" text-anchor="middle">hard</text>
+      <text x="36" y="298" fill="#2D3E54" font-size="9" font-weight="600">Used by ~6 tests</text>
+      <text x="36" y="316" fill="#7C8696" font-size="8.5">Fails if the element is absent,</text>
+      <text x="36" y="328" fill="#7C8696" font-size="8.5">after the 10 s expect timeout.</text>
+
+      <!-- pattern B -->
+      <rect x="238" y="172" width="208" height="180" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <rect x="238" y="172" width="208" height="26" rx="8" fill="#1E8F8E"/>
+      <text x="342" y="190" fill="#fff" font-size="10.5" font-weight="700" text-anchor="middle">B · SCROLL THEN ASSERT</text>
+      <text x="254" y="216" fill="#2D3E54" font-size="9" font-family="JetBrains Mono, monospace">scrollIntoViewIfNeeded()</text>
+      <text x="254" y="228" fill="#2D3E54" font-size="9" font-family="JetBrains Mono, monospace">→ expect(…).toBeVisible()</text>
+      <text x="254" y="248" fill="#7C8696" font-size="9">Everything below the fold. The scroll</text>
+      <text x="254" y="260" fill="#7C8696" font-size="9">also triggers lazy-loaded content.</text>
+      <rect x="254" y="272" width="60" height="18" rx="9" fill="#DCFCE7"/>
+      <text x="284" y="285" fill="#15803D" font-size="8.5" font-weight="700" text-anchor="middle">hard</text>
+      <text x="254" y="310" fill="#2D3E54" font-size="9" font-weight="600">Used by ~24 tests</text>
+      <text x="254" y="328" fill="#7C8696" font-size="8.5">The most common pattern in the file.</text>
+
+      <!-- pattern C -->
+      <rect x="456" y="172" width="208" height="180" rx="8" fill="#fff" stroke="#F0A500" stroke-width="2"/>
+      <rect x="456" y="172" width="208" height="26" rx="8" fill="#F0A500"/>
+      <text x="560" y="190" fill="#17283C" font-size="10.5" font-weight="700" text-anchor="middle">C · CLICK AND RETURN</text>
+      <text x="472" y="216" fill="#2D3E54" font-size="9" font-family="JetBrains Mono, monospace">click() → waitForLoadState</text>
+      <text x="472" y="228" fill="#2D3E54" font-size="9" font-family="JetBrains Mono, monospace">→ log url → goto(PUBLIC_URL)</text>
+      <text x="472" y="248" fill="#7C8696" font-size="9">Navigation checks. The return goto</text>
+      <text x="472" y="260" fill="#7C8696" font-size="9">keeps the page tidy for the next test.</text>
+      <rect x="472" y="272" width="60" height="18" rx="9" fill="#DCFCE7"/>
+      <text x="502" y="285" fill="#15803D" font-size="8.5" font-weight="700" text-anchor="middle">hard</text>
+      <text x="472" y="310" fill="#2D3E54" font-size="9" font-weight="600">Used by 11 tests</text>
+      <text x="472" y="328" fill="#B45309" font-size="8.5">Asserts the click SUCCEEDS, not</text>
+      <text x="472" y="339" fill="#B45309" font-size="8.5">where it lands — the URL is logged only.</text>
+
+      <!-- pattern D -->
+      <rect x="674" y="172" width="208" height="180" rx="8" fill="#fff" stroke="#B45309" stroke-width="2"/>
+      <rect x="674" y="172" width="208" height="26" rx="8" fill="#B45309"/>
+      <text x="778" y="190" fill="#fff" font-size="10.5" font-weight="700" text-anchor="middle">D · GUARDED SOFT CHECK</text>
+      <text x="690" y="216" fill="#2D3E54" font-size="9" font-family="JetBrains Mono, monospace">if (await safeScroll(x)) {</text>
+      <text x="690" y="228" fill="#2D3E54" font-size="9" font-family="JetBrains Mono, monospace">  expect(x).toBeVisible() }</text>
+      <text x="690" y="248" fill="#7C8696" font-size="9">Elements that legitimately vary by</text>
+      <text x="690" y="260" fill="#7C8696" font-size="9">build — partner logos, social icons.</text>
+      <rect x="690" y="272" width="60" height="18" rx="9" fill="#FEF3C7"/>
+      <text x="720" y="285" fill="#B45309" font-size="8.5" font-weight="700" text-anchor="middle">soft</text>
+      <text x="690" y="310" fill="#2D3E54" font-size="9" font-weight="600">Used by 22 tests</text>
+      <text x="690" y="328" fill="#B45309" font-size="8.5">Passes green when the element is</text>
+      <text x="690" y="339" fill="#B45309" font-size="8.5">missing. See Section 17.</text>
+
+      <!-- footer note -->
+      <path d="M124,352 L124,378 L450,378 L450,398" stroke="#1E8F8E" stroke-width="1.5" fill="none"/>
+      <path d="M342,352 L342,378" stroke="#1E8F8E" stroke-width="1.5" fill="none"/>
+      <path d="M560,352 L560,378" stroke="#1E8F8E" stroke-width="1.5" fill="none"/>
+      <path d="M778,352 L778,378 L450,378" stroke="#1E8F8E" stroke-width="1.5" fill="none" marker-end="url(#e2)"/>
+      <rect x="200" y="404" width="500" height="48" rx="8" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="450" y="424" fill="#17283C" font-size="10.5" font-weight="700" text-anchor="middle">no shared state · no ordering · no cleanup needed</text>
+      <text x="450" y="441" fill="#7C8696" font-size="9" text-anchor="middle">Any single test can be run alone with --grep and behaves identically.</text>
+    </svg>
+    <p class="cap">Figure 2 — One <code>beforeEach</code> navigation per test, then one of four body shapes. The four patterns account for all 64 tests.</p>
+  </div>
+
+  <div class="callout">
+    <span class="t">The trade this model buys</span>
+    Re-navigating for every test is slower than walking the page once, but it makes each test a standalone statement about one element. A failure names exactly one thing, no test can corrupt another's starting state, and <code>--grep</code> on any single test name reproduces the failure precisely. On a read-only page with no server cost, that is the right trade.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 5. PAGE ANATOMY ══ -->
+<div class="page sec">
+  <h2>5 &nbsp; Page anatomy</h2>
+  <p class="lead">All 13 element groups mapped onto the page they cover, in the order the script declares them.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 1006" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <!-- browser frame -->
+      <rect x="300" y="26" width="420" height="944" rx="10" fill="#fff" stroke="#2D3E54" stroke-width="2"/>
+      <rect x="300" y="26" width="420" height="24" rx="10" fill="#2D3E54"/>
+      <rect x="300" y="40" width="420" height="10" fill="#2D3E54"/>
+      <circle cx="316" cy="38" r="4" fill="#7E8A9A"/><circle cx="330" cy="38" r="4" fill="#7E8A9A"/><circle cx="344" cy="38" r="4" fill="#7E8A9A"/>
+      <text x="520" y="42" fill="#BEC5CE" font-size="9" text-anchor="middle" font-family="JetBrains Mono, monospace">sphere.aastrika.org/public/home</text>
+
+      <!-- G1 header -->
+      <rect x="310" y="58" width="400" height="34" rx="5" fill="#F6F7F9" stroke="#1E8F8E" stroke-width="1.5"/>
+      <rect x="320" y="68" width="54" height="14" rx="3" fill="#17283C"/>
+      <rect x="628" y="66" width="34" height="18" rx="4" fill="#fff" stroke="#2D3E54"/><text x="645" y="78" fill="#2D3E54" font-size="7.5" text-anchor="middle">Log in</text>
+      <rect x="666" y="66" width="36" height="18" rx="4" fill="#F0A500"/><text x="684" y="78" fill="#17283C" font-size="6.5" font-weight="700" text-anchor="middle">Create</text>
+      <text x="290" y="80" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">1 · Header</text>
+      <text x="290" y="91" fill="#7C8696" font-size="8.5" text-anchor="end">2 tests · logo, login modal</text>
+      <line x1="294" y1="75" x2="308" y2="75" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G2 hero -->
+      <rect x="310" y="98" width="400" height="104" rx="5" fill="#17283C"/>
+      <text x="330" y="126" fill="#fff" font-size="11" font-weight="700">Access free Healthcare courses</text>
+      <text x="330" y="142" fill="#BEC5CE" font-size="8.5">Learn at your own pace &amp; Get Certified</text>
+      <text x="330" y="162" fill="#BEC5CE" font-size="8">New User?</text>
+      <rect x="330" y="168" width="72" height="18" rx="4" fill="#F0A500"/><text x="366" y="181" fill="#17283C" font-size="7.5" font-weight="700" text-anchor="middle">Create Account</text>
+      <circle cx="620" cy="192" r="3" fill="#F0A500"/><circle cx="632" cy="192" r="3" fill="#7E8A9A"/><circle cx="644" cy="192" r="3" fill="#7E8A9A"/>
+      <text x="656" y="195" fill="#BEC5CE" font-size="7">carousel</text>
+      <text x="290" y="140" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">2 · Hero Banner</text>
+      <text x="290" y="151" fill="#7C8696" font-size="8.5" text-anchor="end">7 tests · headings, CTA, carousel</text>
+      <line x1="294" y1="135" x2="308" y2="135" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G3 stats -->
+      <rect x="310" y="208" width="400" height="52" rx="5" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="360" y="230" fill="#135858" font-size="11" font-weight="700" text-anchor="middle">310,000+</text><text x="360" y="244" fill="#186E6E" font-size="7" text-anchor="middle">Learners onboarded</text>
+      <text x="460" y="230" fill="#135858" font-size="11" font-weight="700" text-anchor="middle">490+</text><text x="460" y="244" fill="#186E6E" font-size="7" text-anchor="middle">Number of courses</text>
+      <text x="560" y="230" fill="#135858" font-size="11" font-weight="700" text-anchor="middle">57.5</text><text x="560" y="244" fill="#186E6E" font-size="7" text-anchor="middle">CNE Hours</text>
+      <text x="660" y="230" fill="#135858" font-size="11" font-weight="700" text-anchor="middle">400,000+</text><text x="660" y="244" fill="#186E6E" font-size="7" text-anchor="middle">Total certificate issued</text>
+      <text x="290" y="230" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">3 · Stats Row</text>
+      <text x="290" y="241" fill="#7C8696" font-size="8.5" text-anchor="end">4 tests · label AND exact number</text>
+      <line x1="294" y1="234" x2="308" y2="234" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G4 top courses -->
+      <rect x="310" y="266" width="400" height="96" rx="5" fill="#fff" stroke="#D8DEE5"/>
+      <text x="322" y="284" fill="#17283C" font-size="9.5" font-weight="700">TOP COURSES</text>
+      <text x="698" y="284" fill="#186E6E" font-size="8" text-anchor="end">View All →</text>
+      <g fill="#F6F7F9" stroke="#D8DEE5">
+        <rect x="322" y="292" width="86" height="62" rx="4"/><rect x="416" y="292" width="86" height="62" rx="4"/>
+        <rect x="510" y="292" width="86" height="62" rx="4"/><rect x="604" y="292" width="86" height="62" rx="4"/>
+      </g>
+      <text x="330" y="338" fill="#7C8696" font-size="6.5">★★★★☆</text>
+      <rect x="330" y="342" width="44" height="9" rx="4" fill="#E3F7F6"/><text x="352" y="349" fill="#135858" font-size="5.5" text-anchor="middle">Certificate</text>
+      <text x="290" y="308" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">4 · Top Courses</text>
+      <text x="290" y="319" fill="#7C8696" font-size="8.5" text-anchor="end">6 tests · cards, badges, stars</text>
+      <line x1="294" y1="312" x2="308" y2="312" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G5 CNE courses -->
+      <rect x="310" y="368" width="400" height="116" rx="5" fill="#fff" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="322" y="386" fill="#17283C" font-size="9.5" font-weight="700">CNE COURSES</text>
+      <text x="698" y="386" fill="#186E6E" font-size="8" text-anchor="end">View All →</text>
+      <g fill="#F6F7F9" stroke="#D8DEE5">
+        <rect x="322" y="394" width="86" height="58" rx="4"/><rect x="416" y="394" width="86" height="58" rx="4"/>
+        <rect x="510" y="394" width="86" height="58" rx="4"/><rect x="604" y="394" width="86" height="58" rx="4"/>
+      </g>
+      <circle cx="694" cy="423" r="9" fill="#17283C"/><text x="694" y="427" fill="#fff" font-size="9" text-anchor="middle">›</text>
+      <text x="322" y="466" fill="#7C8696" font-size="7">Indian Nursing Council &nbsp;·&nbsp; UNFPA &nbsp;·&nbsp; partner badges</text>
+      <text x="322" y="478" fill="#7C8696" font-size="7">Normal Labour &amp; Birth and AMTSL &nbsp;·&nbsp; ISRH &nbsp;— matched by exact title</text>
+      <text x="290" y="418" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">5 · CNE Courses</text>
+      <text x="290" y="429" fill="#7C8696" font-size="8.5" text-anchor="end">9 tests · largest group</text>
+      <line x1="294" y1="422" x2="308" y2="422" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G6 trusted by -->
+      <rect x="310" y="490" width="400" height="78" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="510" y="508" fill="#17283C" font-size="9.5" font-weight="700" text-anchor="middle">Trusted By</text>
+      <text x="510" y="521" fill="#7C8696" font-size="7.5" text-anchor="middle">50+ Partner Organizations and Growing</text>
+      <g fill="#fff" stroke="#D8DEE5">
+        <rect x="330" y="530" width="62" height="26" rx="4"/><rect x="404" y="530" width="62" height="26" rx="4"/>
+        <rect x="478" y="530" width="62" height="26" rx="4"/><rect x="552" y="530" width="62" height="26" rx="4"/>
+        <rect x="626" y="530" width="62" height="26" rx="4"/>
+      </g>
+      <text x="361" y="546" fill="#7C8696" font-size="6" text-anchor="middle">FERNANDEZ</text>
+      <text x="435" y="546" fill="#7C8696" font-size="6" text-anchor="middle">MANYATA</text>
+      <text x="509" y="546" fill="#7C8696" font-size="6" text-anchor="middle">KLE</text>
+      <text x="583" y="546" fill="#7C8696" font-size="6" text-anchor="middle">UNFPA</text>
+      <text x="657" y="546" fill="#7C8696" font-size="6" text-anchor="middle">NQOCN</text>
+      <text x="290" y="524" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">6 · Trusted By</text>
+      <text x="290" y="535" fill="#7C8696" font-size="8.5" text-anchor="end">7 tests · 5 logos are soft</text>
+      <line x1="294" y1="528" x2="308" y2="528" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G7 how sphere works -->
+      <rect x="310" y="574" width="400" height="106" rx="5" fill="#fff" stroke="#D8DEE5"/>
+      <text x="510" y="592" fill="#17283C" font-size="9.5" font-weight="700" text-anchor="middle">How Sphere works</text>
+      <text x="510" y="604" fill="#7C8696" font-size="7" text-anchor="middle">In 3-simple videos we guide you through making an account and getting certified.</text>
+      <g fill="#F6F7F9" stroke="#D8DEE5">
+        <rect x="336" y="612" width="112" height="58" rx="4"/><rect x="454" y="612" width="112" height="58" rx="4"/><rect x="572" y="612" width="112" height="58" rx="4"/>
+      </g>
+      <circle cx="392" cy="632" r="8" fill="#1E8F8E"/><text x="392" y="636" fill="#fff" font-size="8" text-anchor="middle">▶</text>
+      <circle cx="510" cy="632" r="8" fill="#1E8F8E"/><text x="510" y="636" fill="#fff" font-size="8" text-anchor="middle">▶</text>
+      <circle cx="628" cy="632" r="8" fill="#1E8F8E"/><text x="628" y="636" fill="#fff" font-size="8" text-anchor="middle">▶</text>
+      <text x="392" y="654" fill="#17283C" font-size="6.5" font-weight="700" text-anchor="middle">Register for a course</text>
+      <text x="510" y="654" fill="#17283C" font-size="6.5" font-weight="700" text-anchor="middle">Take the course</text>
+      <text x="628" y="654" fill="#17283C" font-size="6.5" font-weight="700" text-anchor="middle">Get certified</text>
+      <text x="290" y="622" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">7 · How Sphere Works</text>
+      <text x="290" y="633" fill="#7C8696" font-size="8.5" text-anchor="end">5 tests · 3 cards + play buttons</text>
+      <line x1="294" y1="626" x2="308" y2="626" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G8 transform CTA -->
+      <rect x="310" y="686" width="400" height="50" rx="5" fill="#1E8F8E"/>
+      <text x="470" y="710" fill="#fff" font-size="9.5" font-weight="700" text-anchor="middle">Transform your Healthcare career through Sphere!</text>
+      <rect x="626" y="702" width="62" height="20" rx="4" fill="#F0A500"/><text x="657" y="715" fill="#17283C" font-size="7.5" font-weight="700" text-anchor="middle">Start Today</text>
+      <text x="290" y="706" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">8 · Transform CTA</text>
+      <text x="290" y="717" fill="#7C8696" font-size="8.5" text-anchor="end">2 tests · heading + button</text>
+      <line x1="294" y1="710" x2="308" y2="710" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G9 initiative -->
+      <rect x="310" y="742" width="400" height="56" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="420" y="762" fill="#7C8696" font-size="7.5" text-anchor="middle">An initiative of</text>
+      <rect x="380" y="768" width="80" height="22" rx="4" fill="#fff" stroke="#D8DEE5"/><text x="420" y="782" fill="#7C8696" font-size="6.5" text-anchor="middle">NILEKANI</text>
+      <text x="600" y="762" fill="#7C8696" font-size="7.5" text-anchor="middle">A collaboration with</text>
+      <rect x="560" y="768" width="80" height="22" rx="4" fill="#fff" stroke="#D8DEE5"/><text x="600" y="782" fill="#7C8696" font-size="6.5" text-anchor="middle">SOCIETAL</text>
+      <text x="290" y="764" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">9 · Initiative &amp; Collaboration</text>
+      <text x="290" y="775" fill="#7C8696" font-size="8.5" text-anchor="end">4 tests · labels stay English</text>
+      <line x1="294" y1="768" x2="308" y2="768" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- G10-12 footer -->
+      <rect x="310" y="804" width="400" height="120" rx="5" fill="#17283C"/>
+      <text x="330" y="824" fill="#fff" font-size="8" font-weight="700">Quick Links</text>
+      <text x="330" y="838" fill="#BEC5CE" font-size="7">Privacy policy</text>
+      <text x="330" y="850" fill="#BEC5CE" font-size="7">Terms of Use</text>
+      <text x="460" y="824" fill="#fff" font-size="8" font-weight="700">Help &amp; Contact</text>
+      <text x="460" y="838" fill="#BEC5CE" font-size="7">support@aastrika.org</text>
+      <text x="460" y="850" fill="#BEC5CE" font-size="7">Talk to us on WhatsApp</text>
+      <text x="596" y="824" fill="#fff" font-size="8" font-weight="700">Additional Links</text>
+      <text x="596" y="838" fill="#BEC5CE" font-size="7">Aastrika Foundation:</text>
+      <g fill="#2D3E54"><circle cx="600" cy="854" r="7"/><circle cx="618" cy="854" r="7"/><circle cx="636" cy="854" r="7"/><circle cx="654" cy="854" r="7"/></g>
+      <text x="600" y="857" fill="#BEC5CE" font-size="6" text-anchor="middle">X</text><text x="618" y="857" fill="#BEC5CE" font-size="6" text-anchor="middle">f</text>
+      <text x="636" y="857" fill="#BEC5CE" font-size="6" text-anchor="middle">ig</text><text x="654" y="857" fill="#BEC5CE" font-size="6" text-anchor="middle">in</text>
+      <line x1="330" y1="874" x2="690" y2="874" stroke="#2D3E54" stroke-width="1"/>
+      <rect x="330" y="884" width="48" height="14" rx="3" fill="#2D3E54"/>
+      <text x="690" y="895" fill="#7E8A9A" font-size="6.5" text-anchor="end">Health Systems … Aastrika Foundation</text>
+      <text x="290" y="826" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">10 · Footer Quick Links</text>
+      <text x="290" y="837" fill="#7C8696" font-size="8.5" text-anchor="end">3 tests</text>
+      <line x1="294" y1="830" x2="308" y2="830" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="290" y="856" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">11 · Footer Help &amp; Contact</text>
+      <text x="290" y="867" fill="#7C8696" font-size="8.5" text-anchor="end">3 tests · mailto + wa.me hrefs</text>
+      <line x1="294" y1="860" x2="308" y2="860" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="290" y="886" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">12 · Additional Links &amp; Social</text>
+      <text x="290" y="897" fill="#7C8696" font-size="8.5" text-anchor="end">6 tests · 5 are soft</text>
+      <line x1="294" y1="890" x2="308" y2="890" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="290" y="912" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">13 · Footer Copyright</text>
+      <text x="290" y="923" fill="#7C8696" font-size="8.5" text-anchor="end">2 tests</text>
+      <line x1="294" y1="916" x2="308" y2="916" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- page-wide overlay -->
+      <rect x="736" y="58" width="150" height="866" rx="8" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <text x="811" y="80" fill="#9A6800" font-size="10" font-weight="700" text-anchor="middle">14 · PAGE-WIDE</text>
+      <text x="811" y="94" fill="#9A6800" font-size="8.5" text-anchor="middle">4 tests · spans everything</text>
+      <text x="750" y="122" fill="#9A6800" font-size="8.5">· no broken images</text>
+      <text x="750" y="138" fill="#9A6800" font-size="8">&nbsp;&nbsp;(scrolls the whole page</text>
+      <text x="750" y="150" fill="#9A6800" font-size="8">&nbsp;&nbsp;in 12 steps first)</text>
+      <text x="750" y="172" fill="#9A6800" font-size="8.5">· no console JS errors</text>
+      <text x="750" y="194" fill="#9A6800" font-size="8.5">· loads under 10 s</text>
+      <text x="750" y="216" fill="#9A6800" font-size="8.5">· title names Sphere</text>
+      <text x="750" y="238" fill="#9A6800" font-size="8.5">&nbsp;&nbsp;or Aastrika</text>
+      <line x1="750" y1="262" x2="872" y2="262" stroke="#F0A500" stroke-width="1"/>
+      <text x="750" y="282" fill="#9A6800" font-size="8.5" font-weight="700">These four are the only</text>
+      <text x="750" y="294" fill="#9A6800" font-size="8.5" font-weight="700">tests that look at the</text>
+      <text x="750" y="306" fill="#9A6800" font-size="8.5" font-weight="700">page as a whole rather</text>
+      <text x="750" y="318" fill="#9A6800" font-size="8.5" font-weight="700">than one element.</text>
+
+      <text x="510" y="952" fill="#7C8696" font-size="8.5" text-anchor="middle">wireframe is schematic — it shows which region each group owns, not the real layout</text>
+      <text x="510" y="988" fill="#17283C" font-size="10" font-weight="700" text-anchor="middle">13 element groups &nbsp;+&nbsp; 1 page-wide group &nbsp;=&nbsp; 64 tests</text>
+    </svg>
+    <p class="cap">Figure 3 — Every <code>describe</code> group mapped to the region of the public home page it covers. Group order in the file follows the page top to bottom.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 6. HEADER ══ -->
+<div class="page sec">
+  <h2>6 &nbsp; Group 1 — Header</h2>
+  <p class="lead"><span class="mono">Header</span> &nbsp;·&nbsp; 2 tests &nbsp;·&nbsp; line 99</p>
+  <p><b>What it proves:</b> the site is branded, and the login entry point opens and closes cleanly without leaving a modal stuck over the page.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td>
+        <td><b>Logo is visible</b><br>Three alternatives in one locator, so a markup change in any one place does not break it.</td>
+        <td>img[alt*="logo"],<br>[class*="logo"],<br>ws-app-public-nav-bar img<br>→ .first()</td>
+        <td><span class="pill p-ok">hard</span> <code>toBeVisible()</code>. Covers an alt-text match, a class match, and the Angular nav-bar component's own image.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td>
+        <td><b>Log in opens a modal, Escape closes it</b><br>Four steps in one test: assert, click, assert modal, dismiss.</td>
+        <td>getByRole('button', { name: tr('Log in') })<br>then [class*="modal"], [class*="login"], [role="dialog"]<br>then keyboard.press('Escape')</td>
+        <td><span class="pill p-ok">hard</span> button visible <b>and</b> enabled; modal visible within 5 s. The Escape press and 500 ms wait are not asserted — the test's value is that the modal opened at all.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Why the modal locator is deliberately loose</span>
+    <code>[class*="modal"], [class*="login"], [role="dialog"]</code> matches on any of three signals. The login overlay's markup has changed between builds; an assertion pinned to one class name would have to be rewritten each time, while "something modal-shaped appeared" stays true. The cost is that a wrongly-styled element could satisfy it — acceptable for a smoke check whose real subject is the click.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 7. HERO ══ -->
+<div class="page sec">
+  <h2>7 &nbsp; Group 2 — Hero Banner</h2>
+  <p class="lead"><span class="mono">Hero Banner</span> &nbsp;·&nbsp; 7 tests &nbsp;·&nbsp; line 130</p>
+  <p><b>What it proves:</b> the value proposition renders, the primary call to action navigates, and the rotating carousel responds — with the rotation itself handled as a soft check, because a slide that is not currently showing is not a defect.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Hero heading</b></td><td>getByText(tr('Access free Healthcare courses')).first()</td><td><span class="pill p-ok">hard</span> visible. Pattern A — above the fold, no scroll.</td></tr>
+      <tr><td class="n">2</td><td><b>Hero subtext</b></td><td>getByText(tr('Learn at your own pace &amp; Get Certified')).first()</td><td><span class="pill p-ok">hard</span> visible. The <code>&amp;</code> is why <code>tr()</code> escapes before building the regex.</td></tr>
+      <tr><td class="n">3</td><td><b>"New User?" prompt</b></td><td>getByText(tr('New User?')).first()</td><td><span class="pill p-ok">hard</span> visible. The <code>?</code> would be a regex quantifier unescaped.</td></tr>
+      <tr>
+        <td class="n">4</td><td><b>Create Account navigates</b><br>Pattern C — clicks, logs where it went, returns.</td>
+        <td>getByRole('button', { name: tr('Create Account') }).first()<br>then goto(PUBLIC_URL)</td>
+        <td><span class="pill p-ok">hard</span> visible <b>and</b> enabled, and the click must succeed. The destination URL is logged, not asserted.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td><td><b>CNE Hours banner text</b><br>Lives on a rotating slide that may not be active.</td>
+        <td>getByText(/check out courses with cne hours|सीएनई घंटों वाले पाठ्यक्रम/i)</td>
+        <td><span class="pill p-teal">log</span> — records <code>visible: true/false</code> and always passes. Bilingual regex written inline rather than through <code>tr()</code>.</td>
+      </tr>
+      <tr>
+        <td class="n">6</td><td><b>"View courses" button</b><br>Same slide, so same conditionality.</td>
+        <td>getByRole('button', {name:/view courses|पाठ्यक्रम देखें/i}).or(getByText(…))</td>
+        <td><span class="pill p-warn">soft</span> — if visible, scrollAndClick then return to the page; if not, logs "not on current banner slide — skipping".</td>
+      </tr>
+      <tr>
+        <td class="n">7</td><td><b>Carousel dots</b><br>Clicks dot 2, then dot 1, proving the indicators are interactive.</td>
+        <td>[class*="dot"], [class*="carousel-indicator"], [role="tab"]</td>
+        <td><span class="pill p-warn">soft</span> — only runs <code>if (count &gt; 1)</code>. No <code>expect()</code>; the count is logged.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">The carousel is the reason three of these seven are soft</span>
+    The hero rotates automatically. Tests 5, 6 and 7 target content that exists only on a particular slide, so a hard assertion would fail roughly whenever the timing was unlucky — the classic flaky test. The script chooses to log instead. That is the right call for a rotating element, but it does mean a broken CNE slide would not turn this suite red. If that slide matters, the fix is to pin the carousel to a known slide first, not to harden the assertion as written.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 8. STATS ══ -->
+<div class="page sec">
+  <h2>8 &nbsp; Group 3 — Stats Row</h2>
+  <p class="lead"><span class="mono">Stats Row</span> &nbsp;·&nbsp; 4 tests &nbsp;·&nbsp; line 205</p>
+  <p><b>What it proves:</b> the four platform statistics render — both the translated label and the exact number beside it. These are the strongest assertions in the file: each test makes two hard checks and both must hold.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Statistic</th><th style="width:30%">Locators (two per test)</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Learners onboarded</b><br>310,000+</td><td>getByText(tr('Learners onboarded')).first()<br>getByText('310,000+').first()</td><td><span class="pill p-ok">hard</span> ×2 — scroll to the label, assert it, then assert the literal number string.</td></tr>
+      <tr><td class="n">2</td><td><b>Number of courses</b><br>490+</td><td>getByText(tr('Number of courses')).first()<br>getByText('490+').first()</td><td><span class="pill p-ok">hard</span> ×2.</td></tr>
+      <tr><td class="n">3</td><td><b>CNE Hours</b><br>57.5</td><td>getByText(tr('CNE Hours')).first()<br>getByText('57.5').first()</td><td><span class="pill p-ok">hard</span> ×2.</td></tr>
+      <tr><td class="n">4</td><td><b>Total certificate issued</b><br>400,000+</td><td>getByText(tr('Total certificate issued')).first()<br>getByText('400,000+').first()</td><td><span class="pill p-ok">hard</span> ×2.</td></tr>
+    </tbody>
+  </table>
+
+  <p>All four follow pattern B identically: scroll the label into view, assert it, then assert its number. The numbers are matched as plain strings, not through <code>tr()</code> — digits and separators render the same in both languages.</p>
+
+  <div class="callout red">
+    <span class="t">These four tests are hard-coded to today's numbers</span>
+    <code>310,000+</code>, <code>490+</code>, <code>57.5</code> and <code>400,000+</code> are literals in the spec. They are marketing figures on a live platform: the moment the site updates a counter, the matching test goes red on a page that is working perfectly. That is a maintenance cost, not a bug — but it is worth knowing where it lives. If these begin to churn, the durable alternative is to assert the label plus a numeric shape (<code>/[\d,]+\+/</code>) rather than the exact value.
+  </div>
+
+  <h3>Where to change them</h3>
+  <pre><span class="c">// :211, :220, :229, :238 — one literal per test</span>
+const number = page.getByText(<span class="g">'310,000+'</span>).first();   <span class="c">// Learners onboarded</span>
+const number = page.getByText(<span class="g">'490+'</span>).first();       <span class="c">// Number of courses</span>
+const number = page.getByText(<span class="g">'57.5'</span>).first();       <span class="c">// CNE Hours</span>
+const number = page.getByText(<span class="g">'400,000+'</span>).first();   <span class="c">// Total certificate issued</span></pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 9. TOP COURSES ══ -->
+<div class="page sec">
+  <h2>9 &nbsp; Group 4 — Top Courses</h2>
+  <p class="lead"><span class="mono">Top Courses Section</span> &nbsp;·&nbsp; 6 tests &nbsp;·&nbsp; line 248</p>
+  <p><b>What it proves:</b> the first course carousel populates from the content API, its cards carry the badges and ratings a learner uses to choose, and both the section link and an individual card navigate.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"TOP COURSES" heading</b></td><td>getByText(tr('TOP COURSES')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible.</td></tr>
+      <tr>
+        <td class="n">2</td><td><b>"View All" navigates</b><br>Takes the <i>first</i> View All on the page — this section's.</td>
+        <td>getByText(tr('View All')).first()<br>then goto(PUBLIC_URL)</td>
+        <td><span class="pill p-ok">hard</span> visible, and the click must succeed. Destination logged.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>Course cards render</b><br>The Angular component name first, a class fallback second.</td>
+        <td>ws-web-course-card, [class*="course-card"]</td>
+        <td><span class="pill p-ok">hard</span> <code>count &gt; 0</code>. An empty carousel — the content API failing — fails here.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>Certificate badges</b><br>The one test in the group that waits properly for lazy content.</td>
+        <td>getByText(/Certificate|प्रमाणपत्र/i)</td>
+        <td><span class="pill p-ok">hard</span> <code>toBeVisible({ timeout: 15000 })</code> on the first badge, <b>then</b> <code>count &gt; 0</code>.</td>
+      </tr>
+      <tr><td class="n">5</td><td><b>Star ratings</b></td><td>[class*="rating"], [class*="star"]</td><td><span class="pill p-ok">hard</span> <code>count &gt; 0</code> — an instantaneous count with no auto-wait.</td></tr>
+      <tr>
+        <td class="n">6</td><td><b>First card is clickable</b></td>
+        <td>ws-web-course-card, [class*="course-card"] → .first()<br>then goto(PUBLIC_URL)</td>
+        <td><span class="pill p-ok">hard</span> visible, click must succeed. Destination logged.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Test 4 is the template the others should follow</h3>
+  <p>Course cards are lazy-loaded: the carousel populates from an API call that resolves <i>after</i> the scroll. An immediate <code>count()</code> is a single snapshot with no retry — call it a moment too early and it returns zero on a page that fills in correctly a second later. That is exactly how an intermittent failure is born.</p>
+  <pre><span class="c">// :264 — the comment in the file says it plainly</span>
+<span class="c">// Auto-wait for the (lazy-loaded) cards instead of an instantaneous count()</span>
+<span class="c">// that can fire before the carousel populates.</span>
+await expect(certBadges.first()).toBeVisible({ timeout: 15000 });
+const count = await certBadges.count();
+expect(count).toBeGreaterThan(0);</pre>
+  <p>Tests 3 and 5 still use the bare <code>count()</code> form. They pass because test 4's pattern is not the only thing keeping them honest — the preceding <code>scrollIntoViewIfNeeded</code> gives the carousel time to fill — but they are the two most likely places in this group for an intermittent failure to appear. If either starts flaking, copy the <code>toBeVisible</code>-then-<code>count</code> shape from test 4.</p>
+
+  <div class="callout">
+    <span class="t">Why <code>ws-web-course-card</code> comes first in the locator</span>
+    It is the Angular component's own tag name — the most stable handle available, because it changes only if the component itself is renamed. <code>[class*="course-card"]</code> follows as a fallback for builds where the markup differs. Ordering the specific selector first and the loose one second is the pattern used throughout this file.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 10. CNE COURSES ══ -->
+<div class="page sec">
+  <h2>10 &nbsp; Group 5 — CNE Courses</h2>
+  <p class="lead"><span class="mono">CNE Courses Section</span> &nbsp;·&nbsp; 9 tests &nbsp;·&nbsp; line 311 &nbsp;·&nbsp; <span class="pill p-warn">6 of 9 are soft or log</span></p>
+  <p><b>What it proves:</b> the accredited-course carousel renders and is navigable. CNE courses carry continuing-education credit, so the section also shows accrediting-body badges — content that varies, so checked softly.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"CNE COURSES" heading</b></td><td>getByText(tr('CNE COURSES')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible.</td></tr>
+      <tr>
+        <td class="n">2</td><td><b>Second "View All" navigates</b><br>Counts them and takes index 1 — this section's link.</td>
+        <td>getByText(tr('View All')) → count &gt; 1 ? .nth(1) : .first()</td>
+        <td><span class="pill p-ok">hard</span> visible, click must succeed. The <code>count &gt; 1</code> ternary degrades to the first link if only one exists.</td>
+      </tr>
+      <tr><td class="n">3</td><td><b>CNE cards render</b></td><td>ws-web-course-card, [class*="course-card"]</td><td><span class="pill p-ok">hard</span> <code>count &gt; 0</code>.</td></tr>
+      <tr><td class="n">4</td><td><b>CNE hours badges</b></td><td>[class*="cne"].or(getByText(/CNE:/))</td><td><span class="pill p-teal">log</span> — counts and prints. <b>No <code>expect()</code> at all</b>; zero badges passes.</td></tr>
+      <tr><td class="n">5</td><td><b>Carousel right arrow</b></td><td>[class*="next"], [aria-label*="next"], button[class*="arrow"] → .last()</td><td><span class="pill p-warn">soft</span> — clicks only <code>if visible</code>. No assertion either way.</td></tr>
+      <tr>
+        <td class="n">6</td><td><b>"Normal Labour &amp; Birth and AMTSL" card</b></td>
+        <td>getByText('Normal Labour &amp; Birth and AMTSL').first()</td>
+        <td><span class="pill p-warn">soft</span> — clicks and returns only if visible. Course titles are not translated, so no <code>tr()</code>.</td>
+      </tr>
+      <tr>
+        <td class="n">7</td><td><b>"Integrated Sexual and Reproductive Health (ISRH)" card</b></td>
+        <td>getByText('Integrated Sexual and Reproductive Health (ISRH)').first()</td>
+        <td><span class="pill p-warn">soft</span> — same shape as test 6.</td>
+      </tr>
+      <tr><td class="n">8</td><td><b>Indian Nursing Council badge</b></td><td>getByText('Indian Nursing Council').first()</td><td><span class="pill p-warn">soft</span> — <code>if visible</code> then assert visible.</td></tr>
+      <tr><td class="n">9</td><td><b>UNFPA badge</b></td><td>getByText('UNFPA').first()</td><td><span class="pill p-warn">soft</span> — same shape as test 8.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The guarded shape, and what it costs</h3>
+  <p>Tests 6 and 7 name real CNE course titles. Matching by exact string is stronger than "some card exists" — it proves the carousel serves <i>accredited</i> content rather than the general catalogue. Tests 8 and 9 check the accreditor badges, and all four share one shape:</p>
+  <pre>const badge = page.getByText(<span class="g">'Indian Nursing Council'</span>).first();
+if (await badge.<span class="k">isVisible</span>()) {          <span class="c">// ← absent? the body never runs</span>
+  await expect(badge).toBeVisible();      <span class="c">// ← can only ever pass</span>
+  console.log(<span class="g">'✅ Indian Nursing Council badge visible'</span>);
+}</pre>
+  <p>Present, it asserts something true; absent, the test passes silently. The console line prints only on the success branch — so a run log <i>without</i> that checkmark is the real signal the element was missing. The same guard means a retired or renamed course stops being checked rather than failing.</p>
+
+  <div class="callout gold">
+    <span class="t">Reading this group's result honestly</span>
+    A green CNE group guarantees three things: the heading renders, the carousel has at least one card, and View All works. Everything else — hours badges, arrow, the two named courses, both accreditor badges — is advisory. Read the console output, not just the pass count.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 11. TRUSTED BY ══ -->
+<div class="page sec">
+  <h2>11 &nbsp; Group 6 — Trusted By</h2>
+  <p class="lead"><span class="mono">Trusted By Section</span> &nbsp;·&nbsp; 7 tests &nbsp;·&nbsp; line 406 &nbsp;·&nbsp; <span class="pill p-warn">5 of 7 are soft</span></p>
+  <p><b>What it proves:</b> the social-proof block renders its heading and partner count. The five individual partner logos are checked softly, because which logos appear is content that legitimately varies between builds and environments.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"Trusted By" heading</b></td><td>getByText(tr('Trusted By')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible.</td></tr>
+      <tr><td class="n">2</td><td><b>"50+ Partner Organizations and Growing"</b></td><td>getByText(tr('50+ Partner Organizations and Growing')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible. The <code>+</code> here is the clearest case for <code>tr()</code>'s escaping.</td></tr>
+      <tr><td class="n">3</td><td><b>Fernandez Foundation</b></td><td>getByText('FERNANDEZ').or(img[alt*="Fernandez"]) → .first()</td><td><span class="pill p-warn">soft</span> via <code>safeScroll</code>.</td></tr>
+      <tr><td class="n">4</td><td><b>Manyata</b></td><td>getByText('MANYATA').or(img[alt*="Manyata"])</td><td><span class="pill p-warn">soft</span> via <code>safeScroll</code>.</td></tr>
+      <tr><td class="n">5</td><td><b>KLE</b></td><td>getByText('KLE').or(img[alt*="KLE"])</td><td><span class="pill p-warn">soft</span> via <code>safeScroll</code>.</td></tr>
+      <tr><td class="n">6</td><td><b>UNFPA</b></td><td>img[alt*="UNFPA"], [class*="unfpa"] → .first()</td><td><span class="pill p-warn">soft</span> via <code>safeScroll</code>. Image-only — no text variant, unlike the others.</td></tr>
+      <tr><td class="n">7</td><td><b>NQOCN</b></td><td>getByText('NQOCN').or(img[alt*="NQOCN"])</td><td><span class="pill p-warn">soft</span> via <code>safeScroll</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The text-or-image locator</h3>
+  <p>Four of the five logo tests use the same two-way locator:</p>
+  <pre>page.getByText(<span class="g">'FERNANDEZ'</span>).or(page.locator(<span class="g">'img[alt*="Fernandez"]'</span>)).first()</pre>
+  <p>A partner mark may be rendered as an SVG with a text node, or as a raster image with alt text — and which one it is has changed between builds. Matching either means the test survives that change. The UNFPA test (6) matches only on image selectors, because that mark has no text form.</p>
+
+  <div class="callout">
+    <span class="t">Why softness is defensible here and less so elsewhere</span>
+    Partner logos are a content list the business edits. A logo disappearing because a partnership ended is a content change, not a regression, and failing a build over it would train people to ignore the suite. Contrast this with the hero carousel in Group 2, where the content is fixed and only the <i>timing</i> is variable — there, softness papers over a real flake. Same mechanism, different justification.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 12. HOW IT WORKS ══ -->
+<div class="page sec">
+  <h2>12 &nbsp; Group 7 — How Sphere Works</h2>
+  <p class="lead"><span class="mono">How Sphere Works Section</span> &nbsp;·&nbsp; 5 tests &nbsp;·&nbsp; line 467</p>
+  <p><b>What it proves:</b> the three-step explainer renders — heading, subtitle, and all three cards with both their title and their description. Each card test also attempts its video play button, which is soft.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"How Sphere works" heading</b></td><td>getByText(tr('How Sphere works')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible. The Hindi keeps the English brand name: "Sphere कैसे काम करता है".</td></tr>
+      <tr><td class="n">2</td><td><b>"In 3-simple videos…" subtitle</b></td><td>getByText(tr('In 3-simple videos we guide you through making an account and getting certified.')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible. The longest key in the HI map.</td></tr>
+      <tr>
+        <td class="n">3</td><td><b>Step 1 — Register for a course</b><br>Title, description, then play button.</td>
+        <td>tr('Register for a course')<br>tr('Explore various courses and pick the ones you like')<br>[class*="play"], [aria-label*="play"], button[class*="video"] → .first()</td>
+        <td><span class="pill p-ok">hard</span> ×2 on the text; <span class="pill p-warn">soft</span> on the play button — clicked only if visible, then Escape.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>Step 2 — Take the course</b></td>
+        <td>tr('Take the course')<br>tr('Access the course anytime, at your convenience')<br>play buttons → .nth(1), guarded by <code>count() &gt;= 2</code></td>
+        <td><span class="pill p-ok">hard</span> ×2 on the text; <span class="pill p-warn">soft</span> on the play button.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td><td><b>Step 3 — Get certified</b></td>
+        <td>tr('Get certified')<br>tr('Receive downloadable and shareable certificates')<br>play buttons → .nth(2), guarded by <code>count() &gt;= 3</code></td>
+        <td><span class="pill p-ok">hard</span> ×2 on the text; <span class="pill p-warn">soft</span> on the play button.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Tests 3–5 are hybrids</h3>
+  <p>Each makes two hard text assertions and then attempts one soft interaction. That is a useful shape: the part that is guaranteed — the card's copy — fails loudly, while the part that is fragile — a video player overlay — only logs. The play-button locator is shared across all three tests and indexed by position:</p>
+  <pre>const playBtns = page.locator(<span class="g">'[class*="play"], [aria-label*="play"], button[class*="video"]'</span>);
+if (await playBtns.count() &gt;= 2) {        <span class="c">// step 2 needs at least two to exist</span>
+  await playBtns.<span class="k">nth</span>(1).click();          <span class="c">// index 1 = the second card's button</span>
+  await page.waitForTimeout(1000);
+  await page.keyboard.press(<span class="g">'Escape'</span>);      <span class="c">// dismiss whatever opened</span>
+}</pre>
+  <p>The count guard is what makes positional indexing safe — <code>nth(2)</code> on a page with two buttons would otherwise throw rather than skip.</p>
+
+  <div class="callout">
+    <span class="t">What the Escape press is really for</span>
+    Clicking play may open a modal video player. Because every test gets a fresh page, a stuck overlay could not leak into the next test anyway — but the Escape keeps the end-of-test screenshot (captured for every test, pass or fail) showing the page rather than a video frame. Small thing; it makes the report readable.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 13. CTA + INIT ══ -->
+<div class="page sec">
+  <h2>13 &nbsp; Groups 8 &amp; 9 — Transform CTA and Initiative</h2>
+
+  <h3>Group 8 — Transform CTA &nbsp;<span class="pill p-teal">2 tests · line 547</span></h3>
+  <p>The closing call to action, and the page's second conversion entry point after the hero.</p>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"Transform your Healthcare career through Sphere!"</b></td><td>getByText(tr('Transform your Healthcare career through Sphere!')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible. The trailing <code>!</code> is escaped by <code>tr()</code>.</td></tr>
+      <tr><td class="n">2</td><td><b>"Start Today" navigates</b></td><td>getByRole('button', { name: tr('Start Today') }).first()<br>then goto(PUBLIC_URL)</td><td><span class="pill p-ok">hard</span> visible <b>and</b> enabled, and the click must succeed. Destination logged.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Group 9 — Initiative and Collaboration &nbsp;<span class="pill p-teal">4 tests · line 573</span></h3>
+  <p>The institutional-backing block below the CTA. This group is where the bilingual rule has its one documented exception.</p>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"An initiative of" label</b></td><td>getByText('An initiative of').first() — <b>no tr()</b></td><td><span class="pill p-ok">hard</span> scroll then visible.</td></tr>
+      <tr><td class="n">2</td><td><b>Nilekani Philanthropies logo</b></td><td>getByText('NILEKANI').or(img[alt*="Nilekani"]) → .first()</td><td><span class="pill p-warn">soft</span> via <code>safeScroll</code>.</td></tr>
+      <tr><td class="n">3</td><td><b>"A collaboration with" label</b></td><td>getByText('A collaboration with').first() — <b>no tr()</b></td><td><span class="pill p-ok">hard</span> scroll then visible.</td></tr>
+      <tr><td class="n">4</td><td><b>Societal Platform logo</b></td><td>getByText('SOCIETAL').or(img[alt*="Societal"]) → .first()</td><td><span class="pill p-warn">soft</span> via <code>safeScroll</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">The two labels that stay English</span>
+    "An initiative of" and "A collaboration with" are <b>not</b> translated by the portal — they render in English even when the rest of the page is Hindi. The spec says so in a comment at both sites, and matches the literal strings rather than routing them through <code>tr()</code>. Adding them to the <code>HI</code> map would not break anything (the English alternative comes first in the alternation either way), but it would misrepresent how the page behaves. The comment is there so the next person does not "fix" the apparent inconsistency.
+  </div>
+
+  <p>The two logo tests use the same text-or-image locator as the Trusted By partner marks, and are soft for the same reason: which institutional logos appear is editable content.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 14. FOOTER 1 ══ -->
+<div class="page sec">
+  <h2>14 &nbsp; Groups 10 &amp; 11 — Footer: Quick Links and Help</h2>
+
+  <h3>Group 10 — Footer Quick Links &nbsp;<span class="pill p-teal">3 tests · line 612</span></h3>
+  <p>The legal links. Both are genuine navigations, so both use pattern C — click, log the destination, return.</p>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"Quick Links" heading</b></td><td>getByText(tr('Quick Links')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible.</td></tr>
+      <tr><td class="n">2</td><td><b>Privacy policy navigates</b></td><td>getByText(tr('Privacy policy')).first()<br>then goto(PUBLIC_URL)</td><td><span class="pill p-ok">hard</span> visible, click must succeed. Destination logged.</td></tr>
+      <tr><td class="n">3</td><td><b>Terms of Use navigates</b></td><td>getByText(tr('Terms of Use')).first()<br>then goto(PUBLIC_URL)</td><td><span class="pill p-ok">hard</span> visible, click must succeed. Destination logged.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Group 11 — Footer Help &amp; Contact &nbsp;<span class="pill p-teal">3 tests · line 648</span></h3>
+  <p>The only group that asserts on <code>href</code> attributes rather than visible text — because for a contact link, the destination <i>is</i> the thing that matters.</p>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"Help &amp; Contact" heading</b></td><td>getByText(tr('Help &amp; Contact')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible.</td></tr>
+      <tr>
+        <td class="n">2</td><td><b>support@aastrika.org email link</b><br>Checks the address <i>and</i> that it is actually a mail link.</td>
+        <td>getByText('support@aastrika.org').first()<br>then <code>getAttribute('href')</code></td>
+        <td><span class="pill p-ok">hard</span> ×2 — visible, and <code>href</code> matches <code>/mailto:|support@aastrika/i</code>. A visually-correct address with a dead link fails here.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>"Talk to us on WhatsApp"</b></td>
+        <td>getByText(tr('Talk to us on WhatsApp')).first()<br>then a[href*="wa.me"], a[href*="whatsapp"]</td>
+        <td><span class="pill p-ok">hard</span> on the text being visible; <span class="pill p-teal">log</span> on the href — it is fetched with <code>.catch(() =&gt; null)</code> and printed, never asserted.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">A notable asymmetry between tests 2 and 3</span>
+    The email test asserts its <code>href</code>; the WhatsApp test only logs one. So a broken <code>mailto:</code> fails the suite, while a broken or missing <code>wa.me</code> link passes it with a <code>WhatsApp href: null</code> line in the console. If WhatsApp is a supported contact channel, test 3 is the single cheapest place in this file to add real coverage — the assertion would be one line, mirroring test 2.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 15. FOOTER 2 ══ -->
+<div class="page sec">
+  <h2>15 &nbsp; Groups 12 &amp; 13 — Footer: Social and Copyright</h2>
+
+  <h3>Group 12 — Additional Links &amp; Social Icons &nbsp;<span class="pill p-teal">6 tests · line 682</span> &nbsp;<span class="pill p-warn">5 of 6 soft</span></h3>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>"Additional Links" heading</b></td><td>getByText(tr('Additional Links')).first()</td><td><span class="pill p-ok">hard</span> scroll then visible. The only hard test in the group.</td></tr>
+      <tr><td class="n">2</td><td><b>Aastrika Foundation link</b></td><td>a[href*="aastrika.org"] → <b>.last()</b></td><td><span class="pill p-warn">soft</span> — if visible, asserts <code>href</code> contains "aastrika". <code>.last()</code> picks the footer occurrence rather than an earlier one on the page.</td></tr>
+      <tr><td class="n">3</td><td><b>Twitter / X icon</b></td><td>a[href*="twitter"], a[href*="x.com"], img[alt*="Twitter"], img[alt*="twitter"]</td><td><span class="pill p-warn">soft</span> — href logged only, never asserted. Covers both the old and new brand domains.</td></tr>
+      <tr><td class="n">4</td><td><b>Facebook icon</b></td><td>a[href*="facebook"], img[alt*="Facebook"]</td><td><span class="pill p-warn">soft</span> — href logged only.</td></tr>
+      <tr><td class="n">5</td><td><b>Instagram icon</b></td><td>a[href*="instagram"], img[alt*="Instagram"]</td><td><span class="pill p-warn">soft</span> — href logged only.</td></tr>
+      <tr><td class="n">6</td><td><b>LinkedIn icon</b></td><td>a[href*="linkedin"], img[alt*="LinkedIn"]</td><td><span class="pill p-warn">soft</span> — href logged only.</td></tr>
+    </tbody>
+  </table>
+  <p>Tests 3–6 are identical in shape: <code>safeScroll</code>, then read and print the <code>href</code>. None asserts. The four exist to surface the social links in the run log, not to gate a build on them.</p>
+
+  <h3>Group 13 — Footer Copyright &nbsp;<span class="pill p-teal">2 tests · line 737</span></h3>
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Element</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>Copyright text</b></td>
+        <td>getByText(/Health Systems.*Aastrika Foundation/i).first()</td>
+        <td><span class="pill p-ok">hard</span> scroll then visible. Matched by a two-anchor regex rather than the full sentence.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td><td><b>Footer logo</b></td>
+        <td>footer img, [class*="footer"] img, [class*="footer"] [class*="logo"] → .first()</td>
+        <td><span class="pill p-warn">soft</span> via <code>safeScroll</code>. Three fallbacks: the semantic <code>&lt;footer&gt;</code> tag, a footer class, and a logo class inside one.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">Why the copyright regex has a gap in the middle</span>
+    <code>/Health Systems.*Aastrika Foundation/i</code> anchors on the first and last few words and lets <code>.*</code> absorb everything between. The site's own copyright line contains a typo — the spec's comment notes this without editing around it — and a year that changes annually. Anchoring both ends and ignoring the middle means the test survives the typo being fixed and the year rolling over, while still failing if the line disappears. It is the same principle as matching the T&amp;C page by route rather than by wording: match the structure, not the prose.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 16. PAGE-WIDE ══ -->
+<div class="page sec">
+  <h2>16 &nbsp; Group 14 — Page-wide checks</h2>
+  <p class="lead"><span class="mono">Page-Wide Checks</span> &nbsp;·&nbsp; 4 tests &nbsp;·&nbsp; line 760 &nbsp;·&nbsp; <span class="pill p-ok">all four hard</span></p>
+  <p><b>What it proves:</b> the page as a whole is healthy — no dead images, no JavaScript errors, acceptable load time, correct title. These are the four tests that look at the document rather than at one element, and every one of them can fail.</p>
+
+  <h3>16.1 &nbsp; No broken images</h3>
+  <p>The most carefully engineered test in the file, and the one worth understanding in detail. Two problems had to be solved: lazy-loaded images never start loading unless scrolled to, and an image mid-flight looks identical to a broken one.</p>
+  <ol class="steps">
+    <li><b>Scroll the entire page in 12 steps.</b> <code>window.scrollTo(0, i * innerHeight * 0.9)</code> with a 400 ms pause each, so every <code>loading="lazy"</code> thumbnail enters the viewport and begins fetching. The 0.9 factor overlaps the steps slightly — nothing is skipped between them.</li>
+    <li><b>Jump to the bottom</b> with <code>scrollTo(0, document.body.scrollHeight)</code>, catching any content the fixed steps missed on a longer-than-expected page.</li>
+    <li><b>Wait for quiet</b> — <code>waitForLoadState('networkidle')</code> (errors swallowed) plus a further 3000 ms, so in-flight image requests finish.</li>
+    <li><b>Collect only genuine failures</b> in the browser, using a three-part filter.</li>
+    <li><b>Warn, then assert.</b> Any broken URLs are logged with <code>console.warn</code> before <code>expect(brokenImgs).toEqual([])</code> fails — so the report names the exact files.</li>
+  </ol>
+  <pre>Array.from(document.querySelectorAll(<span class="g">'img'</span>))
+  .filter((img) =&gt; {
+    const src = img.currentSrc || img.src;
+    if (!src || src.startsWith(<span class="g">'data:'</span>)) return false;  <span class="c">// skip inline data URIs</span>
+    return img.complete &amp;&amp; img.naturalWidth === 0;        <span class="c">// FINISHED, but has no pixels</span>
+  })</pre>
+  <p>The <code>complete &amp;&amp; naturalWidth === 0</code> pair is the whole trick. <code>complete</code> means the browser has finished trying; <code>naturalWidth === 0</code> means it got nothing. Together they mean a real 404 or a decoding failure. An image still downloading reports <code>complete: false</code> and is ignored, as is a lazy image that never scrolled into view — so the test cannot fail on timing alone.</p>
+
+  <h3>16.2 &nbsp; No console errors</h3>
+  <p>Attaches a <code>console</code> listener, reloads the page, and collects everything of type <code>error</code>. It then filters the list before asserting:</p>
+  <pre>const jsErrors = errors.filter((e) =&gt; !<span class="g">/Failed to load resource/i</span>.test(e));
+expect(jsErrors).toEqual([]);</pre>
+  <p>Resource 404s are excluded deliberately — a missing analytics beacon or a third-party font would otherwise fail a page whose own code is fine, and broken <i>images</i> already have their own dedicated test above. What survives the filter is real JavaScript: uncaught exceptions, failed promise rejections, framework errors. Those fail the test, and are printed first with <code>console.warn</code>.</p>
+
+  <h3>16.3 &nbsp; Page loads within 10 seconds</h3>
+  <pre>const start = Date.now();
+await page.reload();
+await page.waitForLoadState(<span class="g">'domcontentloaded'</span>);
+expect(Date.now() - start).toBeLessThan(10000);</pre>
+  <p>The elapsed time is printed on every run, pass or fail, which makes this the file's de facto performance trend line — the number in the log is useful even when the test is green. Note the measurement stops at <code>domcontentloaded</code>, not at full load: it covers HTML and blocking scripts, not lazy images or carousel API calls. It is a "did the page get going" check, not a complete page-weight budget.</p>
+
+  <h3>16.4 &nbsp; Page title</h3>
+  <pre>expect(await page.title()).toMatch(<span class="g">/sphere|aastrika/i</span>);</pre>
+  <p>Cheap, and a genuinely useful canary: a wrong or empty title usually means the router served the wrong shell, a deploy landed on the wrong environment, or an error page is being returned with a 200. The title is logged either way.</p>
+
+  <div class="callout">
+    <span class="t">Run this group first when triaging</span>
+    If the whole suite is red, <code>--grep "Page-Wide"</code> answers "is the page fundamentally broken, or did one element move?" in four tests and about twenty seconds. A failing title or a flood of console errors explains the other sixty failures; all four green means the problem is a selector, not the page.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 17. HARD VS SOFT ══ -->
+<div class="page sec">
+  <h2>17 &nbsp; Hard vs soft: what green actually proves</h2>
+  <p class="lead">22 of the 64 tests can pass without checking anything. Here is exactly which, so a green report can be read accurately.</p>
+
+  <p>A soft test is one whose assertion sits behind an <code>if (await …isVisible())</code> or <code>if (count &gt;= n)</code> guard. When the element is present it asserts something real; when it is absent the body never runs and the test reports green. A log test has no <code>expect()</code> at all. Neither is a defect — both are deliberate choices against flakiness — but both change what a pass means.</p>
+
+  <table>
+    <thead><tr><th style="width:26%">Group</th><th style="width:10%">Tests</th><th style="width:10%">Hard</th><th style="width:10%">Soft/log</th><th>What is actually guaranteed</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Header</td><td>2</td><td><b>2</b></td><td>0</td><td>Fully guaranteed.</td></tr>
+      <tr><td>2 · Hero Banner</td><td>7</td><td><b>4</b></td><td>3</td><td>Headings and Create Account. The CNE slide and carousel dots are advisory.</td></tr>
+      <tr><td>3 · Stats Row</td><td>4</td><td><b>4</b></td><td>0</td><td>Fully guaranteed — all four labels and all four exact numbers.</td></tr>
+      <tr><td>4 · Top Courses</td><td>6</td><td><b>6</b></td><td>0</td><td>Fully guaranteed.</td></tr>
+      <tr><td>5 · CNE Courses</td><td>9</td><td><b>3</b></td><td>6</td><td>Heading, cards exist, View All works. Badges, arrow and named courses are advisory.</td></tr>
+      <tr><td>6 · Trusted By</td><td>7</td><td><b>2</b></td><td>5</td><td>Heading and partner count. All five logos are advisory.</td></tr>
+      <tr><td>7 · How Sphere Works</td><td>5</td><td><b>5</b></td><td>0</td><td>All eight text elements are guaranteed; only the play buttons are advisory <i>within</i> otherwise-hard tests.</td></tr>
+      <tr><td>8 · Transform CTA</td><td>2</td><td><b>2</b></td><td>0</td><td>Fully guaranteed.</td></tr>
+      <tr><td>9 · Initiative</td><td>4</td><td><b>2</b></td><td>2</td><td>Both labels. Both logos are advisory.</td></tr>
+      <tr><td>10 · Footer Quick Links</td><td>3</td><td><b>3</b></td><td>0</td><td>Fully guaranteed.</td></tr>
+      <tr><td>11 · Footer Help &amp; Contact</td><td>3</td><td><b>3</b></td><td>0</td><td>Heading, email text + mailto href, WhatsApp text. The wa.me href itself is logged only.</td></tr>
+      <tr><td>12 · Additional &amp; Social</td><td>6</td><td><b>1</b></td><td>5</td><td>The heading. All four social icons and the foundation link are advisory.</td></tr>
+      <tr><td>13 · Footer Copyright</td><td>2</td><td><b>1</b></td><td>1</td><td>The copyright line. The footer logo is advisory.</td></tr>
+      <tr><td>14 · Page-Wide</td><td>4</td><td><b>4</b></td><td>0</td><td>Fully guaranteed — images, console, load time, title.</td></tr>
+      <tr style="background:var(--teal-50)!important;"><td><b>Total</b></td><td><b>64</b></td><td><b>42</b></td><td><b>22</b></td><td><b>Roughly two thirds of the suite gates a build; one third reports.</b></td></tr>
+    </tbody>
+  </table>
+
+  <h3>How to read a run</h3>
+  <p>The soft tests still produce evidence — they just put it in the console instead of the exit code. Their <code>console.log</code> lines print <b>only on the success branch</b>, so absence of a line is the signal:</p>
+  <pre><span class="k">✅ Fernandez Foundation logo visible</span>
+<span class="k">✅ Manyata logo visible</span>
+<span class="c">                                     ← no KLE line: the KLE logo was not found</span>
+<span class="k">✅ UNFPA logo visible</span>
+<span class="k">✅ NQOCN logo visible</span></pre>
+  <p>All five tests report green. Only the log says one logo is missing. When this suite matters, read the output, not just the count.</p>
+
+  <div class="callout gold">
+    <span class="t">Where hardening would pay, if you want it</span>
+    Three places stand out, in order of value. <b>The WhatsApp href</b> (Group 11, test 3) — a one-line assertion mirroring the email test, covering a live contact channel. <b>The CNE hours badge</b> (Group 5, test 4) — it has no <code>expect()</code> at all today, and CNE credit is the section's entire purpose. <b>The social icons</b> (Group 12) — at minimum assert that <i>some</i> href was found, rather than printing <code>null</code>. The partner and institutional logos are best left soft: that list is editable content, and failing a build over a business decision is how a suite gets ignored.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 18. ARTIFACTS ══ -->
+<div class="page sec">
+  <h2>18 &nbsp; Artifacts and run variants</h2>
+
+  <h3>18.1 &nbsp; What a run leaves behind</h3>
+  <table>
+    <thead><tr><th style="width:28%">Artifact</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">test-results/</td>
+        <td><b>A screenshot for every one of the 64 tests</b> — the config sets <code>screenshot: 'on'</code>, not <code>only-on-failure</code>. A passing run therefore leaves a complete visual record of the page, section by section — useful for eyeballing a deploy even when everything is green.</td>
+      </tr>
+      <tr><td class="mono">test-results/…/video.webm</td><td>Video, kept only for failures (<code>retain-on-failure</code>).</td></tr>
+      <tr><td class="mono">playwright-report/</td><td>The HTML report — the normal way to read a run.</td></tr>
+      <tr><td class="mono">console output</td><td>Every navigation destination, every found <code>href</code>, every soft-check result, and the load time in ms. For this suite the log carries information the pass/fail count does not.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>18.2 &nbsp; A healthy run, abridged</h3>
+  <pre><span class="k">✅ Page loaded: https://sphere.aastrika.org/public/home</span>
+<span class="k">✅ Login button clicked</span> → <span class="k">✅ Login modal opened</span> → <span class="k">✅ Login modal closed</span>
+<span class="k">✅ Hero heading visible</span>
+<span class="k">✅ Create Account button clicked</span> → URL: …/app/create-account
+<span class="c">ℹ️  "View courses" not on current banner slide — skipping</span>
+<span class="k">✅ Learners onboarded stat visible</span>
+<span class="k">✅ Found 12 course cards</span>
+<span class="k">✅ Found 8 Certificate badges</span>
+<span class="k">✅ View All clicked</span> → URL: …/app/search
+<span class="k">✅ Email link visible with href: mailto:support@aastrika.org</span>
+   WhatsApp href: https://wa.me/91…
+<span class="k">✅ No broken images</span>
+<span class="k">✅ No console JS errors (resource 404s ignored)</span>
+<span class="k">✅ Page loaded in 2184ms</span>
+<span class="k">✅ Page title: Aastrika Sphere</span></pre>
+
+  <h3>18.3 &nbsp; Run variants</h3>
+  <pre><span class="c"># the whole suite, headed, against staging</span>
+npm run run:public
+
+<span class="c"># one group — any describe name works as a grep target</span>
+npx playwright test tests/PublicPage.spec.ts --grep <span class="g">"Footer"</span>
+npx playwright test tests/PublicPage.spec.ts --grep <span class="g">"Page-Wide"</span>      <span class="c"># triage first</span>
+npx playwright test tests/PublicPage.spec.ts --grep <span class="g">"CNE Courses"</span>
+
+<span class="c"># one test, by its exact name</span>
+npx playwright test tests/PublicPage.spec.ts --grep <span class="g">"No broken images"</span>
+
+<span class="c"># point at another environment (the origin is normalised for you)</span>
+<span class="k">cross-env</span> BASE_URL=https://portal-staging.example.org \
+  npx playwright test tests/PublicPage.spec.ts --headed
+
+<span class="c"># headless, with the public-login suite — the CI gate</span>
+npm run report:ci
+
+<span class="c"># open the report / a trace</span>
+npx playwright show-report
+npx playwright test tests/PublicPage.spec.ts --trace on</pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════ 19. FAILURES ══ -->
+<div class="page sec">
+  <h2>19 &nbsp; Failure modes and fixes</h2>
+
+  <table>
+    <thead><tr><th style="width:26%">Symptom</th><th style="width:30%">Most likely cause</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>All 64 tests fail on "element not found"</b></td>
+        <td>The page never loaded — usually a bad <code>BASE_URL</code>, or Playwright run from the repo root instead of <code>SphereWebAutomation\</code>.</td>
+        <td>Run <code>--grep "Page-Wide"</code> first. A failing title test confirms the page itself is wrong; check the URL printed by <code>beforeEach</code>.</td>
+      </tr>
+      <tr>
+        <td><b>Every text assertion fails, but the page looks fine</b></td>
+        <td>The portal is serving a language variant the <code>HI</code> map does not cover.</td>
+        <td>Open the page, copy the actual rendered strings, and add them to the map at line 27. <code>tr()</code> accepts an array, so add a variant rather than replacing one.</td>
+      </tr>
+      <tr>
+        <td><b>One of the four stat tests fails</b></td>
+        <td>Almost certainly not a bug — the platform's live counter moved past the hard-coded literal.</td>
+        <td>Update the literal at line 211/220/229/238. If they churn often, switch the number assertion to a shape match such as <code>/[\d,]+\+/</code>.</td>
+      </tr>
+      <tr>
+        <td><b>"Found 0 course cards" / card count fails</b></td>
+        <td>The content API did not return in time, or genuinely returned nothing.</td>
+        <td>Check whether the Certificate-badge test (which waits up to 15 s) also failed. If it passed and the count test did not, it is the instantaneous <code>count()</code> — give tests 3 and 5 the same <code>toBeVisible</code>-then-<code>count</code> shape.</td>
+      </tr>
+      <tr>
+        <td><b>Broken-images test lists thumbnails</b></td>
+        <td>Real 404s in the course-thumbnail CDN, or images that failed to decode.</td>
+        <td>The failure message names every URL. Open one directly — the lazy-loading and in-flight cases are already filtered out, so anything listed genuinely returned nothing.</td>
+      </tr>
+      <tr>
+        <td><b>Console-errors test fails</b></td>
+        <td>A genuine uncaught JavaScript error — resource 404s are already filtered.</td>
+        <td>Read the <code>console.warn</code> line printed before the failure; it carries the exact messages. This one is rarely a test problem.</td>
+      </tr>
+      <tr>
+        <td><b>Load-time test fails intermittently</b></td>
+        <td>The 10 s budget is measured to <code>domcontentloaded</code>; a cold CDN or a slow network can exceed it.</td>
+        <td>Check the logged milliseconds across recent runs before changing anything. A steady creep is a real regression; one outlier is not.</td>
+      </tr>
+      <tr>
+        <td><b>A logo or social test passes but you know the element is gone</b></td>
+        <td>Working as designed — it is one of the 22 soft tests.</td>
+        <td>Check the console for the missing <code>✅</code> line. If that element must gate the build, remove its <code>if (await safeScroll(...))</code> guard and let the assertion run unconditionally.</td>
+      </tr>
+      <tr>
+        <td><b>"View All" clicks the wrong section</b></td>
+        <td>The two View All links are addressed by position — <code>.first()</code> for Top Courses, <code>.nth(1)</code> for CNE.</td>
+        <td>If a third carousel is added, or the sections are reordered, these indices need revisiting. Scope the locator to the section container instead of indexing the whole page.</td>
+      </tr>
+      <tr>
+        <td><b>Hero carousel tests log "skipping" every run</b></td>
+        <td>The rotation timing never lands on that slide while the test looks.</td>
+        <td>Expected behaviour today. To make it deterministic, click the relevant carousel dot to pin the slide before asserting, rather than hardening the assertion as written.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">The one rule to keep</span>
+    Every text assertion in this file goes through <code>tr()</code>, and every element locator names two or three alternatives. Both habits exist for the same reason: this page's <b>language, content and markup all change independently of its behaviour</b>. When you add a check, match the structure and accept either language — and when you make something hard rather than soft, do it because the element is guaranteed, not because green feels better.
+  </div>
+</div>

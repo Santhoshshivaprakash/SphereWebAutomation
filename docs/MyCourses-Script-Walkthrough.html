@@ -1,0 +1,1120 @@
+<title>My Courses Script Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#17283C; --navy-400:#18293D; --navy-300:#2D3E54; --navy-100:#7E8A9A; --navy-50:#BEC5CE;
+    --teal:#1E8F8E; --teal-600:#186E6E; --teal-700:#135858; --teal-50:#E3F7F6; --teal-100:#B8ECE9;
+    --gold:#F0A500; --gold-600:#C88800; --gold-700:#9A6800; --gold-50:#FEF6E0;
+    --offwhite:#F6F7F9; --line:#D8DEE5; --mid:#7C8696; --ink:#0D1218;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7; --err:#B91C1C; --err-bg:#FEE2E2;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Open Sans",Segoe UI,Arial,sans-serif;
+    font-size:9.9pt; line-height:1.47; color:var(--ink); background:#fff;
+    margin:0;
+  }
+  .page{ padding:0 16mm; }
+
+  h1{font-size:20pt;font-weight:700;color:var(--navy);margin:0 0 6px;letter-spacing:-.2px;}
+  h2{font-size:14.5pt;font-weight:700;color:var(--navy);margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid var(--teal);}
+  h3{font-size:11.5pt;font-weight:600;color:var(--navy);margin:15px 0 6px;}
+  h4{font-size:10.5pt;font-weight:600;color:var(--navy-300);margin:12px 0 5px;}
+  p{margin:0 0 8px;}
+  .lead{font-size:10.4pt;color:var(--navy-300);}
+  .cap{font-family:Lato,Arial,sans-serif;font-size:8.2pt;color:var(--mid);margin:4px 0 0;}
+  code,.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:8.8pt;}
+  code{background:var(--offwhite);border:1px solid var(--line);border-radius:4px;padding:1px 4px;color:var(--navy);}
+  a{color:var(--teal-600);}
+
+  .cover{height:247mm;display:flex;flex-direction:column;justify-content:center;background:var(--navy);color:#fff;padding:0 20mm;margin:-14mm 0 0;}
+  .cover .kicker{font-family:Lato;font-size:10pt;letter-spacing:3px;text-transform:uppercase;color:var(--teal-100);margin-bottom:18px;}
+  .cover h1{font-size:34pt;color:#fff;line-height:1.15;margin-bottom:14px;}
+  .cover .sub{font-size:13pt;color:var(--navy-50);max-width:150mm;line-height:1.5;}
+  .cover .rule{width:72px;height:5px;background:var(--gold);margin:26px 0;border-radius:3px;}
+  .cover .meta{font-family:Lato;font-size:9.5pt;color:var(--navy-50);line-height:1.9;}
+  .cover .meta b{color:#fff;font-weight:700;}
+
+  .sec{page-break-before:always;padding-top:1mm;}
+  .nobreak{page-break-inside:avoid;}
+
+  .callout{border-left:4px solid var(--teal);background:var(--teal-50);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;font-size:9.5pt;}
+  .callout.gold{border-left-color:var(--gold);background:var(--gold-50);}
+  .callout.red{border-left-color:var(--err);background:var(--err-bg);}
+  .callout .t{font-weight:700;color:var(--navy);display:block;margin-bottom:2px;}
+
+  table{width:100%;border-collapse:collapse;margin:8px 0 11px;font-size:8.6pt;page-break-inside:auto;}
+  thead{display:table-header-group;}
+  th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:6px 8px;border:.5pt solid var(--navy);font-size:8.6pt;}
+  td{padding:5px 8px;border:.5pt solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--offwhite);}
+  tr{page-break-inside:avoid;}
+  td.n{width:24px;text-align:center;font-weight:700;color:var(--teal-700);background:var(--teal-50)!important;}
+  .t-sel td:nth-child(3){font-family:"JetBrains Mono",Consolas,monospace;font-size:7.9pt;line-height:1.45;word-break:break-word;}
+
+  .pill{display:inline-block;padding:1px 8px;border-radius:9999px;font-size:8pt;font-weight:600;font-family:Lato;}
+  .p-ok{background:var(--ok-bg);color:var(--ok);}
+  .p-warn{background:var(--warn-bg);color:var(--warn);}
+  .p-err{background:var(--err-bg);color:var(--err);}
+  .p-teal{background:var(--teal-50);color:var(--teal-700);}
+  .p-gold{background:var(--gold-50);color:var(--gold-700);}
+
+  .grid2{display:flex;gap:12px;margin:10px 0;}
+  .card{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff;}
+  .card .h{font-weight:700;color:var(--navy);font-size:9.8pt;margin-bottom:5px;}
+  .card ul{margin:0;padding-left:15px;}
+  .card li{margin-bottom:3px;font-size:9.2pt;}
+
+  .fig{margin:12px 0 4px;page-break-inside:avoid;}
+  .fig svg{width:100%;height:auto;display:block;}
+
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:9px 0;}
+  ol.steps li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px;font-size:9.4pt;page-break-inside:avoid;}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:9999px;background:var(--navy);color:#fff;font-size:8pt;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  ol.steps li b{color:var(--navy);}
+
+  .toc{margin:12px 0;}
+  .toc div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:5px 2px;font-size:9.6pt;}
+  .toc div span:first-child{color:var(--navy);font-weight:600;}
+  .toc div span:last-child{color:var(--mid);font-family:Lato;font-size:9pt;}
+
+  pre{background:var(--navy);color:#E8EDF3;border-radius:8px;padding:9px 12px;font-family:"JetBrains Mono",Consolas,monospace;font-size:8pt;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;}
+  pre .c{color:#7E9AB8;}
+  pre .k{color:#6FD7D5;}
+  pre .g{color:#F2C14E;}
+  pre .r{color:#FF9A9A;}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════ COVER ══ -->
+<div class="cover">
+  <div class="kicker">Sphere Web Automation</div>
+  <h1>My Courses Script<br>Step-by-Step Walkthrough</h1>
+  <div class="rule"></div>
+  <div class="sub">A tab-by-tab, control-by-control map of how <span class="mono">tests/Mycourse.spec.ts</span> verifies the authenticated My Courses page — its shared-tab architecture, its three tabs, and an honest account of which of its 49 tests can actually fail.</div>
+  <div class="rule" style="width:40px;height:2px;background:#2D3E54;"></div>
+  <div class="meta">
+    <b>Script</b> &nbsp; tests/Mycourse.spec.ts &nbsp;·&nbsp; 541 lines &nbsp;·&nbsp; 49 tests in 7 groups<br>
+    <b>Target</b> &nbsp; https://sphere.aastrika.org/app/user/my_courses &nbsp;<span style="color:#F0A500;">(login required)</span><br>
+    <b>Run</b> &nbsp;&nbsp;&nbsp;&nbsp; npm run run:mycourse<br>
+    <b>Date</b> &nbsp;&nbsp;&nbsp; 12 September 2026
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CONTENTS ══ -->
+<div class="page sec">
+  <h2>Contents</h2>
+  <div class="toc">
+    <div><span>1 &nbsp; What this script does</span><span>Purpose, scope, entry points</span></div>
+    <div><span>2 &nbsp; Authentication and the shared tab</span><span>Diagram — four auth modes, one browser tab</span></div>
+    <div><span>3 &nbsp; Page anatomy</span><span>Diagram — three tabs, three content shapes</span></div>
+    <div><span>4 &nbsp; Two kinds of test</span><span>Diagram — asserting vs observing</span></div>
+    <div><span>5 &nbsp; Group 1 — Page heading and tabs</span><span>7 tests</span></div>
+    <div><span>6 &nbsp; Group 2 — Started tab</span><span>9 tests</span></div>
+    <div><span>7 &nbsp; Group 3 — For You tab</span><span>10 tests</span></div>
+    <div><span>8 &nbsp; Group 4 — Completed tab</span><span>6 tests</span></div>
+    <div><span>9 &nbsp; Group 5 — Tab switching</span><span>4 tests</span></div>
+    <div><span>10 &nbsp; Group 6 — Header</span><span>6 tests</span></div>
+    <div><span>11 &nbsp; Group 7 — Page health</span><span>7 tests</span></div>
+    <div><span>12 &nbsp; What green actually proves</span><span>18 assert · 31 observe, group by group</span></div>
+    <div><span>13 &nbsp; Names that promise more than the body delivers</span><span>Eight tests, and the one-line fixes</span></div>
+    <div><span>14 &nbsp; Artifacts and run variants</span><span>Reports, console output, grep recipes</span></div>
+    <div><span>15 &nbsp; Failure modes and fixes</span><span>Troubleshooting reference</span></div>
+  </div>
+
+  <h3>How to read this document</h3>
+  <p>Sections 5 through 11 walk the script in file order, one table per <code>describe</code> group. Each row gives the <b>action</b>, the exact <b>locator</b>, and what the test does with the result — marked by strength:</p>
+  <table>
+    <thead><tr><th style="width:20%">Marker</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-ok">assert</span></td><td>An <code>expect()</code> always runs. A missing or wrong element fails the test.</td></tr>
+      <tr><td><span class="pill p-warn">conditional</span></td><td>An <code>expect()</code> runs only when preconditions hold — typically "only if the account has started courses".</td></tr>
+      <tr><td><span class="pill p-teal">observe</span></td><td>No <code>expect()</code> at all. The test measures something and prints it for a human to read.</td></tr>
+    </tbody>
+  </table>
+  <p>That last category covers <b>31 of the 49 tests</b>, so Section 4 diagrams the two shapes, Section 12 tallies them per group, and Section 13 names the eight tests whose titles read like assertions but are not.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 1. WHAT IT DOES ══ -->
+<div class="page sec">
+  <h2>1 &nbsp; What this script does</h2>
+  <p class="lead">It is the first suite in the set that runs <i>inside</i> the product — the page a logged-in learner lands on to pick up where they left off.</p>
+
+  <p><code>/app/user/my_courses</code> is the learner's home base. It carries three tabs: <b>Started</b> (courses in progress, each with a progress bar and a Resume button), <b>For You</b> (a recommended grid), and <b>Completed</b> (which is empty for a new account). This spec walks all three, plus the shared header and a set of page-health checks.</p>
+
+  <p>Because the page is behind a login, the suite cannot just navigate to a URL — it needs an authenticated session first. Section 2 covers how it gets one, and the unusual browser-tab arrangement that follows from it.</p>
+
+  <p>The file's header promises that "each test is INDEPENDENT — a failure in one doesn't block the others", and that holds: there is no <code>describe.serial</code> anywhere, and every test re-navigates through <code>beforeEach</code>. What the tests share is a browser <i>tab</i>, not state.</p>
+
+  <h3>The four things it covers</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="h">Tab structure</div>
+      <ul>
+        <li>All three tab labels render with a <code>(n)</code> count</li>
+        <li>Counts are non-negative integers</li>
+        <li>Switching tabs changes the content</li>
+        <li>The URL stays on <code>/my_courses</code> throughout</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Tab contents</div>
+      <ul>
+        <li>Started: thumbnails, titles, progress, Resume</li>
+        <li>For You: card grid, badges, ratings, providers</li>
+        <li>Completed: the empty-state message</li>
+        <li>Clicking through to a course</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Shell and health</div>
+      <ul>
+        <li>Logo, search bar, Home link, bell, dark mode</li>
+        <li>Renders at 390, 768 and 1440px</li>
+        <li>Title, reload persistence, console errors</li>
+        <li><b>Unauthenticated access redirects to login</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout gold">
+    <span class="t">Its content assertions depend on a real account's real data</span>
+    Several tests look for specific course titles (<i>Hypertension in Pregnancy</i>, <i>Normal Labour</i>) and providers (<i>Jhpiego</i>, <i>Indian Nursing Council</i>) that exist only if the logged-in account has those courses. The script handles this by <b>counting how many of a known list it found and printing the tally</b> rather than requiring any of them — which is why so much of the suite observes rather than asserts. Section 4 explains the trade; Section 12 measures it.
+  </div>
+
+  <h3>Entry points</h3>
+  <table>
+    <thead><tr><th style="width:34%">Command</th><th>What it runs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:mycourse</td><td>All 49 tests, headed, against staging. The full walkthrough this document describes.</td></tr>
+      <tr><td class="mono">npm run report:app</td><td>This spec alongside Account, CourseTOC and Competency — the authenticated-app blob report.</td></tr>
+      <tr><td class="mono">… --grep "For You Tab"</td><td>One group. Group names all start with <code>My Courses —</code>, so they are unambiguous.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Before you run it</span>
+    This suite needs credentials. Without one of the auth modes in Section 2 configured, <code>authedTest</code> throws with a message listing what to set — it fails fast rather than running 49 tests against a login page.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 2. AUTH ══ -->
+<div class="page sec">
+  <h2>2 &nbsp; Authentication and the shared tab</h2>
+  <p class="lead">Two architectural decisions shape this file: where the session comes from, and the fact that all 49 tests share one browser tab.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2D3E54"/></marker>
+        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1E8F8E"/></marker>
+      </defs>
+
+      <text x="20" y="20" fill="#17283C" font-size="11.5" font-weight="700">A &nbsp;·&nbsp; where the session comes from &nbsp;— tests/helpers/authedTest.ts, first match wins</text>
+
+      <rect x="20" y="32" width="204" height="72" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <circle cx="42" cy="54" r="11" fill="#1E8F8E"/><text x="42" y="58" fill="#fff" font-size="10" font-weight="700" text-anchor="middle">1</text>
+      <text x="60" y="58" fill="#17283C" font-size="10.5" font-weight="700">USE_CDP=1</text>
+      <text x="36" y="76" fill="#7C8696" font-size="8.5">connect to a live, logged-in</text>
+      <text x="36" y="88" fill="#7C8696" font-size="8.5">Chrome over DevTools. No</text>
+      <text x="36" y="100" fill="#7C8696" font-size="8.5">storageState. Local dev only.</text>
+
+      <rect x="234" y="32" width="204" height="72" rx="8" fill="#fff" stroke="#D8DEE5" stroke-width="1.5"/>
+      <circle cx="256" cy="54" r="11" fill="#7E8A9A"/><text x="256" y="58" fill="#fff" font-size="10" font-weight="700" text-anchor="middle">2</text>
+      <text x="274" y="58" fill="#17283C" font-size="10.5" font-weight="700">SESSION_COOKIE</text>
+      <text x="250" y="76" fill="#7C8696" font-size="8.5">seed the cookie (and local</text>
+      <text x="250" y="88" fill="#7C8696" font-size="8.5">storage), then save the state</text>
+      <text x="250" y="100" fill="#7C8696" font-size="8.5">for reuse.</text>
+
+      <rect x="448" y="32" width="204" height="72" rx="8" fill="#fff" stroke="#D8DEE5" stroke-width="1.5"/>
+      <circle cx="470" cy="54" r="11" fill="#7E8A9A"/><text x="470" y="58" fill="#fff" font-size="10" font-weight="700" text-anchor="middle">3</text>
+      <text x="488" y="58" fill="#17283C" font-size="10.5" font-weight="700">AUTH_VIA_API=1</text>
+      <text x="464" y="76" fill="#7C8696" font-size="8.5">provision a brand-new user</text>
+      <text x="464" y="88" fill="#7C8696" font-size="8.5">through the Sphere API, then</text>
+      <text x="464" y="100" fill="#7C8696" font-size="8.5">UI-login as them. CI.</text>
+
+      <rect x="662" y="32" width="218" height="72" rx="8" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <circle cx="684" cy="54" r="11" fill="#1E8F8E"/><text x="684" y="58" fill="#fff" font-size="10" font-weight="700" text-anchor="middle">4</text>
+      <text x="702" y="58" fill="#17283C" font-size="10.5" font-weight="700">TEST_USER_EMAIL</text>
+      <text x="678" y="76" fill="#7C8696" font-size="8.5">+ TEST_USER_PASSWORD</text>
+      <text x="678" y="88" fill="#7C8696" font-size="8.5">(or MONITOR_*) → a real UI</text>
+      <text x="678" y="100" fill="#7C8696" font-size="8.5">login. The usual CI mode.</text>
+
+      <path d="M122,104 L122,126 L450,126" stroke="#2D3E54" stroke-width="1.5" fill="none"/>
+      <path d="M336,104 L336,126" stroke="#2D3E54" stroke-width="1.5" fill="none"/>
+      <path d="M550,104 L550,126" stroke="#2D3E54" stroke-width="1.5" fill="none"/>
+      <path d="M771,104 L771,126 L450,126" stroke="#2D3E54" stroke-width="1.5" fill="none"/>
+      <path d="M450,126 L450,144" stroke="#2D3E54" stroke-width="2" marker-end="url(#a1)"/>
+
+      <rect x="250" y="150" width="400" height="40" rx="8" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="450" y="167" fill="#135858" font-size="10.5" font-weight="700" text-anchor="middle">one authenticated BrowserContext per worker</text>
+      <text x="450" y="182" fill="#186E6E" font-size="8.5" text-anchor="middle">authenticated ONCE, then handed to every test — no re-login per test</text>
+
+      <line x1="20" y1="212" x2="880" y2="212" stroke="#D8DEE5"/>
+      <text x="20" y="236" fill="#17283C" font-size="11.5" font-weight="700">B &nbsp;·&nbsp; the page fixture override &nbsp;— one tab for all 49 tests</text>
+
+      <rect x="20" y="250" width="410" height="110" rx="8" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.5"/>
+      <text x="36" y="272" fill="#B91C1C" font-size="10.5" font-weight="700">WITHOUT the override</text>
+      <text x="36" y="292" fill="#B91C1C" font-size="9">The CDP harness opens — and closes — a fresh tab</text>
+      <text x="36" y="305" fill="#B91C1C" font-size="9">for every test. 49 tests → 49 tab open/close cycles.</text>
+      <g>
+        <rect x="36" y="316" width="26" height="20" rx="3" fill="#fff" stroke="#B91C1C"/>
+        <rect x="68" y="316" width="26" height="20" rx="3" fill="#fff" stroke="#B91C1C"/>
+        <rect x="100" y="316" width="26" height="20" rx="3" fill="#fff" stroke="#B91C1C"/>
+        <rect x="132" y="316" width="26" height="20" rx="3" fill="#fff" stroke="#B91C1C"/>
+        <rect x="164" y="316" width="26" height="20" rx="3" fill="#fff" stroke="#B91C1C"/>
+      </g>
+      <text x="200" y="330" fill="#B91C1C" font-size="9">… × 49</text>
+      <text x="36" y="352" fill="#B91C1C" font-size="8.5">Slow, and every tab re-negotiates the session.</text>
+
+      <rect x="450" y="250" width="430" height="110" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="1.5"/>
+      <text x="466" y="272" fill="#15803D" font-size="10.5" font-weight="700">WITH the override &nbsp;(lines 23–31)</text>
+      <text x="466" y="292" fill="#15803D" font-size="9">The page fixture returns a module-level sharedPage,</text>
+      <text x="466" y="305" fill="#15803D" font-size="9">created on first use and never closed between tests.</text>
+      <rect x="466" y="316" width="34" height="24" rx="3" fill="#fff" stroke="#15803D" stroke-width="1.5"/>
+      <text x="483" y="332" fill="#15803D" font-size="9" font-weight="700" text-anchor="middle">1</text>
+      <text x="512" y="332" fill="#15803D" font-size="9">one tab &nbsp;·&nbsp; closed once in afterAll</text>
+      <text x="466" y="352" fill="#15803D" font-size="8.5">Safe because workers=1 and fullyParallel=false.</text>
+
+      <path d="M450,362 L450,386" stroke="#1E8F8E" stroke-width="2" marker-end="url(#a2)"/>
+      <rect x="150" y="392" width="600" height="106" rx="8" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.5"/>
+      <text x="450" y="414" fill="#9A6800" font-size="10.5" font-weight="700" text-anchor="middle">the price of a shared tab — and how beforeEach pays it</text>
+      <text x="170" y="436" fill="#9A6800" font-size="9">A shared tab keeps whatever the previous test left behind — including its <tspan font-weight="700">viewport</tspan>.</text>
+      <text x="170" y="450" fill="#9A6800" font-size="9">Group 7's mobile and tablet tests would otherwise leak a 390px window into the next test.</text>
+      <rect x="170" y="458" width="560" height="32" rx="6" fill="#fff" stroke="#F0A500"/>
+      <text x="182" y="472" fill="#9A6800" font-size="8.5" font-family="JetBrains Mono, monospace">await page.setViewportSize({ width: 1280, height: 800 }).catch(() =&gt; {});</text>
+      <text x="182" y="484" fill="#9A6800" font-size="8.5" font-family="JetBrains Mono, monospace">await page.goto(MY_COURSES_URL); await page.waitForLoadState('networkidle');</text>
+    </svg>
+    <p class="cap">Figure 1 — Authentication is resolved once per worker from whichever env mode is set; the <code>page</code> fixture is then overridden so all 49 tests share a single tab, with <code>beforeEach</code> resetting viewport and URL to undo any leakage.</p>
+  </div>
+
+  <h3>The fixture override, in full</h3>
+  <pre><span class="c">// :23 — extend the authenticated base test with a shared page</span>
+const test = authedBase.extend&lt;{}&gt;({
+  page: async ({ context }, use) =&gt; {
+    if (!sharedPage || sharedPage.isClosed()) {
+      sharedPage = await context.newPage();      <span class="c">// created on first use only</span>
+    }
+    await use(sharedPage);
+    <span class="c">// Do NOT close between tests — keep the single tab open.</span>
+  },
+});
+
+test.<span class="k">afterAll</span>(async () =&gt; {
+  await sharedPage?.close().catch(() =&gt; {});    <span class="c">// closed exactly once</span>
+  sharedPage = undefined;
+});</pre>
+  <p>The <code>isClosed()</code> guard matters: if something closes the tab mid-run, the next test transparently opens a new one rather than failing on a dead handle.</p>
+
+  <div class="callout">
+    <span class="t">Why this is safe, and when it would stop being</span>
+    The file's own comment gives the reasoning: <code>workers=1</code> plus <code>fullyParallel=false</code> means tests already run sequentially, so there is never a second test wanting the tab at the same time. Turn on parallelism and this override breaks immediately — two tests would drive the same tab at once. The shared tab is a deliberate optimisation bought with a config guarantee, not a free one.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 3. ANATOMY ══ -->
+<div class="page sec">
+  <h2>3 &nbsp; Page anatomy</h2>
+  <p class="lead">One page, three tabs, three completely different content shapes — which is why three of the seven groups are tab-specific.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 640" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <!-- browser -->
+      <rect x="180" y="26" width="540" height="486" rx="10" fill="#fff" stroke="#2D3E54" stroke-width="2"/>
+      <rect x="180" y="26" width="540" height="24" rx="10" fill="#2D3E54"/>
+      <rect x="180" y="40" width="540" height="10" fill="#2D3E54"/>
+      <circle cx="196" cy="38" r="4" fill="#7E8A9A"/><circle cx="210" cy="38" r="4" fill="#7E8A9A"/><circle cx="224" cy="38" r="4" fill="#7E8A9A"/>
+      <text x="450" y="42" fill="#BEC5CE" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono, monospace">sphere.aastrika.org/app/user/my_courses</text>
+
+      <!-- header -->
+      <rect x="190" y="58" width="520" height="32" rx="5" fill="#F6F7F9" stroke="#1E8F8E" stroke-width="1.5"/>
+      <rect x="200" y="66" width="44" height="14" rx="3" fill="#17283C"/>
+      <rect x="256" y="65" width="150" height="17" rx="8" fill="#fff" stroke="#D8DEE5"/>
+      <text x="264" y="77" fill="#7C8696" font-size="6.5">What do you want to learn today?</text>
+      <text x="424" y="77" fill="#7C8696" font-size="7">Home</text>
+      <text x="460" y="77" fill="#17283C" font-size="7" font-weight="700">My Courses</text>
+      <circle cx="628" cy="74" r="7" fill="#fff" stroke="#7C8696"/><text x="628" y="77" fill="#7C8696" font-size="6" text-anchor="middle">🔔</text>
+      <rect x="648" y="68" width="24" height="12" rx="6" fill="#D8DEE5"/><circle cx="654" cy="74" r="4" fill="#fff"/>
+      <text x="690" y="77" fill="#7C8696" font-size="6" text-anchor="end">dark</text>
+      <text x="172" y="70" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">6 · Header</text>
+      <text x="172" y="81" fill="#7C8696" font-size="8.5" text-anchor="end">6 tests · shared shell, same as Home</text>
+      <line x1="176" y1="74" x2="188" y2="74" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- heading + tabs -->
+      <rect x="190" y="96" width="520" height="52" rx="5" fill="#fff" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="206" y="117" fill="#17283C" font-size="12" font-weight="700">My Courses</text>
+      <rect x="206" y="124" width="92" height="20" rx="3" fill="#E3F7F6"/>
+      <text x="252" y="138" fill="#135858" font-size="8" font-weight="700" text-anchor="middle">Started (5)</text>
+      <line x1="206" y1="144" x2="298" y2="144" stroke="#1E8F8E" stroke-width="2.5"/>
+      <text x="330" y="138" fill="#7C8696" font-size="8">For You (12)</text>
+      <text x="428" y="138" fill="#7C8696" font-size="8">Completed (0)</text>
+      <text x="172" y="112" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">1 · Page Heading &amp; Tabs</text>
+      <text x="172" y="123" fill="#7C8696" font-size="8.5" text-anchor="end">7 tests · labels, counts, active state</text>
+      <line x1="176" y1="116" x2="188" y2="116" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- STARTED content -->
+      <rect x="190" y="156" width="520" height="122" rx="5" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <text x="206" y="174" fill="#135858" font-size="9" font-weight="700">TAB A — STARTED &nbsp;· rows, not cards</text>
+      <g>
+        <rect x="206" y="182" width="488" height="42" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+        <rect x="214" y="188" width="46" height="30" rx="3" fill="#BEC5CE"/>
+        <text x="270" y="198" fill="#17283C" font-size="7.5" font-weight="700">Initial assessment protocols for ANC</text>
+        <rect x="270" y="204" width="160" height="5" rx="2.5" fill="#D8DEE5"/>
+        <rect x="270" y="204" width="18" height="5" rx="2.5" fill="#1E8F8E"/>
+        <text x="438" y="209" fill="#7C8696" font-size="6.5">11% Complete</text>
+        <rect x="624" y="194" width="60" height="18" rx="4" fill="#F0A500"/>
+        <text x="654" y="207" fill="#17283C" font-size="7.5" font-weight="700" text-anchor="middle">Resume</text>
+      </g>
+      <rect x="206" y="230" width="488" height="40" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <rect x="214" y="236" width="46" height="28" rx="3" fill="#BEC5CE"/>
+      <rect x="270" y="242" width="140" height="5" rx="2.5" fill="#D8DEE5"/>
+      <rect x="624" y="241" width="60" height="18" rx="4" fill="#F0A500"/>
+      <text x="654" y="254" fill="#17283C" font-size="7.5" font-weight="700" text-anchor="middle">Resume</text>
+      <text x="172" y="212" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">2 · Started Tab</text>
+      <text x="172" y="223" fill="#7C8696" font-size="8.5" text-anchor="end">9 tests · thumbnail, title, progress,</text>
+      <text x="172" y="234" fill="#7C8696" font-size="8.5" text-anchor="end">Resume, row count</text>
+      <line x1="176" y1="216" x2="188" y2="216" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- FOR YOU content -->
+      <rect x="190" y="286" width="520" height="130" rx="5" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <text x="206" y="304" fill="#135858" font-size="9" font-weight="700">TAB B — FOR YOU &nbsp;· a 3-column card grid</text>
+      <g fill="#F6F7F9" stroke="#D8DEE5">
+        <rect x="206" y="312" width="152" height="94" rx="4"/>
+        <rect x="374" y="312" width="152" height="94" rx="4"/>
+        <rect x="542" y="312" width="152" height="94" rx="4"/>
+      </g>
+      <rect x="214" y="318" width="44" height="9" rx="4" fill="#E3F7F6"/><text x="236" y="325" fill="#135858" font-size="5.5" text-anchor="middle">Certificate</text>
+      <rect x="214" y="332" width="136" height="30" rx="3" fill="#BEC5CE"/>
+      <text x="214" y="376" fill="#17283C" font-size="7" font-weight="700">Hypertension in Pregnancy</text>
+      <text x="214" y="388" fill="#7C8696" font-size="6.5">Jhpiego</text>
+      <text x="214" y="399" fill="#7C8696" font-size="6.5">★ 4.7</text>
+      <text x="172" y="336" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">3 · For You Tab</text>
+      <text x="172" y="347" fill="#7C8696" font-size="8.5" text-anchor="end">10 tests · largest group —</text>
+      <text x="172" y="358" fill="#7C8696" font-size="8.5" text-anchor="end">badges, ratings, providers, grid</text>
+      <line x1="176" y1="340" x2="188" y2="340" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- COMPLETED content -->
+      <rect x="190" y="424" width="520" height="76" rx="5" fill="#fff" stroke="#1E8F8E" stroke-width="2"/>
+      <text x="206" y="442" fill="#135858" font-size="9" font-weight="700">TAB C — COMPLETED &nbsp;· empty for a new account</text>
+      <rect x="250" y="450" width="400" height="42" rx="6" fill="#F6F7F9" stroke="#D8DEE5" stroke-dasharray="4 3"/>
+      <text x="450" y="476" fill="#7C8696" font-size="9" text-anchor="middle" font-style="italic">"You have not completed any courses."</text>
+      <text x="172" y="452" fill="#17283C" font-size="10" font-weight="700" text-anchor="end">4 · Completed Tab</text>
+      <text x="172" y="463" fill="#7C8696" font-size="8.5" text-anchor="end">6 tests · the empty state</text>
+      <line x1="176" y1="456" x2="188" y2="456" stroke="#1E8F8E" stroke-width="1.5"/>
+
+      <!-- group 5 switching -->
+      <path d="M252,148 C142,160 142,548 300,548" stroke="#F0A500" stroke-width="1.5" fill="none" stroke-dasharray="5 3"/>
+      <rect x="300" y="524" width="320" height="50" rx="8" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.5"/>
+      <text x="460" y="542" fill="#9A6800" font-size="9.5" font-weight="700" text-anchor="middle">5 · Tab Switching — 4 tests</text>
+      <text x="460" y="556" fill="#9A6800" font-size="8" text-anchor="middle">A→B differs · B→C empty state · C→A restores · URL never changes</text>
+      <text x="460" y="568" fill="#9A6800" font-size="7.5" text-anchor="middle" font-style="italic">the only group that tests the transitions, not a tab's contents</text>
+
+      <!-- group 7 -->
+      <rect x="740" y="58" width="150" height="442" rx="8" fill="#F6F7F9" stroke="#7E8A9A" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <text x="815" y="80" fill="#17283C" font-size="10" font-weight="700" text-anchor="middle">7 · PAGE HEALTH</text>
+      <text x="815" y="94" fill="#7C8696" font-size="8.5" text-anchor="middle">7 tests · whole page</text>
+      <text x="754" y="122" fill="#2D3E54" font-size="8.5">· console errors</text>
+      <text x="754" y="140" fill="#2D3E54" font-size="8.5">· mobile 390×844</text>
+      <text x="754" y="156" fill="#2D3E54" font-size="8.5">· tablet 768×1024</text>
+      <text x="754" y="172" fill="#2D3E54" font-size="8.5">· desktop 1440×900</text>
+      <text x="754" y="190" fill="#2D3E54" font-size="8.5">· page title</text>
+      <text x="754" y="208" fill="#2D3E54" font-size="8.5">· URL survives reload</text>
+      <line x1="754" y1="224" x2="878" y2="224" stroke="#D8DEE5"/>
+      <rect x="748" y="234" width="136" height="82" rx="6" fill="#DCFCE7" stroke="#15803D"/>
+      <text x="816" y="252" fill="#15803D" font-size="8.5" font-weight="700" text-anchor="middle">· unauthenticated</text>
+      <text x="816" y="264" fill="#15803D" font-size="8.5" font-weight="700" text-anchor="middle">&nbsp;&nbsp;access redirects</text>
+      <text x="758" y="282" fill="#15803D" font-size="7.5">The only test that builds</text>
+      <text x="758" y="292" fill="#15803D" font-size="7.5">its OWN context, with</text>
+      <text x="758" y="302" fill="#15803D" font-size="7.5">storageState: undefined —</text>
+      <text x="758" y="312" fill="#15803D" font-size="7.5">a real access-control check.</text>
+      <text x="754" y="340" fill="#7C8696" font-size="8">The three viewport tests</text>
+      <text x="754" y="352" fill="#7C8696" font-size="8">are why beforeEach has to</text>
+      <text x="754" y="364" fill="#7C8696" font-size="8">reset the window to 1280 —</text>
+      <text x="754" y="376" fill="#7C8696" font-size="8">see Figure 1.</text>
+
+      <text x="450" y="602" fill="#17283C" font-size="10.5" font-weight="700" text-anchor="middle">7 groups &nbsp;·&nbsp; 49 tests &nbsp;·&nbsp; 3 of the 7 groups open a tab first via a nested beforeEach</text>
+      <text x="450" y="620" fill="#7C8696" font-size="8.5" text-anchor="middle">wireframe is schematic — the three tab panels are shown stacked, but only one is ever on screen at a time</text>
+    </svg>
+    <p class="cap">Figure 2 — The three tabs render three different layouts, which is why Groups 2, 3 and 4 each carry their own <code>clickTab</code> hook and their own locators.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 4. TWO KINDS ══ -->
+<div class="page sec">
+  <h2>4 &nbsp; Two kinds of test</h2>
+  <p class="lead">18 of the 49 tests assert. The other 31 measure something and print it. Both shapes appear throughout the file, and telling them apart is the key to reading a run.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="k1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#15803D"/></marker>
+        <marker id="k2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B45309"/></marker>
+      </defs>
+
+      <!-- asserting -->
+      <rect x="20" y="12" width="420" height="182" rx="8" fill="#fff" stroke="#15803D" stroke-width="2"/>
+      <rect x="20" y="12" width="420" height="26" rx="8" fill="#15803D"/>
+      <text x="230" y="30" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">ASSERTING &nbsp;— 18 tests</text>
+      <rect x="36" y="50" width="388" height="56" rx="6" fill="#17283C"/>
+      <text x="48" y="68" fill="#6FD7D5" font-size="8" font-family="JetBrains Mono, monospace">await expect(page.getByText(/^my courses$/i)</text>
+      <text x="48" y="80" fill="#6FD7D5" font-size="8" font-family="JetBrains Mono, monospace">  .first()).toBeVisible();</text>
+      <text x="48" y="96" fill="#7E9AB8" font-size="8" font-family="JetBrains Mono, monospace">console.log('✅ "My Courses" heading visible');</text>
+      <path d="M230,106 L230,124" stroke="#15803D" stroke-width="2" marker-end="url(#k1)"/>
+      <rect x="36" y="130" width="388" height="52" rx="6" fill="#DCFCE7"/>
+      <text x="52" y="148" fill="#15803D" font-size="9.5" font-weight="700">element missing &nbsp;→ &nbsp;TEST FAILS &nbsp;→ &nbsp;build signal</text>
+      <text x="52" y="164" fill="#15803D" font-size="8.5">The console line is a convenience. The expect() is the test.</text>
+      <text x="52" y="177" fill="#15803D" font-size="8.5">Concentrated in Groups 1, 5, 6 and 7 — structure, not content.</text>
+
+      <!-- observing -->
+      <rect x="460" y="12" width="420" height="182" rx="8" fill="#fff" stroke="#B45309" stroke-width="2"/>
+      <rect x="460" y="12" width="420" height="26" rx="8" fill="#B45309"/>
+      <text x="670" y="30" fill="#fff" font-size="11" font-weight="700" text-anchor="middle">OBSERVING &nbsp;— 31 tests</text>
+      <rect x="476" y="50" width="388" height="56" rx="6" fill="#17283C"/>
+      <text x="488" y="68" fill="#7E9AB8" font-size="8" font-family="JetBrains Mono, monospace">const progress = page.locator('[role="progressbar"]…');</text>
+      <text x="488" y="80" fill="#7E9AB8" font-size="8" font-family="JetBrains Mono, monospace">const visible  = await progress.isVisible().catch(…false);</text>
+      <text x="488" y="96" fill="#F2C14E" font-size="8" font-family="JetBrains Mono, monospace">console.log(`✅ Progress bar visible: ${visible}`);</text>
+      <path d="M670,106 L670,124" stroke="#B45309" stroke-width="2" marker-end="url(#k2)"/>
+      <rect x="476" y="130" width="388" height="52" rx="6" fill="#FEF3C7"/>
+      <text x="492" y="148" fill="#B45309" font-size="9.5" font-weight="700">element missing &nbsp;→ &nbsp;prints "false" &nbsp;→ &nbsp;TEST PASSES</text>
+      <text x="492" y="164" fill="#B45309" font-size="8.5">The ✅ prints either way — it marks the test ran, not that it passed.</text>
+      <text x="492" y="177" fill="#B45309" font-size="8.5">Concentrated in Groups 2, 3 and 4 — the tab contents.</text>
+
+      <!-- why -->
+      <rect x="20" y="208" width="860" height="82" rx="8" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.5"/>
+      <text x="40" y="230" fill="#9A6800" font-size="10.5" font-weight="700">Why the content groups observe rather than assert</text>
+      <text x="40" y="250" fill="#9A6800" font-size="9">This page renders <tspan font-weight="700">one account’s real data</tspan>. How many started courses it has, which titles, which providers, whether</text>
+      <text x="40" y="264" fill="#9A6800" font-size="9">Completed is empty — all of it depends on who is logged in and what they have done. A hard assertion on "a progress bar</text>
+      <text x="40" y="278" fill="#9A6800" font-size="9">is visible" fails for a brand-new user who has started nothing, which is a perfectly valid state, not a defect.</text>
+
+      <!-- the shape that bridges -->
+      <rect x="20" y="304" width="860" height="88" rx="8" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.5"/>
+      <text x="40" y="326" fill="#135858" font-size="10.5" font-weight="700">The shape that resolves it — used once, in the Resume test (Group 2, test 6)</text>
+      <rect x="40" y="334" width="470" height="48" rx="6" fill="#fff" stroke="#1E8F8E"/>
+      <text x="52" y="350" fill="#2D3E54" font-size="8" font-family="JetBrains Mono, monospace">if (startedCount &gt; 0) {</text>
+      <text x="52" y="362" fill="#2D3E54" font-size="8" font-family="JetBrains Mono, monospace">  expect(count).toBeGreaterThanOrEqual(1);   // rows ⇒ Resume</text>
+      <text x="52" y="374" fill="#2D3E54" font-size="8" font-family="JetBrains Mono, monospace">} else { /* no started courses — a valid state */ }</text>
+      <text x="528" y="352" fill="#135858" font-size="9">Assert the <tspan font-weight="700">relationship</tspan>, not the data: "if there are rows,</text>
+      <text x="528" y="366" fill="#135858" font-size="9">there must be Resume buttons." True for every account,</text>
+      <text x="528" y="380" fill="#135858" font-size="9">and it still catches a broken render.</text>
+    </svg>
+    <p class="cap">Figure 3 — The two shapes, and the conditional pattern that gets real coverage out of data-dependent content. That pattern appears once in the file; Section 13 lists where else it would apply.</p>
+  </div>
+
+  <div class="callout">
+    <span class="t">The ✅ in the logs does not mean "passed"</span>
+    Almost every test in this file prints a line beginning <code>✅</code>, including the observing ones — and an observing test prints its checkmark whether the value it measured was <code>true</code> or <code>false</code>. When reading a run, read the <i>value</i> after the colon, not the tick before it.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 5. GROUP 1 ══ -->
+<div class="page sec">
+  <h2>5 &nbsp; Group 1 — Page heading and tabs</h2>
+  <p class="lead"><span class="mono">My Courses — Page Heading &amp; Tabs</span> &nbsp;·&nbsp; 7 tests &nbsp;·&nbsp; line 79 &nbsp;·&nbsp; <span class="pill p-ok">6 of 7 assert</span></p>
+  <p><b>What it proves:</b> the page loaded at the right URL, is correctly titled, and offers all three tabs each carrying a numeric count. This is the most strongly-asserted group in the file, because tab <i>structure</i> is the same for every account regardless of data.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Page heading</b></td><td>getByText(/^my courses$/i).first()</td><td><span class="pill p-ok">assert</span> visible. Anchored, so it cannot match the nav link of the same name.</td></tr>
+      <tr><td class="n">2</td><td><b>URL is correct</b></td><td><code>page.url()</code></td><td><span class="pill p-ok">assert</span> <code>toMatch(/my[-_]?courses/i)</code> — tolerates hyphen or underscore.</td></tr>
+      <tr><td class="n">3</td><td><b>"Started" tab with count</b></td><td>getByText(/^started\s*\(\d+\)$/i).first()</td><td><span class="pill p-ok">assert</span> visible, then the label text is logged. The <code>\(\d+\)</code> requires a count to be present.</td></tr>
+      <tr><td class="n">4</td><td><b>"For You" tab with count</b></td><td>getByText(/^for you\s*\(\d+\)$/i).first()</td><td><span class="pill p-ok">assert</span> visible.</td></tr>
+      <tr><td class="n">5</td><td><b>"Completed" tab with count</b></td><td>getByText(/^completed\s*\(\d+\)$/i).first()</td><td><span class="pill p-ok">assert</span> visible.</td></tr>
+      <tr>
+        <td class="n">6</td><td><b>"Started" is active by default</b></td>
+        <td>[role="tab"]:has-text("Started"),<br>.mat-mdc-tab:has-text("Started") → .first()<br>then <code>getAttribute('aria-selected')</code> and <code>('class')</code></td>
+        <td><span class="pill p-teal">observe</span> — computes <code>isActive</code> from <code>aria-selected === 'true'</code> or an <code>/active|selected/</code> class, then logs both. <b>No <code>expect()</code>.</b></td>
+      </tr>
+      <tr>
+        <td class="n">7</td><td><b>Counts are non-negative integers</b><br>Loops all three labels.</td>
+        <td>new RegExp(<code>^${name}\s*\(\d+\)$</code>, 'i')<br>then <code>txt.match(/\((\d+)\)/)</code></td>
+        <td><span class="pill p-ok">assert</span> ×3 — <code>toBeGreaterThanOrEqual(0)</code>. A label whose count fails to parse yields <code>-1</code> and fails the test.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>The <code>-1</code> sentinel in test 7 is doing real work</h3>
+  <pre>const match = txt?.match(<span class="g">/\((\d+)\)/</span>);
+const count = match ? parseInt(match[1]) : <span class="r">-1</span>;   <span class="c">// unparseable → -1</span>
+expect(count).toBeGreaterThanOrEqual(0);          <span class="c">// so -1 FAILS</span></pre>
+  <p>Defaulting to <code>0</code> instead would have made a missing or malformed count pass silently — the test would assert "0 ≥ 0" and report green on a tab whose label had lost its number entirely. Choosing <code>-1</code> turns the absent case into a failure. It is a small decision that determines whether the test is real.</p>
+
+  <div class="callout gold">
+    <span class="t">Test 6 is the group's one gap</span>
+    It gathers exactly the evidence needed — <code>aria-selected</code> and the class list — computes <code>isActive</code>, and then prints it instead of asserting it. Which tab opens by default is fixed product behaviour, identical for every account, so it is safely assertable. One line, <code>expect(isActive).toBe(true)</code>, would make the test match its title. See Section 13.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 6. GROUP 2 ══ -->
+<div class="page sec">
+  <h2>6 &nbsp; Group 2 — Started tab</h2>
+  <p class="lead"><span class="mono">My Courses — Started Tab</span> &nbsp;·&nbsp; 9 tests &nbsp;·&nbsp; line 136 &nbsp;·&nbsp; <span class="pill p-warn">1 conditional, 8 observe</span></p>
+
+  <pre><span class="c">// :137 — every test in this group opens the tab first</span>
+test.<span class="k">beforeEach</span>(async ({ page }) =&gt; { await clickTab(page, <span class="g">'Started'</span>); });</pre>
+  <p><b>What it covers:</b> the in-progress course rows — thumbnail, title, progress bar, percentage text, and the Resume button that takes a learner back into the player.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Tab content displayed</b></td><td>[class*="course-row"], [class*="course-item"], mat-card</td><td><span class="pill p-teal">observe</span> — row count logged.</td></tr>
+      <tr><td class="n">2</td><td><b>Thumbnail image</b></td><td>img.filter({ hasNotText: 'logo' }).first()</td><td><span class="pill p-teal">observe</span> — visibility logged.</td></tr>
+      <tr>
+        <td class="n">3</td><td><b>Course title</b><br>Checks five known titles and counts hits.</td>
+        <td>'Initial assessment protocols for ANC', 'Pregnancy Identification', 'Integrated Sexual', 'सम्मानजनक', 'Normal Labour'</td>
+        <td><span class="pill p-teal">observe</span> — logs <code>N/5 known titles visible</code>. Zero hits passes.</td>
+      </tr>
+      <tr><td class="n">4</td><td><b>Progress bar</b></td><td>[role="progressbar"], mat-progress-bar, [class*="progress-bar"]</td><td><span class="pill p-teal">observe</span> — visibility logged.</td></tr>
+      <tr><td class="n">5</td><td><b>Progress percentage text</b></td><td>getByText(/\d+%\s*complete/i).first()</td><td><span class="pill p-teal">observe</span> — the matched text logged, or <code>(none)</code>.</td></tr>
+      <tr>
+        <td class="n">6</td><td><b>Resume button per course</b><br>The group's only real assertion.</td>
+        <td>rows → count, then getByRole('button', { name: /^resume$/i }) → count</td>
+        <td><span class="pill p-warn">conditional</span> — if rows &gt; 0, <code>expect(resumeCount).toBeGreaterThanOrEqual(1)</code>. If zero rows, logs that this is a valid state.</td>
+      </tr>
+      <tr>
+        <td class="n">7</td><td><b>Resume opens the player</b></td>
+        <td>getByRole('button', { name: /^resume$/i }).first()</td>
+        <td><span class="pill p-teal">observe</span> — early-returns if absent; otherwise clicks and logs <code>urlBefore → urlAfter</code> without comparing them.</td>
+      </tr>
+      <tr>
+        <td class="n">8</td><td><b>Course title click navigates</b></td>
+        <td>[class*="course"].filter({ hasText: /\w/ }).first()<br>then its a, h2, h3, [class*="title"]</td>
+        <td><span class="pill p-teal">observe</span> — same shape: early return, click, log both URLs.</td>
+      </tr>
+      <tr>
+        <td class="n">9</td><td><b>Tab count matches visible rows</b></td>
+        <td>tab label <code>\((\d+)\)</code> vs rows <code>.count()</code></td>
+        <td><span class="pill p-teal">observe</span> — <b>prints both numbers and never compares them.</b> See Section 13.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Test 6 is the pattern the rest of the group could adopt</h3>
+  <pre><span class="c">// :181 — and the comment explaining why</span>
+<span class="c">// A "Resume" appears per in-progress course. An account with no started</span>
+<span class="c">// courses legitimately has zero — only require Resume when rows are present.</span>
+if (startedCount &gt; 0) {
+  expect(count).toBeGreaterThanOrEqual(1);
+} else {
+  console.log(<span class="g">'ℹ️  No in-progress courses on this account — no Resume buttons expected (valid state)'</span>);
+}</pre>
+  <p>This asserts a <b>relationship between two observations</b> rather than a fact about the data. It holds for a brand-new account with nothing started and for a heavy user with twelve courses, and it still fails if rows render but their Resume buttons do not. Tests 4, 5 and 9 all have the same structure available — rows exist, therefore progress bars, percentages and matching counts must too.</p>
+
+  <div class="callout">
+    <span class="t">The Devanagari title in test 3</span>
+    <code>'सम्मानजनक'</code> sits in the known-titles list alongside four English ones. Course titles are not translated — they are stored as authored — so a Hindi-authored course keeps its own script whatever the interface language. It is the only place in this file that acknowledges non-English content.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 7. GROUP 3 ══ -->
+<div class="page sec">
+  <h2>7 &nbsp; Group 3 — For You tab</h2>
+  <p class="lead"><span class="mono">My Courses — For You Tab</span> &nbsp;·&nbsp; 10 tests &nbsp;·&nbsp; line 236 &nbsp;·&nbsp; <span class="pill p-warn">0 of 10 assert</span></p>
+
+  <pre><span class="c">// :237</span>
+test.<span class="k">beforeEach</span>(async ({ page }) =&gt; { await clickTab(page, <span class="g">'For You'</span>); });</pre>
+  <p><b>What it covers:</b> the recommendation grid — cards with thumbnails, Certificate badges, star ratings, provider tags and titles, plus the grid layout itself. It is the largest group in the file and the one with no assertions at all.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Action</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Tab content displayed</b></td><td>[class*="course-card"], mat-card</td><td><span class="pill p-teal">observe</span> — card count logged.</td></tr>
+      <tr><td class="n">2</td><td><b>Cards in a grid</b></td><td>cards.filter({ hasText: /Certificate/i })</td><td><span class="pill p-teal">observe</span> — certificate-tagged count logged.</td></tr>
+      <tr><td class="n">3</td><td><b>Thumbnail on each card</b></td><td>cards.first().locator('img').first()</td><td><span class="pill p-teal">observe</span> — early-returns if no cards; else logs visibility of the first image only.</td></tr>
+      <tr><td class="n">4</td><td><b>"Certificate" badge</b></td><td>getByText(/^Certificate$/i).first()</td><td><span class="pill p-teal">observe</span> — visibility logged.</td></tr>
+      <tr><td class="n">5</td><td><b>Star rating</b></td><td><code>text=/\d\.\d/</code> → .first()</td><td><span class="pill p-teal">observe</span> — visibility logged. Matches any decimal on the page, not specifically a rating.</td></tr>
+      <tr>
+        <td class="n">6</td><td><b>Provider tags</b><br>Checks four known providers.</td>
+        <td>'Indian Nursing Council', 'Jhpiego', 'White Ribbon Alliance', 'UNFPA'</td>
+        <td><span class="pill p-teal">observe</span> — logs <code>N/4 known providers visible</code>.</td>
+      </tr>
+      <tr>
+        <td class="n">7</td><td><b>Course titles</b><br>Checks four known titles.</td>
+        <td>'Hypertension in Pregnancy', 'Infection Prevention', 'Care of Newborn', 'Newborn Resuscitation'</td>
+        <td><span class="pill p-teal">observe</span> — logs <code>N/4 known titles visible</code>.</td>
+      </tr>
+      <tr><td class="n">8</td><td><b>Card click opens detail</b></td><td>cards.first()</td><td><span class="pill p-teal">observe</span> — early return if absent; clicks and logs both URLs.</td></tr>
+      <tr><td class="n">9</td><td><b>Tab count matches cards</b></td><td>tab label vs <code>cards.count()</code></td><td><span class="pill p-teal">observe</span> — <b>prints both, never compares.</b></td></tr>
+      <tr>
+        <td class="n">10</td><td><b>3-column grid on desktop</b><br>The most interesting test in the group.</td>
+        <td>Resize to 1440×900, take <code>boundingBox()</code> of the first three cards, compare their <code>y</code> values</td>
+        <td><span class="pill p-teal">observe</span> — computes <code>sameRow</code> and logs it. Skips if fewer than three cards.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Test 10 measures layout geometrically — and then discards the answer</h3>
+  <pre>const boxes = await Promise.all(cards.slice(0, 3).map((c) =&gt; c.boundingBox()));
+if (boxes[0] &amp;&amp; boxes[1] &amp;&amp; boxes[2]) {
+  const sameRow = Math.abs(boxes[0].y - boxes[1].y) &lt; 20
+               &amp;&amp; Math.abs(boxes[1].y - boxes[2].y) &lt; 20;
+  console.log(<span class="g">`✅ First 3 cards on same row (3-col grid): ${sameRow}`</span>);
+}</pre>
+  <p>Comparing the vertical positions of the first three cards, with a 20px tolerance for card-height variation, proves the grid is three-wide at desktop width without hard-coding any CSS. It is the only layout check in the suite that inspects geometry rather than visibility — and the result is printed, not asserted. Column count at 1440px is fixed design, not account data, so <code>expect(sameRow).toBe(true)</code> would be safe.</p>
+
+  <div class="callout gold">
+    <span class="t">Why this group has no assertions — and what could be asserted anyway</span>
+    Every element here belongs to a card, and whether any cards exist depends on what the recommendation engine returns for this account. That justifies the caution. But three things in the group are <b>not</b> account-dependent: the 3-column layout (test 10), the tab-count-versus-cards relationship (test 9), and the conditional "if cards exist, each must have a thumbnail" (test 3). All three could take Group 2's <code>if (count &gt; 0)</code> shape and become real coverage without becoming fragile.
+  </div>
+
+  <div class="callout">
+    <span class="t">A locator worth tightening</span>
+    Test 5's <code>text=/\d\.\d/</code> matches <i>any</i> decimal anywhere on the page — a duration, a price, a version string. On a card grid it almost certainly resolves to a rating, but the locator does not say so. Scoping it to a card would make it mean what its title claims.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 8. GROUP 4 ══ -->
+<div class="page sec">
+  <h2>8 &nbsp; Group 4 — Completed tab</h2>
+  <p class="lead"><span class="mono">My Courses — Completed Tab</span> &nbsp;·&nbsp; 6 tests &nbsp;·&nbsp; line 340 &nbsp;·&nbsp; <span class="pill p-warn">0 of 6 assert</span></p>
+
+  <pre><span class="c">// :341</span>
+test.<span class="k">beforeEach</span>(async ({ page }) =&gt; { await clickTab(page, <span class="g">'Completed'</span>); });</pre>
+  <p><b>What it covers:</b> the empty state a new learner sees, and the absence of the controls that belong to the other two tabs. Every test here observes — and unlike Group 3, the file explains why in a comment.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Action</th><th style="width:30%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Tab becomes active</b></td><td>[role="tab"]:has-text("Completed"), .mat-mdc-tab:has-text("Completed")<br>then aria-selected + class</td><td><span class="pill p-teal">observe</span> — both logged.</td></tr>
+      <tr>
+        <td class="n">2</td><td><b>Count is 0 for a new user</b></td>
+        <td>tab label → <code>\((\d+)\)</code>, default <code>-1</code></td>
+        <td><span class="pill p-teal">observe</span> — count logged. The source comment says explicitly: <i>"Don't assert == 0 strictly — user may have completed courses elsewhere."</i></td>
+      </tr>
+      <tr><td class="n">3</td><td><b>Empty-state message visible</b></td><td>getByText(/you have not completed any courses/i).first()</td><td><span class="pill p-teal">observe</span> — visibility logged.</td></tr>
+      <tr>
+        <td class="n">4</td><td><b>Empty-state text matches exactly</b></td>
+        <td>getByText('You have not completed any courses.', { exact: <b>false</b> }).first()</td>
+        <td><span class="pill p-teal">observe</span> — if visible, logs the text; else logs that the user may have completed courses. Note <code>exact: false</code> despite the title saying "exactly".</td>
+      </tr>
+      <tr><td class="n">5</td><td><b>No cards when empty</b></td><td>cards.filter({ hasText: /Certificate|Resume/i })</td><td><span class="pill p-teal">observe</span> — count logged, never required to be zero.</td></tr>
+      <tr><td class="n">6</td><td><b>No Resume buttons</b></td><td>getByRole('button', { name: /^resume$/i })</td><td><span class="pill p-teal">observe</span> — count logged, never required to be zero.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The comment in test 2 is the right call — and it points at a better assertion</h3>
+  <p>Refusing to assert <code>count === 0</code> is correct: the suite may run as an account that has genuinely completed something, and failing on that would be wrong. But the group then extends that caution to tests 5 and 6, where it need not apply. Those two are about <b>internal consistency</b>, and consistency is assertable whatever the count is:</p>
+  <pre><span class="c">// what tests 5 and 6 measure today — printed only</span>
+console.log(<span class="g">`✅ Card count in empty Completed tab: ${count}`</span>);
+console.log(<span class="g">`✅ Resume buttons in Completed tab: ${count}`</span>);
+
+<span class="c">// what they could assert, using the count they already read in test 2</span>
+if (completedCount === 0) {
+  expect(cardCount).toBe(0);      <span class="c">// empty tab ⇒ no cards</span>
+  expect(resumeCount).toBe(0);    <span class="c">// Resume belongs to Started, never here</span>
+}</pre>
+  <p>A Resume button appearing in the Completed tab would be a real defect — it offers to resume a course the learner has finished — and today the suite would print the number and pass.</p>
+
+  <div class="callout">
+    <span class="t">Test 4's title and its code disagree</span>
+    The test is called "Empty-state message text matches exactly" but passes <code>{ exact: false }</code> and then logs the text rather than comparing it. What it actually does is a substring search. The empty-state copy is fixed product text, so an exact comparison is entirely safe — this is one of the cleanest one-line fixes in the file.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 9. GROUP 5 ══ -->
+<div class="page sec">
+  <h2>9 &nbsp; Group 5 — Tab switching</h2>
+  <p class="lead"><span class="mono">My Courses — Tab Switching</span> &nbsp;·&nbsp; 4 tests &nbsp;·&nbsp; line 392 &nbsp;·&nbsp; <span class="pill p-ok">2 of 4 assert</span></p>
+  <p><b>What it proves:</b> the tabs are real — switching between them changes what is rendered, and never changes the URL. This is the only group that tests the <i>transitions</i> rather than any tab's contents, and it has no nested <code>beforeEach</code>: each test drives <code>clickTab</code> itself.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:24%">Action</th><th style="width:30%">Mechanism</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>Started → For You shows different content</b></td>
+        <td>Capture <code>body.innerHTML()</code> on Started, switch, capture again</td>
+        <td><span class="pill p-ok">assert</span> <code>expect(startedHTML).not.toEqual(forYouHTML)</code> — the whole document body must differ.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td><td><b>For You → Completed shows the empty state</b></td>
+        <td>Check the empty-state message before and after the switch</td>
+        <td><span class="pill p-teal">observe</span> — logs <code>before: false, after: true</code>. The transition it names is not required to happen.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>Completed → Started restores content</b></td>
+        <td>Switch away and back, then look for a Resume button</td>
+        <td><span class="pill p-teal">observe</span> — visibility logged.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>URL stays on /my_courses</b><br>Loops all three tabs.</td>
+        <td><code>for (const tab of ['Started','For You','Completed'])</code></td>
+        <td><span class="pill p-ok">assert</span> ×3 — <code>toMatch(/my[-_]?courses/i)</code> after each switch.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Test 1's whole-body comparison</h3>
+  <pre>const startedHTML = await page.locator(<span class="g">'body'</span>).innerHTML();
+await clickTab(page, <span class="g">'For You'</span>);
+const forYouHTML  = await page.locator(<span class="g">'body'</span>).innerHTML();
+expect(startedHTML).not.toEqual(forYouHTML);</pre>
+  <p>Comparing the entire <code>body</code> is deliberately blunt, and that is its strength: it needs no knowledge of what either tab contains, so it works for any account with any data. If clicking "For You" silently failed — a dead tab, a JavaScript error swallowed by the framework — the two snapshots would be identical and the test would fail.</p>
+  <p>The weakness is the mirror image. Anything that changes between the two captures satisfies it: a re-rendered timestamp, a rotating banner, a lazily-loaded image that arrived in between. It proves <i>something</i> changed, not that the right thing changed. For a tab-switch smoke check that is a reasonable trade, and it is the only tool available that does not depend on the account's data.</p>
+
+  <div class="callout gold">
+    <span class="t">Tests 2 and 3 are the assertable ones that are not asserted</span>
+    Both describe deterministic product behaviour. Test 2 gathers <code>beforeEmpty</code> and <code>afterEmpty</code> — the exact pair needed to state "the empty-state message was not on For You and is on Completed" — and prints them. Test 3 reads whether Started's content came back and prints that. Neither depends on how much data the account has, only on whether the tab panel re-rendered, so both could assert. Test 2's assertion would need guarding on the Completed count being zero; test 3's on there being started courses at all — the <code>if (count &gt; 0)</code> shape from Group 2 again.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 10. GROUP 6 ══ -->
+<div class="page sec">
+  <h2>10 &nbsp; Group 6 — Header</h2>
+  <p class="lead"><span class="mono">My Courses — Header (same as Home)</span> &nbsp;·&nbsp; 6 tests &nbsp;·&nbsp; line 433 &nbsp;·&nbsp; <span class="pill p-ok">3 of 6 assert</span></p>
+  <p><b>What it proves:</b> the authenticated shell is present and consistent on this page. The group's name states the intent — these are the same controls the Home page carries, re-checked here to catch a header that renders correctly on one route and not another.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Element</th><th style="width:32%">Locator</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><b>Aastrika logo</b></td><td>img[alt*="aastrika" i], [class*="logo"] img → .first()</td><td><span class="pill p-ok">assert</span> visible.</td></tr>
+      <tr>
+        <td class="n">2</td><td><b>Search bar</b></td>
+        <td>getByPlaceholder(/what do you want to learn today/i)</td>
+        <td><span class="pill p-ok">assert</span> visible. Matched by placeholder text — the most stable handle for a search input.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td><td><b>"My Courses" nav link is marked active</b></td>
+        <td>getByRole('link', { name: /my courses/i }).or(getByText(/my courses/i)).first()<br>then <code>getAttribute('class')</code></td>
+        <td><span class="pill p-teal">observe</span> — logs the first 100 characters of the class attribute. Whether it contains an active marker is left for a human to judge.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td><td><b>"Home" link navigates</b><br>The group's strongest test.</td>
+        <td>getByRole('link', { name: /^home$/i }).or(getByText(/^home$/i)).first()</td>
+        <td><span class="pill p-ok">assert</span> <code>toMatch(/\/(app|page)\/home/i)</code> after a 2000 ms wait. This one checks the destination, not just the click.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td><td><b>Dark mode toggle</b><br>Six alternative locators.</td>
+        <td>mat-slide-toggle · button[aria-label*="theme" i] · button[aria-label*="dark" i] · mat-icon:has-text("dark_mode") · mat-icon:has-text("brightness") · [class*="theme-toggle"]</td>
+        <td><span class="pill p-teal">observe</span> — visibility logged with an explicit 5 s timeout. The toggle is never operated, only found.</td>
+      </tr>
+      <tr>
+        <td class="n">6</td><td><b>Notification bell</b></td>
+        <td>mat-icon:has-text("notifications"), [aria-label*="notification" i] → .first()</td>
+        <td><span class="pill p-teal">observe</span> — visibility logged.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Test 4 is the only navigation in the file with an asserted destination</h3>
+  <p>Eight other tests across the suite click something and log the resulting URL. This one compares it:</p>
+  <pre>await scrollAndClick(page, homeLink);
+await page.waitForTimeout(2000);
+expect(page.url()).toMatch(<span class="g">/\/(app|page)\/home/i</span>);   <span class="c">// both route shapes accepted</span></pre>
+  <p>The alternation is the reason it can assert safely — Sphere serves the authenticated home under both <code>/app/home</code> and <code>/page/home</code> depending on the build, and accepting either means the test checks "we reached home" without pinning a routing detail. That is the same technique that makes the URL checks in Groups 1, 5 and 7 durable.</p>
+
+  <div class="callout">
+    <span class="t">Test 5's six-way locator is a sign of an unstable control</span>
+    Six alternatives, an explicit 5 s timeout, and an observe-only result together say the dark-mode toggle has moved more than once and is not reliably findable. That is honest — but it also means the test cannot tell "the toggle moved again" from "the toggle was removed". Since it only reports, the practical effect is that a vanished toggle shows up as one <code>false</code> in a wall of logs.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 11. GROUP 7 ══ -->
+<div class="page sec">
+  <h2>11 &nbsp; Group 7 — Page health</h2>
+  <p class="lead"><span class="mono">My Courses — Page Health</span> &nbsp;·&nbsp; 7 tests &nbsp;·&nbsp; line 484 &nbsp;·&nbsp; <span class="pill p-ok">6 of 7 assert</span></p>
+  <p><b>What it proves:</b> the page is healthy as a document — renders at every width, keeps its URL across a reload, is correctly titled, and <b>refuses to serve itself to a visitor who is not logged in</b>. It contains the file's single most valuable test.</p>
+
+  <table class="t-sel">
+    <thead><tr><th class="n">#</th><th style="width:22%">Check</th><th style="width:30%">Mechanism</th><th>Assertion</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td><td><b>No console errors on load</b></td>
+        <td>Attach a <code>console</code> listener, re-<code>goto</code>, wait networkidle + 2000 ms</td>
+        <td><span class="pill p-teal">observe</span> — logs the count and the first five messages, truncated to 200 chars. <b>No <code>expect()</code>.</b></td>
+      </tr>
+      <tr><td class="n">2</td><td><b>Renders on mobile</b> 390×844</td><td rowspan="3"><code>setViewportSize</code>, 500 ms settle, then look for the page heading</td><td rowspan="3"><span class="pill p-ok">assert</span> ×1 each — <code>/^my courses$/i</code> still visible. These three are why <code>beforeEach</code> resets the viewport to 1280×800.</td></tr>
+      <tr><td class="n">3</td><td><b>Renders on tablet</b> 768×1024</td></tr>
+      <tr><td class="n">4</td><td><b>Renders on desktop</b> 1440×900</td></tr>
+      <tr><td class="n">5</td><td><b>Page title</b></td><td><code>await page.title()</code></td><td><span class="pill p-ok">assert</span> <code>toMatch(/aastrika|sphere|courses/i)</code> — three accepted words.</td></tr>
+      <tr><td class="n">6</td><td><b>URL persists on reload</b></td><td><code>page.reload()</code> + networkidle</td><td><span class="pill p-ok">assert</span> <code>toMatch(/my[-_]?courses/i)</code> — proves a refresh does not bounce the user out or lose the route.</td></tr>
+      <tr>
+        <td class="n">7</td><td><b>Unauthenticated access redirects to login</b></td>
+        <td><code>browser.newContext({ storageState: undefined })</code> → new page → goto → 2000 ms</td>
+        <td><span class="pill p-ok">assert</span> <code>toMatch(/login|public/i)</code>, then the context is closed.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Test 7 — the most valuable test in the file</h3>
+  <pre><span class="c">// :531 — note the fixture: { browser }, NOT { page }</span>
+const context = await browser.newContext({ storageState: <span class="k">undefined</span> });  <span class="c">// no session</span>
+const page = await context.newPage();
+await page.goto(MY_COURSES_URL);
+expect(page.url()).toMatch(<span class="g">/login|public/i</span>);
+await context.close();</pre>
+  <p>Three things make it stand out. It takes <code>{ browser }</code> instead of <code>{ page }</code>, deliberately opting out of the shared authenticated tab. It passes <code>storageState: undefined</code> to guarantee a sessionless context — inheriting the worker's state would make it pass for the wrong reason. And it closes its own context afterwards.</p>
+  <p>What it verifies is access control: a logged-out visitor typing the My Courses URL must be bounced to a public route. Everything else in this suite checks presentation; this checks the page is actually protected.</p>
+
+  <div class="callout gold">
+    <span class="t">Test 1 is one line from being real</span>
+    It captures console errors, counts them, prints up to five — and asserts nothing. The sibling <code>PublicPage.spec.ts</code> runs the same check and does assert, after filtering resource-load noise. The same two lines work here:
+    <pre style="margin-top:6px;">const jsErrors = errors.filter((e) =&gt; !<span class="g">/Failed to load resource/i</span>.test(e));
+expect(jsErrors).toEqual([]);</pre>
+    An authenticated page is exactly where an uncaught exception matters most — a broken render here strands a learner mid-course.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 12. TALLY ══ -->
+<div class="page sec">
+  <h2>12 &nbsp; What green actually proves</h2>
+  <p class="lead">18 of 49 tests can fail. The other 31 produce a readable record of the page and always pass.</p>
+
+  <table>
+    <thead><tr><th style="width:24%">Group</th><th style="width:8%">Tests</th><th style="width:9%">Assert</th><th style="width:11%">Conditional</th><th style="width:9%">Observe</th><th>What is actually guaranteed</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Heading &amp; Tabs</td><td>7</td><td><b>6</b></td><td>0</td><td>1</td><td>Heading, URL, all three tab labels with parseable non-negative counts. Which tab is active by default is only logged.</td></tr>
+      <tr><td>2 · Started Tab</td><td>9</td><td><b>0</b></td><td>1</td><td>8</td><td>Only this: <i>if</i> there are course rows, there is at least one Resume button.</td></tr>
+      <tr><td>3 · For You Tab</td><td>10</td><td><b>0</b></td><td>0</td><td>10</td><td>Nothing. Produces a record of cards, badges, ratings, providers, titles and grid layout.</td></tr>
+      <tr><td>4 · Completed Tab</td><td>6</td><td><b>0</b></td><td>0</td><td>6</td><td>Nothing. Records the count, the empty-state message, and the absence of cards and Resume buttons.</td></tr>
+      <tr><td>5 · Tab Switching</td><td>4</td><td><b>2</b></td><td>0</td><td>2</td><td>Started and For You render different content; the URL stays on <code>/my_courses</code> through all three tabs.</td></tr>
+      <tr><td>6 · Header</td><td>6</td><td><b>3</b></td><td>0</td><td>3</td><td>Logo, search bar, and that the Home link reaches home. Active-link state, dark toggle and bell are logged.</td></tr>
+      <tr><td>7 · Page Health</td><td>7</td><td><b>6</b></td><td>0</td><td>1</td><td>Renders at three widths; correct title; URL survives reload; <b>unauthenticated access is blocked</b>. Console errors are logged only.</td></tr>
+      <tr style="background:var(--teal-50)!important;"><td><b>Total</b></td><td><b>49</b></td><td><b>17</b></td><td><b>1</b></td><td><b>31</b></td><td><b>Structure and access control are gated. Tab contents are recorded, not gated.</b></td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid2">
+    <div class="card" style="border-color:var(--ok);">
+      <div class="h" style="color:var(--ok);">A green run does prove</div>
+      <ul>
+        <li>The page loads at the right URL for a logged-in user</li>
+        <li>All three tabs render with valid counts</li>
+        <li>Switching tabs changes content and keeps the route</li>
+        <li>The shell works; it renders 390px to 1440px</li>
+        <li><b>A logged-out visitor is redirected away</b></li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:var(--err);">
+      <div class="h" style="color:var(--err);">A green run does not prove</div>
+      <ul>
+        <li>Any course appears in Started or For You</li>
+        <li>Progress bars or percentages render</li>
+        <li>Cards carry badges, ratings or providers</li>
+        <li>The page threw no JavaScript errors</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>How to read a run</h3>
+  <p>The 31 observing tests emit a structured snapshot of what the page showed — but the information lives in the values, not the pass count. Scan the log for <code>false</code> and for zero tallies:</p>
+  <pre><span class="k">✅ Started tab visible rows: 5</span>
+<span class="k">✅ First course thumbnail visible: true</span>
+   ✓ Title: "Initial assessment protocols for ANC"
+<span class="k">✅ 1/5 known titles visible in Started</span>
+<span class="k">✅ Progress bar visible: </span><span class="r">false</span>        <span class="c">← 5 rows, but no progress bar found</span>
+<span class="k">✅ Progress percent text: "</span><span class="r">(none)</span><span class="k">"</span>    <span class="c">← and no percentage either</span>
+<span class="k">✅ Resume buttons visible: 5 (started rows: 5)</span></pre>
+  <p>Every line above is green. Together they describe five course rows with Resume buttons intact and <b>the progress indicator missing</b> — a real regression, reported as a pass.</p>
+
+  <div class="callout">
+    <span class="t">The suite's honest value</span>
+    Treat this file as two things at once: a small, reliable gate on page structure and access control, and a much larger instrument that photographs the page's contents each run. The first protects the build; the second is only useful to someone who reads it.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 13. NAMES ══ -->
+<div class="page sec">
+  <h2>13 &nbsp; Names that promise more than the body delivers</h2>
+  <p class="lead">Eight tests read like assertions in a report. Each one already gathers the value it would need.</p>
+
+  <p>These are the tests most likely to mislead. A report listing "<i>Started tab count matches actual course rows visible ✓</i>" reads as a verified fact; the body prints two numbers and compares nothing. In every case below the measurement is already taken — only the comparison is missing.</p>
+
+  <table>
+    <thead><tr><th style="width:5%">§</th><th style="width:30%">Test name</th><th style="width:27%">What the body does</th><th>The line it is missing</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1.6</td><td><b>"Started" tab is active by default</b></td>
+        <td>Computes <code>isActive</code> from aria-selected and class, logs it</td>
+        <td class="mono">expect(isActive).toBe(true)</td>
+      </tr>
+      <tr>
+        <td>2.9</td><td><b>Started tab count matches actual course rows visible</b></td>
+        <td>Reads <code>declaredCount</code> and <code>visibleCount</code>, prints both</td>
+        <td class="mono">expect(visibleCount).toBe(declaredCount)</td>
+      </tr>
+      <tr>
+        <td>3.9</td><td><b>For You tab count matches displayed card count</b></td>
+        <td>Reads <code>declared</code> and <code>visible</code>, prints both</td>
+        <td class="mono">expect(visible).toBe(declared)</td>
+      </tr>
+      <tr>
+        <td>3.10</td><td><b>For You cards are arranged in 3-column grid on desktop</b></td>
+        <td>Measures bounding boxes, computes <code>sameRow</code>, logs it</td>
+        <td class="mono">expect(sameRow).toBe(true)</td>
+      </tr>
+      <tr>
+        <td>4.4</td><td><b>Empty-state message text matches exactly</b></td>
+        <td>Substring-matches with <code>exact: false</code>, logs the text</td>
+        <td class="mono">expect(text?.trim()).toBe(expected)</td>
+      </tr>
+      <tr>
+        <td>4.5</td><td><b>No course cards are visible when Completed tab is empty</b></td>
+        <td>Counts cards, prints the number</td>
+        <td class="mono">if (completedCount === 0) expect(count).toBe(0)</td>
+      </tr>
+      <tr>
+        <td>4.6</td><td><b>No "Resume" buttons appear in Completed tab</b></td>
+        <td>Counts Resume buttons, prints the number</td>
+        <td class="mono">expect(count).toBe(0)</td>
+      </tr>
+      <tr>
+        <td>5.2</td><td><b>For You → Completed switch shows empty state</b></td>
+        <td>Reads <code>beforeEmpty</code> and <code>afterEmpty</code>, prints both</td>
+        <td class="mono">expect(afterEmpty).toBe(true)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Which of these are safe to assert, and which need a guard</h3>
+  <div class="grid2">
+    <div class="card" style="border-color:var(--ok);">
+      <div class="h" style="color:var(--ok);">Safe as-is — fixed product behaviour</div>
+      <ul>
+        <li><b>1.6</b> Started opens by default for every account</li>
+        <li><b>3.10</b> Desktop is three columns by design</li>
+        <li><b>4.4</b> The empty-state copy is fixed text</li>
+        <li><b>4.6</b> Resume never belongs in Completed</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:var(--warn);">
+      <div class="h" style="color:var(--warn);">Needs a guard — depends on data</div>
+      <ul>
+        <li><b>2.9 / 3.9</b> Guard on count &gt; 0 — a paginated or lazily-loaded list may show fewer rows than the tab declares</li>
+        <li><b>4.5 / 5.2</b> Guard on the Completed count being zero</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout gold">
+    <span class="t">Two caveats before changing 2.9 and 3.9</span>
+    These two look like the most obvious fixes and are the least certain. The tab label's count comes from the API; the visible row count comes from the DOM. They can differ legitimately — if the list virtualises, paginates, or lazy-loads on scroll, fewer rows are in the DOM than the count declares, and a strict equality assertion would fail on a working page. Before asserting equality, confirm the list renders every item at once. If it does not, the honest assertion is <code>expect(visibleCount).toBeLessThanOrEqual(declaredCount)</code> plus <code>toBeGreaterThan(0)</code> when the declared count is non-zero.
+  </div>
+
+  <div class="callout">
+    <span class="t">A cheaper fix than changing the assertions</span>
+    If these stay as observations, rename them so a report does not overstate what happened — "<i>Log Started tab count vs visible rows</i>" rather than "<i>… matches …</i>". Only the titles mislead.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 14. ARTIFACTS ══ -->
+<div class="page sec">
+  <h2>14 &nbsp; Artifacts and run variants</h2>
+
+  <h3>14.1 &nbsp; What a run leaves behind</h3>
+  <table>
+    <thead><tr><th style="width:26%">Artifact</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">test-results/</td><td>A screenshot for every one of the 49 tests (<code>screenshot: 'on'</code>). Because the tab groups each open their tab first, the set covers all three tab panels plus three viewport widths.</td></tr>
+      <tr><td class="mono">playwright-report/ · video.webm</td><td>The HTML report; video kept only for failures.</td></tr>
+      <tr><td class="mono">console output</td><td><b>The primary artifact for this suite.</b> 31 of the 49 tests put their entire finding here — row counts, title tallies, provider tallies, progress visibility, grid geometry and console-error listings.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>14.2 &nbsp; A healthy run, abridged</h3>
+  <pre><span class="k">✅ "My Courses" heading visible</span>
+   Started: 5 · For You: 12 · Completed: 0
+   ✓ Title: "Initial assessment protocols for ANC"
+<span class="k">✅ Progress percent text: "11% Complete"</span>
+<span class="k">✅ Resume buttons visible: 5 (started rows: 5)</span>
+<span class="k">✅ Certificate-tagged cards: 12</span>
+<span class="k">✅ 2/4 known For You titles visible</span>
+<span class="k">✅ First 3 cards on same row (3-col grid): true</span>
+<span class="k">✅ Started vs For You content differs</span>
+<span class="k">✅ Home click — URL: …/page/home</span>
+<span class="k">✅ Unauth URL: https://sphere.aastrika.org/public/login</span></pre>
+
+  <h3>14.3 &nbsp; Run variants</h3>
+  <pre><span class="c"># the whole suite, headed, against staging</span>
+npm run run:mycourse
+
+<span class="c"># one group — "Page Health" is the one to triage with</span>
+npx playwright test tests/Mycourse.spec.ts --grep <span class="g">"Started Tab"</span>
+npx playwright test tests/Mycourse.spec.ts --grep <span class="g">"Page Health"</span>
+
+<span class="c"># auth mode 4 — a real UI login with your own credentials</span>
+<span class="k">cross-env</span> TEST_USER_EMAIL=you@yopmail.com TEST_USER_PASSWORD=Sunbird@123 \
+  npx playwright test tests/Mycourse.spec.ts --headed
+
+<span class="c"># auth mode 3 — provision a brand-new user through the API first</span>
+<span class="k">cross-env</span> AUTH_VIA_API=1 npx playwright test tests/Mycourse.spec.ts
+
+<span class="c"># auth mode 1 — local dev against a live logged-in Chrome over CDP</span>
+<span class="k">cross-env</span> USE_CDP=1 npx playwright test tests/Mycourse.spec.ts --headed
+
+<span class="c"># run as the fresh user minted by create-account · or the app blob report</span>
+<span class="k">cross-env</span> USE_FRESH_USER=1 npx playwright test tests/Mycourse.spec.ts
+npm run report:app</pre>
+
+  <div class="callout">
+    <span class="t">Which account you run as changes what the log says</span>
+    A brand-new user shows <code>Started (0)</code>, no Resume buttons and an empty Completed tab — and every observing test still passes, printing zeros. An established account fills the same tests with real values. Neither is a failure, so note which account produced a run you intend to compare against later.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 15. FAILURES ══ -->
+<div class="page sec">
+  <h2>15 &nbsp; Failure modes and fixes</h2>
+
+  <table>
+    <thead><tr><th style="width:26%">Symptom</th><th style="width:30%">Most likely cause</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>The run aborts before any test with a credentials error</b></td>
+        <td>No auth mode is configured — <code>authedTest</code> throws rather than running against a login page.</td>
+        <td>Set one of the four modes from Section 2. The thrown message lists them. This is the intended behaviour, not a bug.</td>
+      </tr>
+      <tr>
+        <td><b>Every test fails with "element not found" and the URL is /public/login</b></td>
+        <td>The session expired or was rejected — the suite is being redirected to login on every navigation.</td>
+        <td>Delete <code>.auth/state.json</code> and re-run so the session is re-established. If mode 1, confirm the CDP Chrome is still logged in.</td>
+      </tr>
+      <tr>
+        <td><b>Tab-specific groups all fail in their hook</b></td>
+        <td><code>clickTab</code> could not find the tab — one cause, nine or ten reds in that group.</td>
+        <td>Check Group 1 first. If the tab labels assert fine there, the markup for the clickable tab changed; extend the five-way selector list at line 50.</td>
+      </tr>
+      <tr>
+        <td><b>A test fails at an unexpected viewport</b></td>
+        <td>A previous Group 7 test left the shared tab at 390px and something bypassed the reset.</td>
+        <td><code>beforeEach</code> resets to 1280×800 — confirm it ran. This is the specific hazard the shared-tab design creates; see Figure 1.</td>
+      </tr>
+      <tr>
+        <td><b>Group 3's grid test logs "Only 2 cards — skipping"</b></td>
+        <td>The recommendation engine returned fewer than three cards for this account.</td>
+        <td>Expected on a sparse account. Run as an established user if you want the grid geometry actually measured.</td>
+      </tr>
+      <tr>
+        <td><b>All the title and provider tallies read 0/5 or 0/4</b></td>
+        <td>The account is not enrolled in any of the hard-coded courses, or the catalogue changed.</td>
+        <td>Not a failure — the tests pass. Update the known-title lists at lines 155 and 277 to match the catalogue you actually test against.</td>
+      </tr>
+      <tr>
+        <td><b>"Started vs For You content differs" fails</b></td>
+        <td>The tab click did nothing — the two <code>body.innerHTML</code> snapshots came back identical.</td>
+        <td>A real finding. Confirm with Group 5 test 4, which checks the URL across all three switches.</td>
+      </tr>
+      <tr>
+        <td><b>The unauthenticated-redirect test fails</b></td>
+        <td>The page served itself to a sessionless context — a genuine access-control problem.</td>
+        <td>Treat as an incident, not a test issue. The test builds its own clean context with <code>storageState: undefined</code>, so it cannot fail from session leakage.</td>
+      </tr>
+      <tr>
+        <td><b>A test fails on a dead page handle</b></td>
+        <td>Something closed the shared tab mid-run.</td>
+        <td>The fixture's <code>isClosed()</code> guard should reopen it transparently. If it recurs, look for a navigation that kills the context — a popup or a hard redirect.</td>
+      </tr>
+      <tr>
+        <td><b>Two tests interfere with each other</b></td>
+        <td>Parallelism was enabled, breaking the shared-tab assumption.</td>
+        <td>This file requires <code>workers=1</code> and <code>fullyParallel=false</code>. Either restore them or remove the page-fixture override.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">The one rule to keep</span>
+    This page renders one account's real data, so most of its content cannot be asserted absolutely — but almost all of it can be asserted <b>conditionally</b>. The Resume test at line 181 shows the shape: measure the precondition, then require the relationship. When you add a test here, take that shape rather than defaulting to a <code>console.log</code>, and make sure the test's name describes what its body actually does.
+  </div>
+</div>

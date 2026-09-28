@@ -1,0 +1,71 @@
+name: Prod Deploy Tests
+
+# Runs the automation against PRODUCTION whenever prod is deployed, and publishes
+# a branded report. Trigger it from your prod deploy pipeline with a
+# repository_dispatch call (see docs/CI-ON-DEPLOY.md), or run it manually.
+on:
+  repository_dispatch:
+    types: [prod-deployed]
+  workflow_dispatch: {}
+
+concurrency:
+  group: prod-deploy-tests
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BASE_URL: https://sphere.aastrika.org
+      STAGING_URL: https://staging.aastrika.org
+      # Authenticated specs use storageState via UI login (Phase 1). Provide a
+      # prod test account so the authed suite can run headless in CI.
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      # Login smoke + email report (used if configured)
+      MONITOR_EMAIL: ${{ secrets.MONITOR_EMAIL }}
+      MONITOR_PASSWORD: ${{ secrets.MONITOR_PASSWORD }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+      ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Public site + login page (no auth needed).
+      - name: Run public/login tests + branded report
+        run: npm run report:ci
+
+      # Authenticated suite — Phase 1 done, so these run headless via storageState
+      # when a prod test account is configured. Runs against prod (BASE_URL).
+      - name: Run authenticated suite (if a test account is configured)
+        if: ${{ env.TEST_USER_EMAIL != '' }}
+        run: npx cross-env HEADLESS=true playwright test tests/Account.spec.ts tests/Mycourse.spec.ts tests/CourseTOC.spec.ts tests/PrivatePage.spec.ts --project=Chrome
+
+      - name: Prod login smoke (if a monitor account is configured)
+        if: ${{ env.MONITOR_EMAIL != '' }}
+        run: npm run test:monitor
+
+      - name: Publish branded report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sphere-branded-report
+          path: |
+            brand-reports/
+            test-reports/
+          retention-days: 30

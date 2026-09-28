@@ -1,0 +1,52 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Generated reports (branded HTML + Excel + merge blobs)
+/brand-reports/
+/test-reports/
+/blob-reports/
+
+# Saved auth storageState (created by tests/helpers/authedTest.ts)
+/.auth/
+
+# Environment comparison output (prod vs staging)
+/compare-reports/
+
+# Cached course lists + login sessions used by the runner scripts
+/.cache/
+
+# Secrets — never commit (credentials, tokens, SMTP)
+.env
+.env.local
+
+# ── added: files that hold live session state or run records ──
+# Saved storageState written beside the project root (NOT under /.auth/, which
+# was already ignored) — these carry real login cookies.
+.auth-state.json
+.auth-state.*.json
+
+# The address of the most recent signup.
+.last-registered-email.json
+
+# Stray artefact of a shell redirect on Windows. A file literally named "nul"
+# cannot be checked out on Windows, so it must never enter the index.
+nul
+
+.env.*
+!.env.example
+
+# Account list with REAL passwords — kept locally, shared via accounts.example.json.
+config/accounts.json
+
+# Registry of accounts a run registered, and per-run regression output.
+registered-accounts.xlsx
+regression-results/
+
+# Copies of the last-signup record ("… copy.json" etc).
+.last-registered-email*.json

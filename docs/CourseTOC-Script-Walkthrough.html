@@ -1,0 +1,1188 @@
+<title>Course TOC Script Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#17283C; --navy-400:#18293D; --navy-300:#2D3E54; --navy-100:#7E8A9A; --navy-50:#BEC5CE;
+    --teal:#1E8F8E; --teal-600:#186E6E; --teal-700:#135858; --teal-50:#E3F7F6; --teal-100:#B8ECE9;
+    --gold:#F0A500; --gold-600:#C88800; --gold-700:#9A6800; --gold-50:#FEF6E0;
+    --offwhite:#F6F7F9; --line:#D8DEE5; --mid:#7C8696; --ink:#0D1218;
+    --ok:#15803D; --ok-bg:#DCFCE7; --warn:#B45309; --warn-bg:#FEF3C7; --err:#B91C1C; --err-bg:#FEE2E2;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Open Sans",Segoe UI,Arial,sans-serif;
+    font-size:9.9pt; line-height:1.47; color:var(--ink); background:#fff;
+    margin:0;
+  }
+  .page{ padding:0 16mm; }
+
+  h1{font-size:20pt;font-weight:700;color:var(--navy);margin:0 0 6px;letter-spacing:-.2px;}
+  h2{font-size:14.5pt;font-weight:700;color:var(--navy);margin:0 0 8px;padding-bottom:5px;border-bottom:2px solid var(--teal);}
+  h3{font-size:11.5pt;font-weight:600;color:var(--navy);margin:15px 0 6px;}
+  h4{font-size:10.5pt;font-weight:600;color:var(--navy-300);margin:12px 0 5px;}
+  p{margin:0 0 8px;}
+  .lead{font-size:10.4pt;color:var(--navy-300);}
+  .cap{font-family:Lato,Arial,sans-serif;font-size:8.2pt;color:var(--mid);margin:4px 0 0;}
+  code,.mono{font-family:"JetBrains Mono",Consolas,monospace;font-size:8.8pt;}
+  code{background:var(--offwhite);border:1px solid var(--line);border-radius:4px;padding:1px 4px;color:var(--navy);}
+  a{color:var(--teal-600);}
+
+  .cover{height:247mm;display:flex;flex-direction:column;justify-content:center;background:var(--navy);color:#fff;padding:0 20mm;margin:-14mm 0 0;}
+  .cover .kicker{font-family:Lato;font-size:10pt;letter-spacing:3px;text-transform:uppercase;color:var(--teal-100);margin-bottom:18px;}
+  .cover h1{font-size:34pt;color:#fff;line-height:1.15;margin-bottom:14px;}
+  .cover .sub{font-size:13pt;color:var(--navy-50);max-width:150mm;line-height:1.5;}
+  .cover .rule{width:72px;height:5px;background:var(--gold);margin:26px 0;border-radius:3px;}
+  .cover .meta{font-family:Lato;font-size:9.5pt;color:var(--navy-50);line-height:1.9;}
+  .cover .meta b{color:#fff;font-weight:700;}
+
+  .sec{page-break-before:always;padding-top:1mm;}
+  .nobreak{page-break-inside:avoid;}
+
+  .callout{border-left:4px solid var(--teal);background:var(--teal-50);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;font-size:9.5pt;}
+  .callout.gold{border-left-color:var(--gold);background:var(--gold-50);}
+  .callout.red{border-left-color:var(--err);background:var(--err-bg);}
+  .callout .t{font-weight:700;color:var(--navy);display:block;margin-bottom:2px;}
+
+  table{width:100%;border-collapse:collapse;margin:8px 0 11px;font-size:8.6pt;page-break-inside:auto;}
+  thead{display:table-header-group;}
+  th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:6px 8px;border:.5pt solid var(--navy);font-size:8.6pt;}
+  td{padding:5px 8px;border:.5pt solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:var(--offwhite);}
+  tr{page-break-inside:avoid;}
+  td.n{width:24px;text-align:center;font-weight:700;color:var(--teal-700);background:var(--teal-50)!important;}
+  .t-sel td:nth-child(3){font-family:"JetBrains Mono",Consolas,monospace;font-size:7.9pt;line-height:1.45;word-break:break-word;}
+
+  .pill{display:inline-block;padding:1px 8px;border-radius:9999px;font-size:8pt;font-weight:600;font-family:Lato;}
+  .p-ok{background:var(--ok-bg);color:var(--ok);}
+  .p-warn{background:var(--warn-bg);color:var(--warn);}
+  .p-err{background:var(--err-bg);color:var(--err);}
+  .p-teal{background:var(--teal-50);color:var(--teal-700);}
+  .p-gold{background:var(--gold-50);color:var(--gold-700);}
+
+  .grid2{display:flex;gap:12px;margin:10px 0;}
+  .card{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff;}
+  .card .h{font-weight:700;color:var(--navy);font-size:9.8pt;margin-bottom:5px;}
+  .card ul{margin:0;padding-left:15px;}
+  .card li{margin-bottom:3px;font-size:9.2pt;}
+
+  .fig{margin:12px 0 4px;page-break-inside:avoid;}
+  .fig svg{width:100%;height:auto;display:block;}
+
+  ol.steps{padding-left:0;list-style:none;counter-reset:s;margin:9px 0;}
+  ol.steps li{counter-increment:s;position:relative;padding-left:28px;margin-bottom:7px;font-size:9.4pt;page-break-inside:avoid;}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:9999px;background:var(--navy);color:#fff;font-size:8pt;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  ol.steps li b{color:var(--navy);}
+
+  .toc{margin:12px 0;}
+  .toc div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:5px 2px;font-size:9.6pt;}
+  .toc div span:first-child{color:var(--navy);font-weight:600;}
+  .toc div span:last-child{color:var(--mid);font-family:Lato;font-size:9pt;}
+
+  pre{background:var(--navy);color:#E8EDF3;border-radius:8px;padding:9px 12px;font-family:"JetBrains Mono",Consolas,monospace;font-size:8pt;line-height:1.5;overflow-x:auto;margin:8px 0;white-space:pre-wrap;}
+  pre .c{color:#7E9AB8;}
+  pre .k{color:#6FD7D5;}
+  pre .g{color:#F2C14E;}
+  pre .r{color:#FF9A9A;}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════ COVER ══ -->
+<div class="cover">
+  <div class="kicker">Sphere Web Automation</div>
+  <h1>Course TOC Script<br>Step-by-Step Walkthrough</h1>
+  <div class="rule"></div>
+  <div class="sub">An element-by-element map of how <span class="mono">tests/CourseTOC.spec.ts</span> verifies the course overview page — the page's unusually slow banner, the button that changes element type as you learn, and why this is the most strongly-asserted suite in the set.</div>
+  <div class="rule" style="width:40px;height:2px;background:#2D3E54;"></div>
+  <div class="meta">
+    <b>Script</b> &nbsp; tests/CourseTOC.spec.ts &nbsp;·&nbsp; 525 lines &nbsp;·&nbsp; 21 tests in 5 groups<br>
+    <b>Target</b> &nbsp; /app/toc/&lt;courseId&gt;/overview &nbsp;<span style="color:#F0A500;">(login + COURSE_NAME required)</span><br>
+    <b>Run</b> &nbsp;&nbsp;&nbsp;&nbsp; npm run run:course-toc<br>
+    <b>Date</b> &nbsp;&nbsp;&nbsp; 12 September 2026
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ CONTENTS ══ -->
+<div class="page sec">
+  <h2>Contents</h2>
+  <div class="toc">
+    <div><span>1 &nbsp; What this script does</span><span>Purpose, scope, entry points</span></div>
+    <div><span>2 &nbsp; Page anatomy</span><span>Diagram — five groups on one page</span></div>
+    <div><span>3 &nbsp; The readiness model</span><span>Diagram — why tabs are not "ready" · the four timeout knobs</span></div>
+    <div><span>4 &nbsp; Helpers and harness</span><span>Seven helpers, four auth modes</span></div>
+    <div><span>5 &nbsp; Group 1 — Header</span><span>5 tests · lines 273–306</span></div>
+    <div><span>6 &nbsp; Group 2 — Action icons</span><span>6 tests · lines 308–384</span></div>
+    <div><span>7 &nbsp; Group 3 — Resume/Start and tabs</span><span>4 tests · lines 386–431</span></div>
+    <div><span>8 &nbsp; Group 4 — Description and licence</span><span>3 tests · lines 433–463</span></div>
+    <div><span>9 &nbsp; Group 5 — Navigation</span><span>3 tests · lines 465–524</span></div>
+    <div><span>10 &nbsp; What green actually proves</span><span>Diagram — 15 assert · 3 conditional · 3 observe</span></div>
+    <div><span>11 &nbsp; Artifacts and run variants</span><span>Reports, console output, grep recipes</span></div>
+    <div><span>12 &nbsp; Failure modes and fixes</span><span>Troubleshooting reference</span></div>
+  </div>
+
+  <h3>How to read this document</h3>
+  <p>Sections 5 through 9 walk the script in file order, one table per group, following the <code>// ─── GROUP ───</code> banners in the source. Each row gives the <b>action</b>, the exact <b>locator</b>, and what the test does with the result — marked by strength:</p>
+  <table>
+    <thead><tr><th style="width:22%">Marker</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-ok">assert</span></td><td>An <code>expect()</code> always runs. A missing or wrong element fails the test.</td></tr>
+      <tr><td><span class="pill p-warn">conditional</span></td><td>The test calls <code>skipIfAbsent()</code> first. If the control is not on this course the test <i>skips</i>; if it is, a real <code>expect()</code> runs.</td></tr>
+      <tr><td><span class="pill p-teal">observe</span></td><td>No <code>expect()</code> at all. The test performs the action and prints what happened for a human to read.</td></tr>
+    </tbody>
+  </table>
+  <p>The ratio is what sets this suite apart from the others in the set: <b>15 of 21 tests assert unconditionally</b>, 3 more assert behind a skip guard, and only 3 merely observe. Section 10 tallies it group by group and explains why the balance is so much healthier here than on, say, My Courses.</p>
+
+  <div class="callout">
+    <span class="t">Line numbers in this document are live</span>
+    Every line reference points at <code>tests/CourseTOC.spec.ts</code> as it stands today — 525 lines, including the per-line explanatory comments that were added across the suite. They are safe to click through to.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ 1. WHAT IT DOES ══ -->
+<div class="page sec">
+  <h2>1 &nbsp; What this script does</h2>
+  <p class="lead">It is the sweep of the course overview page — the screen a learner lands on after searching for and opening a course, and the screen they come back to between every module.</p>
+
+  <p>The URL shape is <code>/app/toc/&lt;courseId&gt;/overview</code>, and the page carries a lot: the course title and its metadata badges, three action icons, the Start/Resume banner, three tabs, a description, and a licence block. This spec puts <b>one granular test on each of those elements</b> — 21 tests in five groups — so a failure names the exact control that broke rather than "the course page".</p>
+
+  <div class="callout">
+    <span class="t">Its scope was carved out of the course-completion suite</span>
+    <code>CourseComplete.spec.ts</code> drives a whole course end to end and deliberately <i>does not</i> click around the overview page, because doing so disturbs the Resume state it depends on. Its comment at line 2211 says as much: <i>"the full overview element sweep lives in CourseTOC.spec.ts now."</i> This file is that sweep, and the separation is why both can be trusted.
+  </div>
+
+  <h3>Two inputs, both required</h3>
+  <table>
+    <thead><tr><th style="width:26%">Input</th><th>Why it is needed</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">a logged-in session</td><td>The TOC is behind auth. The suite imports <code>test</code> from <code>./helpers/authedTest</code> (line 21), so every test arrives with a logged-in context already established.</td></tr>
+      <tr><td class="mono">COURSE_NAME</td><td>Line 28. There is no default. Without it, <code>beforeEach</code> calls <code>test.skip()</code> on line 223 and all 21 tests skip — they do not fail, and they do not run against a blank page.</td></tr>
+    </tbody>
+  </table>
+
+  <p>That second point matters when reading a report: <b>21 skipped is the signature of a missing <code>COURSE_NAME</code></b>, not of a broken page. The skip message says so explicitly — <i>"Set COURSE_NAME to run Course TOC coverage"</i>.</p>
+
+  <h3>How a test gets to the page</h3>
+  <p>Every test starts from the home page and searches. There is no hard-coded course URL anywhere in the file, because course ids differ per environment. <code>searchAndOpenCourse()</code> (line 47) types the name into the search box, presses Enter, and clicks the first result whose title starts with the same 8 characters — a prefix match, because result cards truncate long titles.</p>
+
+  <p>Once one test has opened the course, the URL is cached in <code>tocUrl</code> (line 197) and every later test takes a much cheaper path: navigate straight there, verify it landed, done. Section 3 diagrams both paths and the verification between them.</p>
+
+  <h3>The four things it covers</h3>
+  <div class="grid2">
+    <div class="card">
+      <div class="h">Header metadata</div>
+      <ul>
+        <li>Course title</li>
+        <li>CNE hours badge</li>
+        <li>Duration, in any of four formats</li>
+        <li>Rating and review count</li>
+        <li>The <code>By:</code> author line</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Interactive controls</div>
+      <ul>
+        <li>Details / Certificate / Share icons</li>
+        <li>Each popup opens <i>and closes</i></li>
+        <li>Start / Resume banner button</li>
+        <li>Overview / Modules / Discussion tabs</li>
+        <li>The module list actually has modules</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="h">Content and exits</div>
+      <ul>
+        <li>Description section</li>
+        <li>Licence terms, Creative Commons link</li>
+        <li>Author link to the organisation page</li>
+        <li>Back icon leaves the overview</li>
+        <li>Start/Resume opens the player</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Entry points</h3>
+  <table>
+    <thead><tr><th style="width:38%">Command</th><th>What it runs</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:course-toc</td><td>All 21 tests, headed, against staging. The full walkthrough this document describes. Set <code>COURSE_NAME</code> first.</td></tr>
+      <tr><td class="mono">npm run report:app</td><td>This spec alongside Account, My Courses and Competency — the authenticated-app blob report.</td></tr>
+      <tr><td class="mono">… --grep "Certificate"</td><td>Just the two certificate tests. Every test title starts with <code>TOC:</code>, so grepping on a control name is unambiguous.</td></tr>
+    </tbody>
+  </table>
+
+  <pre><span class="c"># PowerShell — the one-liner from the file header (line 16)</span>
+$env:COURSE_NAME="Implementing Respectful Maternity Care In Healthcare Facilities"
+npm run run:course-toc</pre>
+
+  <div class="callout gold">
+    <span class="t">Three minutes per test</span>
+    Line 194 sets <code>test.setTimeout(3 * 60 * 1000)</code>. That is not defensive padding — the banner alone is allowed 90 seconds (Section 3), and a slow-path re-open makes up to three trips through search before giving up. A 30-second default would fail this suite on a healthy site.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ 2. PAGE ANATOMY ══ -->
+<div class="page sec">
+  <h2>2 &nbsp; Page anatomy</h2>
+  <p class="lead">Everything this suite touches lives on one screen. The five groups in the source map cleanly onto five bands of that screen, top to bottom.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="a1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#7C8696"/>
+        </marker>
+      </defs>
+
+      <!-- ── browser mock ── -->
+      <rect x="66" y="26" width="420" height="452" rx="9" fill="#FFFFFF" stroke="#17283C" stroke-width="1.6"/>
+      <path d="M66,35 a9,9 0 0 1 9,-9 h402 a9,9 0 0 1 9,9 v19 h-420 Z" fill="#17283C"/>
+      <circle cx="82" cy="41" r="3.4" fill="#7E8A9A"/><circle cx="94" cy="41" r="3.4" fill="#7E8A9A"/><circle cx="106" cy="41" r="3.4" fill="#7E8A9A"/>
+      <text x="124" y="45" font-size="10" fill="#BEC5CE" font-family="JetBrains Mono, monospace">/app/toc/&lt;courseId&gt;/overview</text>
+
+      <!-- back bar -->
+      <rect x="80" y="64" width="392" height="24" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="92" y="80" font-size="13" fill="#2D3E54">&#8249;</text>
+      <text x="106" y="80" font-size="10" fill="#7C8696">chevron_left &#183; ws-widget-btn-page-back</text>
+
+      <!-- header band -->
+      <rect x="80" y="96" width="392" height="88" rx="6" fill="#F6F7F9" stroke="#1E8F8E" stroke-width="1.3"/>
+      <text x="92" y="118" font-size="13" font-weight="700" fill="#17283C">Implementing Respectful Maternity</text>
+      <text x="92" y="134" font-size="13" font-weight="700" fill="#17283C">Care In Healthcare Facilities</text>
+      <rect x="92" y="144" width="86" height="17" rx="8.5" fill="#E3F7F6" stroke="#B8ECE9"/>
+      <text x="99" y="156" font-size="9" fill="#135858">CNE hours : 2</text>
+      <rect x="185" y="144" width="54" height="17" rx="8.5" fill="#E3F7F6" stroke="#B8ECE9"/>
+      <text x="192" y="156" font-size="9" fill="#135858">2h 30m</text>
+      <text x="249" y="157" font-size="10" fill="#F0A500">&#9733;</text>
+      <text x="261" y="157" font-size="9" fill="#2D3E54">4.6</text>
+      <text x="281" y="157" font-size="9" fill="#7C8696">(42)</text>
+      <text x="92" y="177" font-size="9.5" fill="#2D3E54">By : </text>
+      <text x="113" y="177" font-size="9.5" fill="#186E6E" font-weight="600">Jhpiego</text>
+      <text x="160" y="177" font-size="8" fill="#7C8696">&#8592; span.blue-link, not an &lt;a&gt;</text>
+
+      <!-- action icons band -->
+      <rect x="80" y="192" width="392" height="48" rx="6" fill="#FFFFFF" stroke="#1E8F8E" stroke-width="1.3"/>
+      <rect x="98" y="201" width="106" height="30" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="151" y="220" font-size="10" fill="#17283C" text-anchor="middle">&#9432;  Details</text>
+      <rect x="222" y="201" width="106" height="30" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="275" y="220" font-size="10" fill="#17283C" text-anchor="middle">&#9873;  Certificate</text>
+      <rect x="346" y="201" width="106" height="30" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="399" y="220" font-size="10" fill="#17283C" text-anchor="middle">&#8599;  Share</text>
+
+      <!-- banner band -->
+      <rect x="80" y="248" width="392" height="44" rx="6" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.5"/>
+      <rect x="98" y="259" width="96" height="24" rx="12" fill="#1E8F8E"/>
+      <text x="146" y="275" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Resume</text>
+      <text x="208" y="268" font-size="8.6" fill="#9A6800">.banner-btn &#8212; the LAST element</text>
+      <text x="208" y="280" font-size="8.6" fill="#9A6800">the page paints. See Section 3.</text>
+
+      <!-- tabs band -->
+      <rect x="80" y="300" width="392" height="32" rx="6" fill="#FFFFFF" stroke="#1E8F8E" stroke-width="1.3"/>
+      <text x="106" y="321" font-size="10" font-weight="700" fill="#1E8F8E">Overview</text>
+      <rect x="98" y="325" width="60" height="2.5" fill="#1E8F8E"/>
+      <text x="196" y="321" font-size="10" fill="#2D3E54">Modules</text>
+      <text x="296" y="321" font-size="10" fill="#2D3E54">Discussion</text>
+
+      <!-- description band -->
+      <rect x="80" y="340" width="392" height="58" rx="6" fill="#F6F7F9" stroke="#1E8F8E" stroke-width="1.3"/>
+      <text x="92" y="358" font-size="10.5" font-weight="700" fill="#17283C">Description</text>
+      <rect x="92" y="366" width="368" height="5" rx="2.5" fill="#D8DEE5"/>
+      <rect x="92" y="376" width="368" height="5" rx="2.5" fill="#D8DEE5"/>
+      <rect x="92" y="386" width="240" height="5" rx="2.5" fill="#D8DEE5"/>
+
+      <!-- licence band -->
+      <rect x="80" y="406" width="392" height="56" rx="6" fill="#FFFFFF" stroke="#1E8F8E" stroke-width="1.3"/>
+      <text x="92" y="424" font-size="10.5" font-weight="700" fill="#17283C">License terms</text>
+      <rect x="92" y="432" width="300" height="5" rx="2.5" fill="#D8DEE5"/>
+      <text x="92" y="454" font-size="9" fill="#186E6E" text-decoration="underline">creativecommons.org/licenses/by-sa/4.0</text>
+
+      <!-- ── group badges ── -->
+      <circle cx="40" cy="140" r="13" fill="#17283C"/><text x="40" y="145" font-size="12" font-weight="700" fill="#FFF" text-anchor="middle">1</text>
+      <circle cx="40" cy="216" r="13" fill="#17283C"/><text x="40" y="221" font-size="12" font-weight="700" fill="#FFF" text-anchor="middle">2</text>
+      <circle cx="40" cy="290" r="13" fill="#17283C"/><text x="40" y="295" font-size="12" font-weight="700" fill="#FFF" text-anchor="middle">3</text>
+      <circle cx="40" cy="369" r="13" fill="#17283C"/><text x="40" y="374" font-size="12" font-weight="700" fill="#FFF" text-anchor="middle">4</text>
+      <circle cx="40" cy="440" r="13" fill="#17283C"/><text x="40" y="445" font-size="12" font-weight="700" fill="#FFF" text-anchor="middle">5</text>
+
+      <!-- band 3 spans banner + tabs: a bracket -->
+      <path d="M55,254 H62 V332 H55" fill="none" stroke="#7C8696" stroke-width="1.1"/>
+      <path d="M55,100 H62 V182 H55" fill="none" stroke="#7C8696" stroke-width="1.1"/>
+      <path d="M55,196 H62 V238 H55" fill="none" stroke="#7C8696" stroke-width="1.1"/>
+      <path d="M55,344 H62 V396 H55" fill="none" stroke="#7C8696" stroke-width="1.1"/>
+      <path d="M55,410 H62 V460 H55" fill="none" stroke="#7C8696" stroke-width="1.1"/>
+
+      <!-- ── legend ── -->
+      <g>
+        <rect x="524" y="96" width="352" height="70" rx="7" fill="#FFFFFF" stroke="#D8DEE5"/>
+        <line x1="524" y1="96" x2="524" y2="166" stroke="#1E8F8E" stroke-width="4"/>
+        <text x="540" y="117" font-size="11.5" font-weight="700" fill="#17283C">1 &#183; HEADER</text>
+        <text x="792" y="117" font-size="9" fill="#7C8696">lines 273&#8211;306</text>
+        <text x="540" y="135" font-size="9.4" fill="#2D3E54">Title, CNE hours, duration, rating and</text>
+        <text x="540" y="149" font-size="9.4" fill="#2D3E54">review count, author line.</text>
+        <text x="540" y="161" font-size="9" fill="#15803D" font-weight="600">5 tests &#183; all 5 assert</text>
+      </g>
+      <line x1="500" y1="140" x2="518" y2="131" stroke="#7C8696" stroke-width="1.1" marker-end="url(#a1)"/>
+
+      <g>
+        <rect x="524" y="176" width="352" height="70" rx="7" fill="#FFFFFF" stroke="#D8DEE5"/>
+        <line x1="524" y1="176" x2="524" y2="246" stroke="#1E8F8E" stroke-width="4"/>
+        <text x="540" y="197" font-size="11.5" font-weight="700" fill="#17283C">2 &#183; ACTION ICONS</text>
+        <text x="792" y="197" font-size="9" fill="#7C8696">lines 308&#8211;384</text>
+        <text x="540" y="215" font-size="9.4" fill="#2D3E54">Details, Certificate and Share &#8212; each</text>
+        <text x="540" y="229" font-size="9.4" fill="#2D3E54">one opens, and two of them close again.</text>
+        <text x="540" y="241" font-size="9" fill="#15803D" font-weight="600">6 tests &#183; 5 assert, 1 conditional</text>
+      </g>
+      <line x1="500" y1="216" x2="518" y2="211" stroke="#7C8696" stroke-width="1.1" marker-end="url(#a1)"/>
+
+      <g>
+        <rect x="524" y="256" width="352" height="70" rx="7" fill="#FFFFFF" stroke="#D8DEE5"/>
+        <line x1="524" y1="256" x2="524" y2="326" stroke="#F0A500" stroke-width="4"/>
+        <text x="540" y="277" font-size="11.5" font-weight="700" fill="#17283C">3 &#183; RESUME / START + TABS</text>
+        <text x="792" y="277" font-size="9" fill="#7C8696">lines 386&#8211;431</text>
+        <text x="540" y="295" font-size="9.4" fill="#2D3E54">The banner button and its render time;</text>
+        <text x="540" y="309" font-size="9.4" fill="#2D3E54">three tabs; the module list is non-empty.</text>
+        <text x="540" y="321" font-size="9" fill="#15803D" font-weight="600">4 tests &#183; 3 assert, 1 observe</text>
+      </g>
+      <line x1="500" y1="292" x2="518" y2="291" stroke="#7C8696" stroke-width="1.1" marker-end="url(#a1)"/>
+
+      <g>
+        <rect x="524" y="336" width="352" height="70" rx="7" fill="#FFFFFF" stroke="#D8DEE5"/>
+        <line x1="524" y1="336" x2="524" y2="406" stroke="#1E8F8E" stroke-width="4"/>
+        <text x="540" y="357" font-size="11.5" font-weight="700" fill="#17283C">4 &#183; DESCRIPTION + LICENSE</text>
+        <text x="792" y="357" font-size="9" fill="#7C8696">lines 433&#8211;463</text>
+        <text x="540" y="375" font-size="9.4" fill="#2D3E54">Below the fold &#8212; each test scrolls to its</text>
+        <text x="540" y="389" font-size="9.4" fill="#2D3E54">target before looking for it.</text>
+        <text x="540" y="401" font-size="9" fill="#15803D" font-weight="600">3 tests &#183; 2 assert, 1 observe</text>
+      </g>
+      <line x1="500" y1="369" x2="518" y2="371" stroke="#7C8696" stroke-width="1.1" marker-end="url(#a1)"/>
+
+      <g>
+        <rect x="524" y="416" width="352" height="70" rx="7" fill="#FFFFFF" stroke="#D8DEE5"/>
+        <line x1="524" y1="416" x2="524" y2="486" stroke="#1E8F8E" stroke-width="4"/>
+        <text x="540" y="437" font-size="11.5" font-weight="700" fill="#17283C">5 &#183; NAVIGATION</text>
+        <text x="792" y="437" font-size="9" fill="#7C8696">lines 465&#8211;524</text>
+        <text x="540" y="455" font-size="9.4" fill="#2D3E54">The three ways off this page: the author</text>
+        <text x="540" y="469" font-size="9.4" fill="#2D3E54">link, the back icon, and the player.</text>
+        <text x="540" y="481" font-size="9" fill="#B45309" font-weight="600">3 tests &#183; 2 conditional, 1 observe</text>
+      </g>
+      <line x1="500" y1="440" x2="518" y2="448" stroke="#7C8696" stroke-width="1.1" marker-end="url(#a1)"/>
+    </svg>
+    <p class="cap">Figure 1 — The course TOC overview, with the five source groups mapped onto the five bands of the page. The gold band is the one the whole readiness model is built around.</p>
+  </div>
+
+  <div class="callout">
+    <span class="t">Why the groups run top to bottom</span>
+    It is not a coincidence. The file is ordered the way a person reads the page, so when a report shows five consecutive failures you can read them as "everything below the banner is missing" rather than having to reconstruct which control lives where.
+  </div>
+
+  <h3>The two markup details the suite had to learn</h3>
+  <table>
+    <thead><tr><th style="width:28%">Element</th><th>What is surprising about it</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Action icon</b><br><span class="mono">line 178</span></td>
+        <td>An icon is a <code>div.toc-icon-action</code> wrapping an icon and a label span. <b>The <code>(click)</code> handler is on the div</b> — clicking the inner label does nothing at all. <code>actionIcon()</code> therefore locates the wrapper and filters it by the label text, rather than clicking the text directly.</td>
+      </tr>
+      <tr>
+        <td><b>Author link</b><br><span class="mono">line 468</span></td>
+        <td>The organisation name after <code>By:</code> is a <code>span.blue-link</code>, <b>not an anchor</b>. <code>getByRole('link')</code> finds nothing. The test uses the structural class, with a text filter naming common org types as a fallback.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Both are the kind of thing that only shows up once you have watched a test click something and seen nothing happen. Both are documented in the source at the helper that solves them, so the next person does not rediscover them.</p>
+</div>
+
+<!-- ═════════════════════════════════════════════ 3. READINESS MODEL ══ -->
+<div class="page sec">
+  <h2>3 &nbsp; The readiness model</h2>
+  <p class="lead">This is the idea the whole file is built on: <b>the tabs appearing does not mean the page is ready.</b> Everything else — the 90-second timeout, the two-stage gate, the fast and slow paths — follows from that one measurement.</p>
+
+  <p>The TOC overview paints in layers. The shell and the tabs come from the course metadata and are on screen in well under a second. The Start/Resume banner is different: it waits on the enrolment and progress calls, so it is the <i>last</i> thing to appear. On a clean load that is 1.6 to 2.8 seconds. Coming back from the player — which is exactly what a learner does between modules — it has been measured at around 70 seconds.</p>
+
+  <div class="callout red">
+    <span class="t">The bug this replaced</span>
+    The original tests used a plain <code>expect(banner).toBeVisible()</code>, which carries Playwright's default 10-second window. On a clean load it passed. After a round trip through the course player it failed every time — <b>while the page was still painting correctly</b>. The suite was reporting a product failure that was really a test failure.
+  </div>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 660" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="b1" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#17283C"/>
+        </marker>
+        <marker id="b2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#B45309"/>
+        </marker>
+      </defs>
+
+      <!-- ══ PANEL A ══ -->
+      <rect x="30" y="24" width="840" height="176" rx="8" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <circle cx="52" cy="46" r="11" fill="#17283C"/><text x="52" y="50" font-size="11" font-weight="700" fill="#FFF" text-anchor="middle">A</text>
+      <text x="70" y="50" font-size="12" font-weight="700" fill="#17283C">What paints when &#8212; measured on staging</text>
+
+      <!-- default-window marker -->
+      <line x1="430" y1="104" x2="430" y2="162" stroke="#B91C1C" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="430" y="98" font-size="9" font-weight="700" fill="#B91C1C" text-anchor="middle">Playwright default expect window ends &#8212; 10 s</text>
+
+      <!-- banner timeout marker -->
+      <line x1="845" y1="122" x2="845" y2="162" stroke="#15803D" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="845" y="116" font-size="9" font-weight="700" fill="#15803D" text-anchor="end">BANNER_TIMEOUT = 90 s</text>
+
+      <!-- tabs marker -->
+      <line x1="150" y1="122" x2="150" y2="162" stroke="#1E8F8E" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="150" y="116" font-size="9" font-weight="700" fill="#135858" text-anchor="middle">tabs &#8212; ~0.4 s</text>
+
+      <!-- bars -->
+      <rect x="230" y="140" width="62" height="16" rx="3" fill="#1E8F8E"/>
+      <text x="228" y="134" font-size="9" fill="#135858" font-weight="600">banner &#8212; clean load, 1.6&#8211;2.8 s</text>
+      <rect x="698" y="140" width="90" height="16" rx="3" fill="#F0A500"/>
+      <text x="790" y="134" font-size="9" fill="#9A6800" font-weight="600" text-anchor="end">banner &#8212; after returning from the player, ~70 s</text>
+
+      <!-- axis -->
+      <line x1="70" y1="162" x2="856" y2="162" stroke="#2D3E54" stroke-width="1.4"/>
+      <g stroke="#2D3E54" stroke-width="1.1">
+        <line x1="70" y1="162" x2="70" y2="169"/><line x1="150" y1="162" x2="150" y2="169"/>
+        <line x1="230" y1="162" x2="230" y2="169"/><line x1="292" y1="162" x2="292" y2="169"/>
+        <line x1="430" y1="162" x2="430" y2="169"/><line x1="560" y1="162" x2="560" y2="169"/>
+        <line x1="740" y1="162" x2="740" y2="169"/><line x1="845" y1="162" x2="845" y2="169"/>
+      </g>
+      <g font-size="8.4" fill="#7C8696" text-anchor="middle">
+        <text x="70" y="182">0</text><text x="150" y="182">0.5 s</text><text x="230" y="182">1.6 s</text>
+        <text x="292" y="182">2.8 s</text><text x="430" y="182">10 s</text><text x="560" y="182">30 s</text>
+        <text x="740" y="182">70 s</text><text x="845" y="182">90 s</text>
+      </g>
+      <text x="70" y="134" font-size="9" fill="#2D3E54" font-weight="600">goto</text>
+      <text x="52" y="195" font-size="8" fill="#7C8696">not to scale</text>
+
+      <!-- ══ PANEL B ══ -->
+      <rect x="30" y="216" width="840" height="428" rx="8" fill="#FFFFFF" stroke="#D8DEE5"/>
+      <circle cx="52" cy="238" r="11" fill="#17283C"/><text x="52" y="242" font-size="11" font-weight="700" fill="#FFF" text-anchor="middle">B</text>
+      <text x="70" y="242" font-size="12" font-weight="700" fill="#17283C">beforeEach &#8212; the fast path, the slow path, and the gate between them</text>
+      <text x="210" y="272" font-size="9" font-weight="700" fill="#135858" text-anchor="middle">FAST PATH</text>
+      <text x="670" y="272" font-size="9" font-weight="700" fill="#9A6800" text-anchor="middle">SLOW PATH &#8212; re-open via search</text>
+
+      <!-- left column -->
+      <rect x="60" y="280" width="300" height="30" rx="6" fill="#17283C"/>
+      <text x="210" y="300" font-size="10" font-weight="600" fill="#FFF" text-anchor="middle">test.beforeEach(page)  &#183;  line 221</text>
+      <line x1="210" y1="310" x2="210" y2="322" stroke="#17283C" stroke-width="1.3" marker-end="url(#b1)"/>
+
+      <rect x="60" y="324" width="300" height="30" rx="6" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.3"/>
+      <text x="210" y="344" font-size="9.6" fill="#17283C" text-anchor="middle">COURSE_NAME set?</text>
+      <line x1="360" y1="339" x2="488" y2="339" stroke="#B45309" stroke-width="1.2" marker-end="url(#b2)"/>
+      <text x="424" y="334" font-size="8.2" fill="#B45309" text-anchor="middle">no</text>
+      <rect x="494" y="324" width="346" height="30" rx="6" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.2"/>
+      <text x="667" y="344" font-size="9.4" fill="#B91C1C" text-anchor="middle">test.skip() &#8212; 21 skipped, 0 failed  &#183;  line 223</text>
+
+      <line x1="210" y1="354" x2="210" y2="366" stroke="#17283C" stroke-width="1.3" marker-end="url(#b1)"/>
+      <rect x="60" y="368" width="300" height="30" rx="6" fill="#F6F7F9" stroke="#7C8696" stroke-width="1.2"/>
+      <text x="210" y="388" font-size="9.6" fill="#17283C" text-anchor="middle">tocUrl already cached?  &#183;  line 197</text>
+
+      <line x1="210" y1="398" x2="210" y2="410" stroke="#17283C" stroke-width="1.3" marker-end="url(#b1)"/>
+      <text x="228" y="408" font-size="8.2" fill="#135858">yes</text>
+      <rect x="60" y="412" width="300" height="30" rx="6" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.2"/>
+      <text x="210" y="432" font-size="9.4" fill="#135858" text-anchor="middle">goto(tocUrl) &#183; domcontentloaded &#183; wait 1500 ms</text>
+
+      <line x1="210" y1="442" x2="210" y2="454" stroke="#17283C" stroke-width="1.3" marker-end="url(#b1)"/>
+
+      <!-- onToc gate -->
+      <rect x="60" y="456" width="300" height="120" rx="7" fill="#FFFFFF" stroke="#1E8F8E" stroke-width="1.8"/>
+      <text x="210" y="474" font-size="9.6" font-weight="700" fill="#135858" text-anchor="middle">onToc(page) &#8212; all three must pass  &#183;  line 208</text>
+      <rect x="74" y="482" width="272" height="26" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="84" y="499" font-size="8.6" fill="#17283C">1 &#160; URL matches /toc/&#8230;/overview</text>
+      <rect x="74" y="512" width="272" height="26" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="84" y="529" font-size="8.6" fill="#17283C">2 &#160; wait for tabs &#8804; TABS_READY_MS (10 s)</text>
+      <rect x="74" y="542" width="272" height="26" rx="4" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="84" y="559" font-size="8.6" fill="#17283C">3 &#160; waitForBanner &#8804; BANNER_READY_MS (30 s)</text>
+
+      <line x1="210" y1="576" x2="210" y2="594" stroke="#15803D" stroke-width="1.6" marker-end="url(#b1)"/>
+      <text x="222" y="590" font-size="8.2" fill="#15803D" font-weight="600">all pass &#8594; return</text>
+
+      <!-- gate fail → slow path -->
+      <path d="M360,516 H400 V400" fill="none" stroke="#B45309" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <path d="M400,400 H488" fill="none" stroke="#B45309" stroke-width="1.3" marker-end="url(#b2)"/>
+      <text x="404" y="454" font-size="8.2" fill="#B45309">any stage fails &#8212;</text>
+      <text x="404" y="466" font-size="8.2" fill="#B45309">log &#8220;&#8634; re-opening&#8221;</text>
+      <path d="M360,383 H380 V400" fill="none" stroke="#B45309" stroke-width="1.3" stroke-dasharray="4 3"/>
+      <text x="386" y="380" font-size="8.2" fill="#B45309">no cache</text>
+
+      <!-- right column -->
+      <rect x="494" y="384" width="346" height="42" rx="6" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.3"/>
+      <text x="667" y="401" font-size="9.2" fill="#17283C" text-anchor="middle">for attempt = 1&#8230;3 &#8212; goto(HOME_URL), wait 1.5 s</text>
+      <text x="667" y="415" font-size="9.2" fill="#17283C" text-anchor="middle">(3 s on a retry), searchAndOpenCourse()  &#183;  line 47</text>
+
+      <path d="M520,426 V454 H552" fill="none" stroke="#B91C1C" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#b2)"/>
+      <text x="524" y="446" font-size="7.8" fill="#B91C1C">no</text>
+      <rect x="556" y="440" width="284" height="28" rx="6" fill="#FEE2E2" stroke="#B91C1C" stroke-width="1.2"/>
+      <text x="698" y="459" font-size="8.2" fill="#B91C1C" text-anchor="middle">throw &#8220;Could not open course&#8221;  &#183;  line 250</text>
+
+      <line x1="520" y1="426" x2="520" y2="480" stroke="#17283C" stroke-width="1.3" marker-end="url(#b1)"/>
+      <text x="527" y="477" font-size="7.8" fill="#135858">opened</text>
+      <rect x="494" y="482" width="346" height="26" rx="6" fill="#F6F7F9" stroke="#7C8696" stroke-width="1.1"/>
+      <text x="667" y="499" font-size="9" fill="#17283C" text-anchor="middle">tocUrl = page.url()  &#183;  log &#8220;&#128204; Course TOC URL&#8221;</text>
+
+      <line x1="667" y1="508" x2="667" y2="520" stroke="#17283C" stroke-width="1.3" marker-end="url(#b1)"/>
+      <rect x="494" y="522" width="346" height="26" rx="6" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.4"/>
+      <text x="667" y="539" font-size="9" font-weight="600" fill="#135858" text-anchor="middle">waitForBanner(page, BANNER_TIMEOUT = 90 s)  &#183;  line 256</text>
+
+      <line x1="667" y1="548" x2="667" y2="558" stroke="#17283C" stroke-width="1.3" marker-end="url(#b1)"/>
+      <rect x="494" y="560" width="346" height="34" rx="6" fill="#FFFFFF" stroke="#D8DEE5"/>
+      <text x="504" y="573" font-size="8.4" fill="#B91C1C">ms &lt; 0 &#8594; log &#8220;&#9888; banner never rendered&#8221; &#8212; but do not throw</text>
+      <text x="504" y="586" font-size="8.4" fill="#B45309">ms &gt; 10 s &#8594; log &#8220;&#128034; banner took N s&#8221; &#8212; a performance finding</text>
+
+      <line x1="667" y1="594" x2="667" y2="600" stroke="#15803D" stroke-width="1.6"/>
+      <path d="M667,600 H460" fill="none" stroke="#15803D" stroke-width="1.6"/>
+      <path d="M460,600 V604" fill="none" stroke="#15803D" stroke-width="1.6"/>
+
+      <rect x="60" y="604" width="780" height="30" rx="6" fill="#DCFCE7" stroke="#15803D" stroke-width="1.4"/>
+      <text x="450" y="624" font-size="10" font-weight="700" fill="#15803D" text-anchor="middle">The test body begins on a fully-painted TOC &#8212; banner included.</text>
+    </svg>
+    <p class="cap">Figure 2 — (A) the paint order that forced the design, and (B) the <code>beforeEach</code> that guarantees every one of the 21 tests starts from the same fully-rendered state.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ 3b. READINESS, IN PROSE ══ -->
+<div class="page sec">
+  <h2>3 &nbsp; The readiness model <span style="font-weight:400;color:#7C8696;font-size:11pt;">(continued)</span></h2>
+
+  <h3>Why <code>isVisible()</code> could not be used for the gate</h3>
+  <p>The comment at lines 204–207 records a real regression. <code>onToc()</code> originally used <code>isVisible()</code> to check for the tabs. That call <b>does not wait</b> — its <code>timeout</code> option is ignored, and it answers about the current instant only. Used milliseconds after a <code>goto</code>, it reported "not the TOC" on a page that was about to render perfectly, and sent <i>every</i> test down the slow re-open-via-search path. The suite still passed; it just took several times longer than it needed to.</p>
+
+  <p>The fix is the <code>.then(true).catch(false)</code> idiom on line 213 — it turns a <code>waitFor()</code> into a boolean without letting the rejection escape:</p>
+
+  <pre><span class="c">// line 212-213 — a wait that answers yes/no instead of throwing</span>
+<span class="k">const</span> tabs = <span class="k">await</span> page.getByText(/^(Details|Overview|Modules)$/i).first()
+  .waitFor({ state: <span class="g">'visible'</span>, timeout: TABS_READY_MS }).then(() =&gt; <span class="k">true</span>).catch(() =&gt; <span class="k">false</span>);</pre>
+
+  <h3>The three timeouts are three different questions</h3>
+  <p>It would be simpler to have one banner timeout. There are three because they answer different questions, and collapsing them would make the suite either slow or flaky.</p>
+  <table>
+    <thead><tr><th style="width:22%">Constant</th><th style="width:10%">Default</th><th>The question it answers</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">BANNER_TIMEOUT<br><span style="font-size:7.6pt;color:#7C8696;">line 34</span></td><td><b>90 s</b></td><td>"How long may the banner take before we call it broken?" Used after a fresh open, where there is no fallback left — so it has to cover the ~70-second worst case with headroom.</td></tr>
+      <tr><td class="mono">BANNER_READY_MS<br><span style="font-size:7.6pt;color:#7C8696;">line 37</span></td><td><b>30 s</b></td><td>"Is the cached URL good?" Deliberately shorter, because a failure here is cheap — it just falls through to the slow path. Waiting the full 90 seconds to discover the cache is stale would be wasted time.</td></tr>
+      <tr><td class="mono">TABS_READY_MS<br><span style="font-size:7.6pt;color:#7C8696;">line 39</span></td><td><b>10 s</b></td><td>"Is this even a rendered TOC?" The tabs paint in under half a second, so 10 seconds is already twenty times the observed value — it exists to fail fast on a wrong page, not to wait for a slow one.</td></tr>
+      <tr><td class="mono">SLOW_BANNER_MS<br><span style="font-size:7.6pt;color:#7C8696;">line 41</span></td><td><b>10 s</b></td><td>Not a timeout at all. "Was this slow enough that a human should know?" Crossing it prints a 🐢 line and nothing else. Section 11 explains how to mine those lines out of a run.</td></tr>
+    </tbody>
+  </table>
+  <p>All four read from the environment, so a slow CI box can be given more room without editing the file:</p>
+  <pre><span class="c"># give the banner three minutes and raise the slowness bar to 20 s</span>
+$env:TOC_BANNER_TIMEOUT="180000"; $env:TOC_SLOW_BANNER_MS="20000"; npm run run:course-toc</pre>
+
+  <h3>The banner button changes element type as you learn</h3>
+  <p>This is the other discovery in the file, and it is documented at length in the doc-comment above <code>startOrResumeBtn()</code> (lines 86–100). The same visual control is emitted as two different elements depending on progress:</p>
+  <table>
+    <thead><tr><th style="width:32%">Learner state</th><th>What the DOM actually contains</th></tr></thead>
+    <tbody>
+      <tr><td>Not started, or in progress</td><td class="mono">&lt;button class="banner-btn"&gt;Start | Resume&lt;/button&gt;</td></tr>
+      <tr><td>100&#37; complete</td><td class="mono">&lt;a class="banner-btn resumeButton"&gt;Start Again&lt;/a&gt;</td></tr>
+    </tbody>
+  </table>
+  <div class="callout gold">
+    <span class="t">Verified on staging: 0 matches as a link, 1 via <span class="mono">.banner-btn</span></span>
+    On a completed course <code>getByRole('button')</code> finds nothing, because the control is no longer a button — and <b>the link role does not rescue it either</b>: the measurement recorded in the source is <i>zero</i> matches as a link against one match via the class. Neither role is dependable, so <code>startOrResumeBtn()</code> puts <code>.banner-btn</code> first and keeps both roles behind it as belt-and-braces. The failure this prevents is the most awkward kind: it appears only on accounts that have finished something.
+  </div>
+  <pre><span class="c">// line 101-107 — class first, roles as a fallback, .first() to stay strict-mode safe</span>
+<span class="k">function</span> startOrResumeBtn(page: Page): Locator {
+  <span class="k">return</span> page.locator(<span class="g">'.banner-btn, [class*="resumeButton"]'</span>)
+    .or(page.getByRole(<span class="g">'button'</span>, { name: /^(resume|start|start again)$/i }))
+    .or(page.getByRole(<span class="g">'link'</span>,   { name: /^(resume|start|start again)$/i }))
+    .first();
+}</pre>
+</div>
+
+<!-- ═══════════════════════════════════════ 4. HELPERS AND HARNESS ══ -->
+<div class="page sec">
+  <h2>4 &nbsp; Helpers and harness</h2>
+  <p class="lead">Seven helpers sit between the tests and the page. They exist so that a test body can read as one sentence about one control, and so that a markup change is fixed in one place rather than twenty.</p>
+
+  <table>
+    <thead><tr><th style="width:24%">Helper</th><th style="width:9%">Line</th><th>What it does, and the problem it solves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="mono">searchAndOpenCourse</td><td class="mono">47</td>
+        <td>Types <code>COURSE_NAME</code> into the home search box, presses Enter, and clicks the first result. Two details matter: it matches on the <b>first 8 characters only</b>, because result cards truncate long titles; and it treats a <b>changed URL as the proof</b> that the click opened something, rather than trusting the click.</td>
+      </tr>
+      <tr>
+        <td class="mono">startOrResumeBtn</td><td class="mono">101</td>
+        <td>Returns a locator for the banner control across both of its element forms. Covered in Section 3.</td>
+      </tr>
+      <tr>
+        <td class="mono">waitForBanner</td><td class="mono">110</td>
+        <td>Waits for that control and <b>returns how long it took in milliseconds</b>, or <code>-1</code> if it never appeared. Returning a number rather than a boolean is what lets the caller distinguish "fine", "slow enough to report", and "broken" — see the 🐢 line in Section 11.</td>
+      </tr>
+      <tr>
+        <td class="mono">startOrResume</td><td class="mono">125</td>
+        <td>Actually clicks the control, trying <b>six locators in order</b> and stopping at the first visible one. Returns whether the URL changed. Its last resort (line 151) is a URL test for <code>/viewer/</code>, <code>/play/</code> or <code>/learn/</code> — if we were already inside the player, that counts as success.</td>
+      </tr>
+      <tr>
+        <td class="mono">closeAnyPopup</td><td class="mono">157</td>
+        <td>Best-effort dismissal. Tries <b>five shapes of close button</b> in one selector, falls back to the Escape key, then waits 400 ms for the dialog animation. Its timeouts are deliberately tiny (700 ms to look, 1500 ms to click) because this is cleanup, not a check.</td>
+      </tr>
+      <tr>
+        <td class="mono">actionIcon</td><td class="mono">178</td>
+        <td>Finds a <code>div.toc-icon-action</code> and narrows it by label text. Exists because the click handler is on the wrapper div, not the label span inside it.</td>
+      </tr>
+      <tr>
+        <td class="mono">skipIfAbsent</td><td class="mono">265</td>
+        <td>Logs <code>⏭️</code> and calls <code>test.skip()</code> when an optional control is missing. Declared <i>inside</i> the describe block because <code>test.skip(true, …)</code> only works from within a test's scope.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Alongside them is one constant, <code>POPUP</code> (line 185), which lists six container shapes in a single selector string:</p>
+  <pre>'[role="dialog"], .cdk-overlay-pane, .mat-mdc-dialog-panel, [class*="modal"], [class*="popup"], [class*="dialog"]'</pre>
+  <p>Angular Material has changed its dialog class names across versions, and the app mixes hand-rolled overlays with Material ones. Listing all six means a rename in any single shape does not break the four popup tests at once.</p>
+
+  <div class="callout">
+    <span class="t">Deliberately self-contained</span>
+    The banner above the helpers (line 44) says "self-contained so this file is independent of <code>CourseComplete</code>". <code>searchAndOpenCourse</code>, <code>startOrResume</code> and <code>closeAnyPopup</code> all have cousins in the completion suite. Duplicating them was the choice: the completion suite's versions are tuned for driving a course to the end, and coupling the two files would mean a change made for one silently altering the other.
+  </div>
+
+  <h3>How the suite gets a logged-in page</h3>
+  <p>Line 21 imports <code>test</code> and <code>expect</code> from <code>./helpers/authedTest</code> rather than from Playwright directly. That harness picks an auth mode from the environment, first match winning:</p>
+  <table>
+    <thead><tr><th style="width:8%">#</th><th style="width:28%">Trigger</th><th>How it authenticates</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td class="mono">USE_CDP=1</td><td>Attaches to a Chrome you are already logged into, over the DevTools protocol. The local-development mode — on localhost, cookie injection returns 419, so this is the only thing that works. No <code>storageState</code> file is written, and the harness never closes a browser you own.</td></tr>
+      <tr><td class="n">2</td><td class="mono">USE_FRESH_USER=1</td><td>Reuses the session of an account minted by the create-account suite, from <code>.auth/fresh-user.json</code>. Falls back to credential login with a warning if that file is missing.</td></tr>
+      <tr><td class="n">3</td><td>a saved state file</td><td>Loads a previously captured <code>storageState</code>.</td></tr>
+      <tr><td class="n">4</td><td class="mono">TEST_USER_EMAIL + TEST_USER_PASSWORD</td><td>Drives a real UI login once, saves the state, and hands every test a context built from it. This is what CI uses against staging and production.</td></tr>
+    </tbody>
+  </table>
+  <p>If none of the four is configured the harness <b>throws immediately</b> with a message listing all of them — it fails in setup rather than running 21 tests against a login screen.</p>
+
+  <h3>Not serial, on purpose</h3>
+  <p>Line 191 carries a one-line note that is easy to skip past: <i>"NOT serial — each test resets to the TOC in <code>beforeEach</code>, so one failure must not skip the rest."</i></p>
+  <p>That is a real trade. <code>test.describe.serial</code> would let the tests share a single page load and run much faster. But under serial, the first failure aborts every test after it — so a broken Details popup would hide the fact that the licence block is also missing. Here, each test pays the cost of returning to a known state and, in exchange, <b>a report of 21 results is 21 independent facts</b>.</p>
+  <p>The tests do still share one thing: <code>tocUrl</code> (line 197), the cached course URL. It is a performance cache, not shared state — every test re-verifies it through <code>onToc()</code> before trusting it, and silently re-opens the course if it has gone stale.</p>
+
+  <div class="callout gold">
+    <span class="t">One test self-heals mid-body</span>
+    Line 388, in the Resume/Start test, re-checks <code>onToc(page)</code> and navigates back if needed. That is there because in CDP mode the browser belongs to a human — a stray click in the window the tests are driving can move the tab off the TOC between <code>beforeEach</code> and the assertion.
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════ 5. GROUP 1 — HEADER ══ -->
+<div class="page sec">
+  <h2>5 &nbsp; Group 1 — Header</h2>
+  <p class="lead">Five tests, lines 273–306. One per piece of metadata in the block at the top of the page. All five assert unconditionally.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:24%">Test &#183; line</th><th style="width:42%">Locator</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">1</td>
+        <td><b>Course title is visible</b><br><span style="font-size:7.6pt;color:#7C8696;">line 273</span></td>
+        <td>getByRole('heading', { name: RegExp(COURSE_NAME.slice(0,18)) })<br>.or(getByText(same))<br>.first()</td>
+        <td><span class="pill p-ok">assert</span> That the course we searched for is the course we are looking at. It matches the <b>first 18 characters</b> — long enough to be unique, short enough to survive title truncation — and accepts either a real heading or plain text, because the title is not always marked up as a heading. Logs the first 60 characters it found.</td>
+      </tr>
+      <tr>
+        <td class="n">2</td>
+        <td><b>"CNE hours" badge</b><br><span style="font-size:7.6pt;color:#7C8696;">line 282</span></td>
+        <td>getByText(/CNE hours?\s*:/i).first()</td>
+        <td><span class="pill p-ok">assert</span> The continuing-education credit badge rendered. <b>The colon is doing real work</b> — without it the regex would also match a sentence in the description that happens to mention CNE hours, and the test would pass on a page with no badge at all.</td>
+      </tr>
+      <tr>
+        <td class="n">3</td>
+        <td><b>Course duration</b><br><span style="font-size:7.6pt;color:#7C8696;">line 288</span></td>
+        <td>getByText(/\b\d+\s*h(\s*\d+\s*m)?\b<br>|\b\d+\s*min<br>|\b\d+\s*hours?/i).first()</td>
+        <td><span class="pill p-ok">assert</span> A duration is displayed in any of the four shapes the app emits: <code>2h</code>, <code>2h 30m</code>, <code>45 min</code>, <code>3 hours</code>. One alternation rather than four tests, because which format appears is a content decision, not a bug.</td>
+      </tr>
+      <tr>
+        <td class="n">4</td>
+        <td><b>Rating and review count</b><br><span style="font-size:7.6pt;color:#7C8696;">line 294</span></td>
+        <td>getByText(/\(\s*\d+\s*\)/).first()</td>
+        <td><span class="pill p-ok">assert</span> A parenthesised review count such as <code>(42)</code> is on the page, and the value is logged. See the note below on what this does <i>not</i> check.</td>
+      </tr>
+      <tr>
+        <td class="n">5</td>
+        <td><b>Author "By: &lt;org&gt;"</b><br><span style="font-size:7.6pt;color:#7C8696;">line 301</span></td>
+        <td>getByText(/^\s*By\s*:/i).first()</td>
+        <td><span class="pill p-ok">assert</span> The attribution line rendered. <b>Anchored at the start</b> with <code>^</code>, so it cannot be satisfied by the words "by:" appearing in the middle of a description paragraph.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">Test 4 is named for more than it checks</span>
+    The title says "rating and review count"; the assertion covers only the review count. <code>/\(\s*\d+\s*\)/</code> matches the bracketed number, and nothing looks at the stars — a page rendering <code>(42)</code> with the rating missing would pass. Fix it with a second assertion on the numeric rating, or rename the test to "review count is visible".
+  </div>
+
+  <p>That is the only over-promising title in this file. It is worth calling out precisely because there is just one: on the My Courses suite the equivalent list ran to eight tests.</p>
+
+  <h3>Anchored versus unanchored</h3>
+  <p>Three of the five regexes above are anchored; two are not. The rule — which holds across every group that follows — is that an anchor goes on text short and common enough to appear inside <i>other</i> text (<code>By:</code>, <code>Details</code>, <code>Overview</code>), and is left off where the pattern is already specific, as with the duration formats.</p>
+</div>
+
+<!-- ═══════════════════════════════════ 6. GROUP 2 — ACTION ICONS ══ -->
+<div class="page sec">
+  <h2>6 &nbsp; Group 2 — Action icons</h2>
+  <p class="lead">Six tests, lines 308–384. The three icons under the header, and what each does when clicked. The only group that tests a control <i>closing</i> as well as opening.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:24%">Test &#183; line</th><th style="width:42%">Locator</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">6</td>
+        <td><b>All three icons visible</b><br><span style="font-size:7.6pt;color:#7C8696;">line 308</span></td>
+        <td>getByText(/^Details$/i).first()<br>getByText(/^Certificate$/i).first()<br>getByText(/^Share$/i).first()</td>
+        <td><span class="pill p-ok">assert</span> Three separate <code>expect()</code> calls in one test. All anchored, so <code>Certificate</code> matches the icon label and not the phrase "certificate of completion" elsewhere on the page.</td>
+      </tr>
+      <tr>
+        <td class="n">7</td>
+        <td><b>"Details" opens its popup</b><br><span style="font-size:7.6pt;color:#7C8696;">line 316</span></td>
+        <td>actionIcon(page, /^details$/i).click()<br>expect(locator(POPUP).first()).toBeVisible({timeout:5000})</td>
+        <td><span class="pill p-ok">assert</span> The click reaches a handler and a dialog opens within 5 s. Uses <code>actionIcon()</code>, so it clicks the wrapper div — clicking the label span would do nothing and the test would fail on a working page.</td>
+      </tr>
+      <tr>
+        <td class="n">8</td>
+        <td><b>"X" closes the details popup</b><br><span style="font-size:7.6pt;color:#7C8696;">line 326</span></td>
+        <td>open &#8594; expect(popup).toBeVisible()<br>closeAnyPopup(page)<br>expect(popup).not.toBeVisible({timeout:4000})</td>
+        <td><span class="pill p-ok">assert</span> Two assertions with a reason. The first confirms the popup opened, <b>so a failure on the second can only be about closing</b> — without it, a dialog that never opened would report as "close is broken". A modal that cannot be dismissed traps the learner, which is why this is asserted rather than observed.</td>
+      </tr>
+      <tr>
+        <td class="n">9</td>
+        <td><b>"Certificate" shows a popup</b><br><span style="font-size:7.6pt;color:#7C8696;">line 339</span></td>
+        <td>locator(POPUP)<br>.or(locator('canvas'))<br>.or(getByText(/complete the course|certificate<br>|finish the course|not.*(eligible|complete)/i))<br>.first().isVisible({timeout:6000})<br><b>expect(shown).toBe(true)</b></td>
+        <td><span class="pill p-ok">assert</span> That the control <i>responds</i>. This icon legitimately does two things: on a completed course it opens the certificate dialog, drawn onto a <code>&lt;canvas&gt;</code>; in progress it shows a "complete the course first" message. Both are correct, so both count — <b>silence is the only failure</b>.</td>
+      </tr>
+      <tr>
+        <td class="n">10</td>
+        <td><b>"Close" closes the certificate popup</b><br><span style="font-size:7.6pt;color:#7C8696;">line 355</span></td>
+        <td>skipIfAbsent(popup visible, 'Certificate popup')<br>getByRole('button', { name: /^close$/i })<br>&#8230; else closeAnyPopup(page)<br>expect(popup).not.toBeVisible({timeout:4000})</td>
+        <td><span class="pill p-warn">conditional</span> If nothing opened it <b>skips rather than fails</b> — test 9 already covers that case, and failing twice for one defect makes a report harder to read. When something did open, the close assertion is as hard as test 8's. Prefers a labelled Close button, falling back to the generic dismissal.</td>
+      </tr>
+      <tr>
+        <td class="n">11</td>
+        <td><b>"Share" shows options</b><br><span style="font-size:7.6pt;color:#7C8696;">line 372</span></td>
+        <td>locator('[class*="share"], [class*="social"]')<br>.or(getByRole('link', { name: /facebook|twitter<br>|whatsapp|linkedin|copy|telegram/i }))<br>.or(getByRole('button', { name: /&#8230;|copy link/i }))<br>.first() &#8594; toBeVisible({timeout:5000})</td>
+        <td><span class="pill p-ok">assert</span> Three independent signals, any one of which means the panel opened: a share- or social-styled container, a social <i>link</i>, or a social <i>button</i>. The app has shipped this panel as both links and buttons, so demanding one shape would break on a refactor rather than on a regression.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Every popup test cleans up after itself</span>
+    Tests 7, 9 and 11 all end with <code>closeAnyPopup(page)</code>, even though <code>beforeEach</code> re-navigates anyway. It is cheap insurance: a dialog left open can swallow the next test's clicks in the moment before the navigation lands, and that failure looks like a broken control rather than leftover state.
+  </div>
+</div>
+
+<!-- ══════════════════════════ 7. GROUP 3 — RESUME/START + TABS ══ -->
+<div class="page sec">
+  <h2>7 &nbsp; Group 3 — Resume/Start and tabs</h2>
+  <p class="lead">Four tests, lines 386–431. The banner button the whole readiness model was built for, and the three tabs beneath it.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:24%">Test &#183; line</th><th style="width:42%">Locator</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">12</td>
+        <td><b>Resume/Start is visible</b><br><span style="font-size:7.6pt;color:#7C8696;">line 386</span></td>
+        <td>if (!await onToc(page)) goto(tocUrl)<br>const ms = await waitForBanner(page, BANNER_TIMEOUT)<br>expect(startOrResumeBtn(page)).toBeVisible({ timeout: 5_000 })</td>
+        <td><span class="pill p-ok">assert</span> The banner rendered, in whichever element form this learner's progress produces. It also <b>reports the render time</b> and prints a 🐢 line above <code>SLOW_BANNER_MS</code>. Note the 5-second expect window: <code>waitForBanner</code> has already done the waiting, so a long window here would only delay a genuine failure.</td>
+      </tr>
+      <tr>
+        <td class="n">13</td>
+        <td><b>Three tabs are visible</b><br><span style="font-size:7.6pt;color:#7C8696;">line 401</span></td>
+        <td>getByText(/^Overview$/i).first()<br>getByText(/^Modules$/i).first()<br>getByText(/^Discussion$/i).first()</td>
+        <td><span class="pill p-ok">assert</span> All three tab labels rendered. Anchored, so <code>Overview</code> matches the tab and not the word appearing in the description.</td>
+      </tr>
+      <tr>
+        <td class="n">14</td>
+        <td><b>"Modules" opens the module list</b><br><span style="font-size:7.6pt;color:#7C8696;">line 409</span></td>
+        <td>click Modules &#183; wait 1500 ms<br>locator('mat-list-item, ws-web-course-toc-card,<br>[class*="toc-card"], [class*="module-item"],<br>mat-tree-node').count()<br><b>expect(count).toBeGreaterThan(0)</b></td>
+        <td><span class="pill p-ok">assert</span> The one counting assertion in the file, and the most valuable test in the group: <b>an empty module list means the course content failed to load</b>, which a visibility check on the tab label would never catch. Five selector shapes are tried because the app has shipped this list as three different components.</td>
+      </tr>
+      <tr>
+        <td class="n">15</td>
+        <td><b>"Discussion" is clickable</b><br><span style="font-size:7.6pt;color:#7C8696;">line 424</span></td>
+        <td>click Discussion &#183; wait 1200 ms<br>console.log(page.url())</td>
+        <td><span class="pill p-teal">observe</span> No <code>expect()</code>. The click either works or throws on the click itself; where it lands is <b>logged, not asserted</b>, because discussion is an in-page tab on some builds and a separate route on others. Asserting either shape would make the test fail on a deployment difference.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout gold">
+    <span class="t">Test 15 is the weakest test in the file — and that is a defensible choice</span>
+    It will fail only if the Discussion label is absent or unclickable; a tab that opens an empty or broken panel passes. Strengthening it means deciding what "Discussion works" should mean across both builds — a real product question, not a test one. Until that is settled, printing the destination URL is honest: the log line tells a reviewer exactly where the click went, which is enough to spot a change by eye.
+  </div>
+
+  <h3>Where the count in test 14 comes from</h3>
+  <p>The five selectors are not alternatives tried in order — they are one locator matching any of them, and <code>.count()</code> returns the total across all five. On a build that renders the list as <code>ws-web-course-toc-card</code>, the other four simply contribute nothing. The number is printed either way:</p>
+  <pre><span class="c">   ✅ Modules tab — 14 module/resource item(s)</span></pre>
+  <p>so an unexpected drop stays visible across runs even while the assertion — greater than zero — remains satisfied.</p>
+</div>
+
+<!-- ═══════════════════════ 8. GROUP 4 — DESCRIPTION + LICENSE ══ -->
+<div class="page sec">
+  <h2>8 &nbsp; Group 4 — Description and licence</h2>
+  <p class="lead">Three tests, lines 433–463. The two content blocks at the bottom of the overview, plus the licence link inside the second one.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:24%">Test &#183; line</th><th style="width:42%">Locator</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">16</td>
+        <td><b>"Description" section</b><br><span style="font-size:7.6pt;color:#7C8696;">line 433</span></td>
+        <td>click Overview tab (errors swallowed) &#183; wait 600 ms<br>const desc = getByText(/^Description$/i).first()<br>desc.scrollIntoViewIfNeeded()<br>expect(desc).toBeVisible()</td>
+        <td><span class="pill p-ok">assert</span> The description heading is on the page. It <b>clicks back to Overview first</b>, because test 14 or 15 may have left the page on another tab — and it swallows any error from that click, since being on Overview already is not a failure.</td>
+      </tr>
+      <tr>
+        <td class="n">17</td>
+        <td><b>"License terms" section</b><br><span style="font-size:7.6pt;color:#7C8696;">line 445</span></td>
+        <td>const license = getByText(/license\s*terms?/i).first()<br>license.scrollIntoViewIfNeeded()<br>expect(license).toBeVisible()</td>
+        <td><span class="pill p-ok">assert</span> The licence block rendered. The trailing <code>s?</code> accepts both "License term" and "License terms" — the app has used both, and which one appears is a copy decision rather than a defect.</td>
+      </tr>
+      <tr>
+        <td class="n">18</td>
+        <td><b>Creative Commons link</b><br><span style="font-size:7.6pt;color:#7C8696;">line 454</span></td>
+        <td>getByRole('link', { name: /creativecommons|creative commons/i })<br>.or(locator('a[href*="creativecommons.org"]'))<br>.first().scrollIntoViewIfNeeded()<br>skipIfAbsent(&#8230;, 'Creative Commons link')<br>console.log(await ccLink.getAttribute('href'))</td>
+        <td><span class="pill p-teal">observe</span> Genuinely optional — not every course is CC-licensed — so a missing link <b>skips</b>. When the link is there the test prints its <code>href</code> and stops; there is no <code>expect()</code> on the URL. See the note below.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Why every test here scrolls first</h3>
+  <p>Both sections sit below the fold on a normal viewport, and <code>scrollIntoViewIfNeeded()</code> appears before each assertion. It is worth being precise about what that call is and is not for.</p>
+  <p>Playwright's <code>toBeVisible()</code> does <b>not</b> require an element to be inside the viewport — it checks that the element is attached and has a non-empty bounding box. So the scroll is not there to satisfy the matcher. It is there because the app renders parts of this page lazily: content below the fold can be absent from the DOM until something scrolls toward it. Scrolling first turns "not rendered yet" into "rendered", which is the state the test actually means to check.</p>
+  <p>Each scroll has its errors swallowed with <code>.catch(() =&gt; {})</code>. If the element is already in view, or the page is short enough that there is nothing to scroll, that is not a failure — and letting the scroll throw would replace a clear "Description not visible" with a confusing scroll error.</p>
+
+  <div class="callout gold">
+    <span class="t">Test 18 reads the href and then does nothing with it</span>
+    The last line prints <code>href</code>, which is the one piece of information worth checking — a Creative Commons link that points somewhere else is a licensing problem, not a cosmetic one. Adding <code>expect(href).toContain('creativecommons.org')</code> after the skip guard would cost nothing and would turn a printed string into a checked fact. As written, the test proves only that a link matching one of two patterns exists.
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════ 9. GROUP 5 — NAVIGATION ══ -->
+<div class="page sec">
+  <h2>9 &nbsp; Group 5 — Navigation</h2>
+  <p class="lead">Three tests, lines 465–524. The three ways off this page — to the organisation, backwards, and forwards into the player. All three are behind a skip guard, and they are last in the file because each one navigates away.</p>
+
+  <table class="t-sel">
+    <thead><tr><th style="width:4%">#</th><th style="width:24%">Test &#183; line</th><th style="width:42%">Locator and flow</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="n">19</td>
+        <td><b>Author opens the org page</b><br><span style="font-size:7.6pt;color:#7C8696;">line 465</span></td>
+        <td>locator('.details .blue-link, .blue-link.cursor-pointer')<br>.or(locator('.blue-link, [class*="blue-link"]')<br>&#160;&#160;.filter({ hasText: /alliance|council|foundation<br>&#160;&#160;|jhpiego|unfpa|others|india/i })).first()<br><br>skipIfAbsent(&#8230;, 'Author org link')<br>Promise.all([ waitForEvent('popup', 2500), author.click() ])<br>target = popup ?? page<br><b>expect(seen).toBeGreaterThan(0)</b></td>
+        <td><span class="pill p-warn">conditional</span> That the organisation name is clickable and lands on an org-style page. Counts how many of five markers it can see — <i>courses offered</i>, <i>filter by language</i>, <i>english</i>, <i>हिंदी</i>, <i>courses</i> — and requires at least one. <b>It deliberately does not check the course count</b>, which varies per organisation and would make the test a data check.</td>
+      </tr>
+      <tr>
+        <td class="n">20</td>
+        <td><b>Back icon leaves the overview</b><br><span style="font-size:7.6pt;color:#7C8696;">line 497</span></td>
+        <td>locator('ws-widget-btn-page-back button, ws-widget-btn-page-back')<br>.or(getByRole('button').filter({ hasText: /chevron_left|arrow_back/i }))<br>.or(locator('mat-icon:has-text("chevron_left")')<br>&#160;&#160;.locator('xpath=ancestor-or-self::button[1]')).first()<br><br>click &#183; waitForURL(not a TOC overview, 10 s)<br><b>expect(page.url()).not.toMatch(/\/toc\/.*\/overview/)</b></td>
+        <td><span class="pill p-warn">conditional</span> That back actually navigates. The assertion is on the <b>URL, not on a visible element</b> — the strongest available statement, because a back button that repaints the same page without changing the route is exactly the bug this catches. The source comment says it plainly: "this one IS asserted".</td>
+      </tr>
+      <tr>
+        <td class="n">21</td>
+        <td><b>Start/Resume opens the player</b><br><span style="font-size:7.6pt;color:#7C8696;">line 516</span></td>
+        <td>const urlBefore = page.url()<br>const started = await startOrResume(page)<br>skipIfAbsent(started, 'Start/Resume button')<br>console.log(page.url() !== urlBefore, page.url())</td>
+        <td><span class="pill p-teal">observe</span> That the six-locator click found something and the URL moved. There is <b>no <code>expect()</code></b> — see the note below.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Three locator techniques worth stealing</h3>
+  <ol class="steps">
+    <li><b>Register the listener before the click, in one call.</b> Test 19 uses <code>Promise.all([ waitForEvent('popup'), author.click() ])</code>. The popup promise is created first, so the listener is attached before the click can fire — a tab that opens instantly is not missed. Awaiting the click first and then waiting for the popup is the classic race, and it fails intermittently rather than always.</li>
+    <li><b>Climb from the icon to its button.</b> Material icons render their name as ligature text inside a <code>&lt;mat-icon&gt;</code>, so the thing you can find by text is not the thing you can click. Test 20's third fallback, <code>locator('xpath=ancestor-or-self::button[1]')</code>, walks up from the matched icon to the nearest enclosing button — and <code>ancestor-or-self</code> rather than <code>ancestor</code> covers the build where the icon <i>is</i> the button.</li>
+    <li><b>Handle both tab shapes with one line.</b> <code>const target = popup ?? page</code>. If a new tab opened, assert against it; if the app navigated in place, assert against the same page. Everything after that line is identical, so the test does not fork.</li>
+  </ol>
+
+  <div class="callout red">
+    <span class="t">Test 21 cannot fail — and it is the one that matters most</span>
+    <code>startOrResume()</code> returns <code>true</code> only if the URL actually changed (or we were already in the player). So <code>started === false</code> means the learner could not start the course — the single most serious thing this page can get wrong. The test passes that value to <code>skipIfAbsent()</code>, which <b>skips</b>. A broken Start button therefore produces a skipped test, not a red one, and a skip in a report of 21 is easy to read past.
+    <br><br>
+    The fix is one line: replace the guard with <code>expect(started).toBe(true)</code>. The skip idiom is right for the Creative Commons link, which genuinely may not exist on a given course; it is wrong here, because <i>every</i> course has a way in. That change would take the file from 15 unconditional assertions to 16, and would make the suite fail loudly on the defect a learner would notice first.
+  </div>
+
+  <p>Tests 19 and 20 use the same guard more defensibly. A course with no linked organisation is a real content state, and some builds of the shell render no back control at all — skipping on those is correct. But both of those tests then go on to assert properly, which is the difference: their guard decides <i>whether</i> to check, not <i>what</i> to conclude.</p>
+</div>
+
+<!-- ═══════════════════════════════ 10. WHAT GREEN ACTUALLY PROVES ══ -->
+<div class="page sec">
+  <h2>10 &nbsp; What green actually proves</h2>
+  <p class="lead">Twenty-one green ticks are not twenty-one guarantees. Here is exactly what each one is worth.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" font-family="Open Sans, Arial, sans-serif">
+      <defs>
+        <marker id="c1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#2D3E54"/>
+        </marker>
+      </defs>
+
+      <!-- LANE 1 -->
+      <rect x="26" y="26" width="562" height="92" rx="8" fill="#FFFFFF" stroke="#15803D" stroke-width="1.4"/>
+      <text x="44" y="50" font-size="11.5" font-weight="700" fill="#15803D">ASSERT &#8212; 15 tests</text>
+      <rect x="46" y="58" width="100" height="28" rx="5" fill="#17283C"/>
+      <text x="96" y="76" font-size="8.8" fill="#FFF" text-anchor="middle">beforeEach</text>
+      <line x1="146" y1="72" x2="160" y2="72" stroke="#2D3E54" stroke-width="1.2" marker-end="url(#c1)"/>
+      <rect x="162" y="58" width="100" height="28" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="212" y="76" font-size="8.8" fill="#17283C" text-anchor="middle">click / read</text>
+      <line x1="262" y1="72" x2="276" y2="72" stroke="#2D3E54" stroke-width="1.2" marker-end="url(#c1)"/>
+      <rect x="278" y="58" width="100" height="28" rx="5" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.4"/>
+      <text x="328" y="76" font-size="9" font-weight="700" fill="#135858" text-anchor="middle">expect()</text>
+      <line x1="378" y1="72" x2="392" y2="72" stroke="#2D3E54" stroke-width="1.2" marker-end="url(#c1)"/>
+      <rect x="394" y="58" width="84" height="28" rx="5" fill="#DCFCE7" stroke="#15803D"/>
+      <text x="436" y="76" font-size="9" font-weight="700" fill="#15803D" text-anchor="middle">PASS</text>
+      <rect x="486" y="58" width="84" height="28" rx="5" fill="#FEE2E2" stroke="#B91C1C"/>
+      <text x="528" y="76" font-size="9" font-weight="700" fill="#B91C1C" text-anchor="middle">FAIL</text>
+      <text x="46" y="106" font-size="8.6" fill="#7C8696">A missing or wrong element turns the run red. This is the shape you want.</text>
+
+      <!-- LANE 2 -->
+      <rect x="26" y="128" width="562" height="118" rx="8" fill="#FFFFFF" stroke="#F0A500" stroke-width="1.4"/>
+      <text x="44" y="152" font-size="11.5" font-weight="700" fill="#9A6800">CONDITIONAL &#8212; 3 tests</text>
+      <rect x="46" y="162" width="96" height="26" rx="5" fill="#17283C"/>
+      <text x="94" y="179" font-size="8.8" fill="#FFF" text-anchor="middle">beforeEach</text>
+      <line x1="142" y1="175" x2="156" y2="175" stroke="#2D3E54" stroke-width="1.2" marker-end="url(#c1)"/>
+      <rect x="158" y="162" width="124" height="26" rx="5" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.3"/>
+      <text x="220" y="179" font-size="8.8" fill="#17283C" text-anchor="middle">skipIfAbsent(probe)</text>
+      <path d="M282,175 H290 V152 H326" fill="none" stroke="#B45309" stroke-width="1.2" marker-end="url(#c1)"/>
+      <text x="320" y="146" font-size="7.8" fill="#B45309" text-anchor="end">absent</text>
+      <rect x="330" y="138" width="240" height="26" rx="5" fill="#FEF6E0" stroke="#F0A500" stroke-width="1.3"/>
+      <text x="450" y="155" font-size="8.8" font-weight="700" fill="#9A6800" text-anchor="middle">test.skip() &#8212; &#9195; logged, never red</text>
+      <path d="M282,175 H290 V208 H326" fill="none" stroke="#2D3E54" stroke-width="1.2" marker-end="url(#c1)"/>
+      <text x="320" y="202" font-size="7.8" fill="#135858" text-anchor="end">present</text>
+      <rect x="330" y="195" width="88" height="26" rx="5" fill="#E3F7F6" stroke="#1E8F8E" stroke-width="1.4"/>
+      <text x="374" y="212" font-size="9" font-weight="700" fill="#135858" text-anchor="middle">expect()</text>
+      <line x1="418" y1="208" x2="428" y2="208" stroke="#2D3E54" stroke-width="1.2" marker-end="url(#c1)"/>
+      <rect x="430" y="195" width="70" height="26" rx="5" fill="#DCFCE7" stroke="#15803D"/>
+      <text x="465" y="212" font-size="8.6" font-weight="700" fill="#15803D" text-anchor="middle">PASS</text>
+      <rect x="508" y="195" width="72" height="26" rx="5" fill="#FEE2E2" stroke="#B91C1C"/>
+      <text x="544" y="212" font-size="8.6" font-weight="700" fill="#B91C1C" text-anchor="middle">FAIL</text>
+      <text x="46" y="236" font-size="8.6" fill="#7C8696">The guard decides whether to check &#8212; not what to conclude. Correct only when the control is genuinely optional.</text>
+
+      <!-- LANE 3 -->
+      <rect x="26" y="256" width="562" height="92" rx="8" fill="#FFFFFF" stroke="#7C8696" stroke-width="1.4"/>
+      <text x="44" y="280" font-size="11.5" font-weight="700" fill="#2D3E54">OBSERVE &#8212; 3 tests</text>
+      <rect x="46" y="288" width="96" height="28" rx="5" fill="#17283C"/>
+      <text x="94" y="306" font-size="8.8" fill="#FFF" text-anchor="middle">beforeEach</text>
+      <line x1="142" y1="302" x2="156" y2="302" stroke="#2D3E54" stroke-width="1.2" marker-end="url(#c1)"/>
+      <rect x="158" y="288" width="96" height="28" rx="5" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="206" y="306" font-size="8.8" fill="#17283C" text-anchor="middle">click / read</text>
+      <line x1="254" y1="302" x2="268" y2="302" stroke="#2D3E54" stroke-width="1.2" marker-end="url(#c1)"/>
+      <rect x="270" y="288" width="126" height="28" rx="5" fill="#F6F7F9" stroke="#7C8696"/>
+      <text x="333" y="306" font-size="8.8" fill="#2D3E54" text-anchor="middle">console.log(&#8230;)</text>
+      <line x1="396" y1="302" x2="410" y2="302" stroke="#2D3E54" stroke-width="1.2" marker-end="url(#c1)"/>
+      <rect x="412" y="288" width="158" height="28" rx="5" fill="#DCFCE7" stroke="#15803D"/>
+      <text x="491" y="306" font-size="9" font-weight="700" fill="#15803D" text-anchor="middle">always passes</text>
+      <text x="46" y="336" font-size="8.6" fill="#7C8696">Fails only if the click itself throws. The value is the printed line, for a human to read.</text>
+
+      <!-- RIGHT PANEL -->
+      <rect x="604" y="26" width="270" height="322" rx="8" fill="#F6F7F9" stroke="#D8DEE5"/>
+      <text x="622" y="50" font-size="11.5" font-weight="700" fill="#17283C">By group</text>
+      <text x="622" y="66" font-size="8.2" fill="#7C8696">one segment per test</text>
+
+      <text x="622" y="94" font-size="8.8" font-weight="600" fill="#17283C">1 &#183; Header</text>
+      <rect x="622" y="100" width="130" height="15" rx="3" fill="#15803D"/>
+      <text x="760" y="112" font-size="8.4" fill="#7C8696">5</text>
+
+      <text x="622" y="142" font-size="8.8" font-weight="600" fill="#17283C">2 &#183; Action icons</text>
+      <rect x="622" y="148" width="130" height="15" rx="3" fill="#15803D"/>
+      <rect x="754" y="148" width="26" height="15" rx="3" fill="#F0A500"/>
+      <text x="788" y="160" font-size="8.4" fill="#7C8696">6</text>
+
+      <text x="622" y="190" font-size="8.8" font-weight="600" fill="#17283C">3 &#183; Resume/Start + tabs</text>
+      <rect x="622" y="196" width="78" height="15" rx="3" fill="#15803D"/>
+      <rect x="702" y="196" width="26" height="15" rx="3" fill="#7C8696"/>
+      <text x="736" y="208" font-size="8.4" fill="#7C8696">4</text>
+
+      <text x="622" y="238" font-size="8.8" font-weight="600" fill="#17283C">4 &#183; Description + licence</text>
+      <rect x="622" y="244" width="52" height="15" rx="3" fill="#15803D"/>
+      <rect x="676" y="244" width="26" height="15" rx="3" fill="#7C8696"/>
+      <text x="710" y="256" font-size="8.4" fill="#7C8696">3</text>
+
+      <text x="622" y="286" font-size="8.8" font-weight="600" fill="#17283C">5 &#183; Navigation</text>
+      <rect x="622" y="292" width="52" height="15" rx="3" fill="#F0A500"/>
+      <rect x="676" y="292" width="26" height="15" rx="3" fill="#7C8696"/>
+      <text x="710" y="304" font-size="8.4" fill="#7C8696">3</text>
+
+      <line x1="622" y1="320" x2="856" y2="320" stroke="#D8DEE5"/>
+      <rect x="622" y="330" width="12" height="10" rx="2" fill="#15803D"/><text x="639" y="339" font-size="8" fill="#2D3E54">assert 15</text>
+      <rect x="700" y="330" width="12" height="10" rx="2" fill="#F0A500"/><text x="717" y="339" font-size="8" fill="#2D3E54">cond. 3</text>
+      <rect x="772" y="330" width="12" height="10" rx="2" fill="#7C8696"/><text x="789" y="339" font-size="8" fill="#2D3E54">obs. 3</text>
+    </svg>
+    <p class="cap">Figure 3 — the three test shapes in this file, and how the 21 tests divide between them. Only the grey segments can never turn red.</p>
+  </div>
+
+  <h3>The honest summary</h3>
+  <div class="grid2">
+    <div class="card" style="border-color:#15803D;">
+      <div class="h" style="color:#15803D;">Green means this, for certain</div>
+      <ul>
+        <li>The course opened from a search by name</li>
+        <li>Title, CNE hours, duration, review count and author all rendered</li>
+        <li>All three action icons are present and clickable</li>
+        <li>Details opens <b>and closes</b></li>
+        <li>Certificate responds with something</li>
+        <li>Share reveals share options</li>
+        <li>The banner rendered within 90 seconds</li>
+        <li>All three tabs are present</li>
+        <li><b>The module list is non-empty</b></li>
+        <li>Description and licence blocks rendered</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:#B45309;">
+      <div class="h" style="color:#B45309;">Green does <i>not</i> mean this</div>
+      <ul>
+        <li>That the star rating rendered — only the <code>(n)</code> count is checked</li>
+        <li>That the Discussion tab shows anything</li>
+        <li>That the Creative Commons link points at creativecommons.org</li>
+        <li><b>That a learner can start the course</b> — test 21 skips instead of failing</li>
+        <li>That the author link or back icon exist — both skip when absent</li>
+        <li>That the banner was <i>fast</i>. Slowness is logged, never failed</li>
+        <li>That any of the popups contain correct content — only that they appear</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Where this file sits among the suites</h3>
+  <p>Across the four scripts documented in this series, the proportion of tests that assert unconditionally varies more than you would expect:</p>
+  <table>
+    <thead><tr><th style="width:30%">Suite</th><th style="width:14%">Tests</th><th style="width:20%">Assert always</th><th>Shape of the rest</th></tr></thead>
+    <tbody>
+      <tr><td><b>Course TOC</b> <span class="pill p-ok">this one</span></td><td>21</td><td><b>15 &#183; 71&#37;</b></td><td>3 conditional, 3 observe. With the conditionals counted, <b>86&#37;</b> of the file can fail.</td></tr>
+      <tr><td>Public Page</td><td>64</td><td>42 &#183; 66&#37;</td><td>22 soft or present-only.</td></tr>
+      <tr><td>Public Login</td><td>29</td><td>18 &#183; 62&#37;</td><td>7 present-only, 4 log-only. No test asserts that login succeeded.</td></tr>
+      <tr><td>My Courses</td><td>49</td><td>17 &#183; 35&#37;</td><td>1 conditional, 31 observe — content assertions depend on what the account happens to have studied.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">Why this file scores so much better than My Courses</span>
+    It is not that this suite is written more carefully. It is that <b>the TOC overview has data guarantees the My Courses page does not.</b> Every published course has a title, a duration, an author, a description and at least one module — so those can be asserted outright. My Courses shows whatever the logged-in account has studied, so the same style of assertion would fail on a fresh user. The lesson generalises: the strength of a suite is capped by how much the page is guaranteed to contain.
+  </div>
+</div>
+
+<!-- ═══════════════════════════ 11. ARTIFACTS AND RUN VARIANTS ══ -->
+<div class="page sec">
+  <h2>11 &nbsp; Artifacts and run variants</h2>
+  <p class="lead">Every run of this suite produces four reports and a screenshot of all 21 tests, whether they passed or not. The console log is where the findings this suite is actually good at end up.</p>
+
+  <h3>What a run leaves behind</h3>
+  <table>
+    <thead><tr><th style="width:28%">Artifact</th><th>Where it lands, and when</th></tr></thead>
+    <tbody>
+      <tr><td><b>Branded HTML report</b></td><td><code>brand-reports/</code> — written on every run by <code>reporters/brand-html-reporter.ts</code>.</td></tr>
+      <tr><td><b>Full run report</b></td><td><code>test-reports/run-reports/</code> — HTML <i>and</i> PDF, carrying every step and every console line. This is the one to open when you want the 🐢 and ⏭️ lines in context.</td></tr>
+      <tr><td><b>Excel summary</b></td><td>Written by <code>reporters/excel-reporter.ts</code> on every run.</td></tr>
+      <tr><td><b>Email</b></td><td>A no-op unless <code>SMTP_HOST</code> and <code>ALERT_EMAIL_TO</code> are both set.</td></tr>
+      <tr><td><b>Screenshots</b></td><td><code>screenshot: 'on'</code> — captured for <b>every</b> test, not only failures, so the branded report shows visual evidence for a green run too.</td></tr>
+      <tr><td><b>Video</b></td><td><code>retain-on-failure</code>. A failed popup test gives you the click and the non-response.</td></tr>
+      <tr><td><b>Trace</b></td><td><code>on-first-retry</code>. Open with <code>npx playwright show-trace</code> for a step-by-step DOM timeline.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The console lines worth grepping for</h3>
+  <p>Six emoji markers carry the information that does not appear anywhere in the pass/fail counts:</p>
+  <table class="t-sel">
+    <thead><tr><th style="width:8%">Mark</th><th style="width:34%">Line</th><th>What it tells you</th></tr></thead>
+    <tbody>
+      <tr><td style="font-size:12pt;text-align:center;">🐢</td><td>SLOW: the banner took 41.2s to render</td><td>A performance finding from a <b>passing</b> test. Printed by <code>beforeEach</code> and again by test 12. Count these across runs to see the TOC getting slower before a user complains.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">⚠️</td><td>Banner (Start/Resume) never rendered</td><td>From <code>beforeEach</code>. It does not throw — it warns, and lets test 12's assertion produce the real failure with a proper message.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">⏭️</td><td>&lt;control&gt; not present on this course — skipping</td><td>Which optional controls this course lacks. Three tests can print this; if test 21 does, read the red callout in Section 9.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">↻</td><td>TOC not loaded from cached URL &#183; open attempt N failed</td><td>The fast path missed, or a search attempt flaked. One or two of these in a run is normal; one before every test means the cache is never valid and the run is paying the slow path 21 times.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">📌</td><td>Course TOC URL: &#8230;/toc/do_&#8230;/overview</td><td>The resolved course id. Paste it into a browser to look at exactly what the suite was looking at.</td></tr>
+      <tr><td style="font-size:12pt;text-align:center;">✅</td><td>Modules tab — 14 module/resource item(s)</td><td>The module count. The assertion only requires more than zero, so a drop from 14 to 1 passes — this line is the only place that change is visible.</td></tr>
+    </tbody>
+  </table>
+
+  <pre><span class="c"># pull the performance findings out of a run</span>
+npm run run:course-toc 2&gt;&amp;1 | Select-String "🐢|⚠️|⏭️"</pre>
+
+  <h3>Run variants</h3>
+  <table>
+    <thead><tr><th style="width:42%">Command</th><th>Use it when</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">npm run run:course-toc</td><td>Normal use. Headed, against staging. Needs <code>COURSE_NAME</code>.</td></tr>
+      <tr><td class="mono">HEADLESS=true npm run run:course-toc</td><td>Unattended. Roughly twice as fast, and the screenshots are still captured.</td></tr>
+      <tr><td class="mono">… --grep "popup"</td><td>The four popup tests only — the quickest loop when fixing a dialog selector.</td></tr>
+      <tr><td class="mono">… --repeat-each=5</td><td>Hunting flake in the banner timing. Watch the 🐢 lines rather than the pass count.</td></tr>
+      <tr><td class="mono">USE_CDP=1 …</td><td>Local development against localhost, where cookie injection returns 419 and only attaching to a live Chrome works.</td></tr>
+      <tr><td class="mono">TOC_BANNER_TIMEOUT=180000 …</td><td>A CI box slow enough that 90 seconds is not enough. All four knobs from Section 3 read the environment.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout red">
+    <span class="t">In <span class="mono">report:app</span>, this suite currently contributes nothing</span>
+    <code>npm run report:app</code> runs Account, My Courses, <b>Course TOC</b> and Competency into one blob report — but it does not set <code>COURSE_NAME</code>, and <code>.env</code> does not define it either. So in that run all 21 tests skip, and the app report has a Course TOC section with no results in it. The fix is one word in <code>package.json</code>: add <code>COURSE_NAME="&lt;a course that exists on the target env&gt;"</code> to the <code>report:app</code> script, exactly as <code>report:course</code> already does for the completion suite.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ 12. FAILURE MODES AND FIXES ══ -->
+<div class="page sec">
+  <h2>12 &nbsp; Failure modes and fixes</h2>
+  <p class="lead">What each shape of failure means, in the order you are most likely to meet it.</p>
+
+  <table>
+    <thead><tr><th style="width:30%">Symptom</th><th style="width:32%">Cause</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>All 21 tests skipped</b>, none red</td>
+        <td><code>COURSE_NAME</code> is not set. <code>beforeEach</code> skips at line 223 before doing anything else.</td>
+        <td>Set it. A configuration state, not a defect — but it reads as a clean run in a summary count, so check the skip total before trusting green.</td>
+      </tr>
+      <tr>
+        <td><code>Error: Could not open course "&#8230;"</code> on every test</td>
+        <td>Three search attempts all failed (line 250). Either the name does not match anything on this environment, or the home search box never rendered.</td>
+        <td>Check the exact title on the target environment: the match is on the <b>first 8 characters</b>, so a changed prefix breaks it. Confirm <code>BASE_URL</code>.</td>
+      </tr>
+      <tr>
+        <td><code>↻ TOC not loaded from cached URL</code> before <i>every</i> test</td>
+        <td><code>onToc()</code> keeps returning false. Usually the session expired and the app is redirecting to login, so the URL never matches <code>/toc/&#8230;/overview</code>.</td>
+        <td>Re-authenticate. In CDP mode log the attached Chrome back in; otherwise delete the stale <code>storageState</code> file so the harness logs in again.</td>
+      </tr>
+      <tr>
+        <td><code>⚠️ Banner never rendered</code>, then test 12 fails</td>
+        <td>The enrolment or progress call is failing or timing out. The banner is the only element that depends on it.</td>
+        <td>Watch the network panel on the URL from the 📌 line. Slow-but-successful calls mean raising <code>TOC_BANNER_TIMEOUT</code>; failing ones mean the test is right.</td>
+      </tr>
+      <tr>
+        <td>Banner test passes but prints <code>🐢</code> on every run</td>
+        <td>Real slowness. Most often seen on the run right after a course has been opened and exited.</td>
+        <td>Not a test fix. Report the number — that is what the line exists for.</td>
+      </tr>
+      <tr>
+        <td>Test 8 or 10 fails: the popup <b>opened</b> but would not close</td>
+        <td><code>closeAnyPopup()</code>'s five close-button shapes no longer match, and Escape did not dismiss the dialog either.</td>
+        <td>Add the dialog's close-control shape to the selector at line 161. Fix it properly rather than reaching for Escape — a dialog a user cannot close is the bug this test exists to find.</td>
+      </tr>
+      <tr>
+        <td>An action-icon click appears to do nothing</td>
+        <td>The click landed on the label span instead of the <code>div.toc-icon-action</code> wrapper that carries the handler.</td>
+        <td>Use <code>actionIcon()</code>. Do not "simplify" it to <code>getByText('Details').click()</code> — that is the exact regression it was written to prevent.</td>
+      </tr>
+      <tr>
+        <td>The banner locator finds nothing, <b>only on one account</b></td>
+        <td>That account completed the course, so the control is now an <code>&lt;a class="banner-btn resumeButton"&gt;Start Again&lt;/a&gt;</code> and neither role matches.</td>
+        <td>Keep <code>.banner-btn</code> first in the locator chain. See Section 3.</td>
+      </tr>
+      <tr>
+        <td>Test 14 fails: <code>expected &gt; 0, received 0</code></td>
+        <td>The module list is genuinely empty — the content hierarchy did not load.</td>
+        <td>A real defect, and the most valuable failure this suite produces. Confirm by opening the 📌 URL and clicking Modules by hand.</td>
+      </tr>
+      <tr>
+        <td><code>strict mode violation: resolved to N elements</code></td>
+        <td>A <code>.first()</code> was dropped from a locator during an edit.</td>
+        <td>Put it back. Every locator in this file ends in <code>.first()</code> for exactly this reason.</td>
+      </tr>
+      <tr>
+        <td>Passes headed locally, fails in CI</td>
+        <td>CDP mode has no live Chrome to attach to on a build agent.</td>
+        <td>CI should use mode 4 — <code>TEST_USER_EMAIL</code> and <code>TEST_USER_PASSWORD</code>. Leave <code>USE_CDP</code> unset there.</td>
+      </tr>
+      <tr>
+        <td>Tests 19 and 20 skip on every course</td>
+        <td>Either the courses genuinely have no linked organisation and no back control, or <code>.blue-link</code> / <code>ws-widget-btn-page-back</code> were renamed in the shell.</td>
+        <td>Check one course by hand. If the controls are visibly there, the selectors are stale — and a permanently-skipping test is worse than a failing one, because nothing draws attention to it.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">The one change worth making first</span>
+    If you take a single action from this document, make it the one-line fix in Section 9: swap <code>skipIfAbsent(started, 'Start/Resume button')</code> for <code>expect(started).toBe(true)</code> at line 522. It converts the most serious failure this page can have — a learner unable to start the course — from a quiet skip into a red test.
+  </div>
+</div>

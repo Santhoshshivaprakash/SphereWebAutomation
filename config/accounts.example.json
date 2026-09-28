@@ -1,0 +1,4 @@
+[
+  { "label": "learner (course completion)", "email": "someone@yopmail.com", "password": "REPLACE_ME" },
+  { "label": "learner (spare)", "email": "someone-else@yopmail.com", "password": "REPLACE_ME" }
+]

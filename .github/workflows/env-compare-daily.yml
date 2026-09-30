@@ -112,3 +112,41 @@ jobs:
             playwright-report/
             test-reports/
           retention-days: 14
+
+  # Signup on BOTH environments: the matrix runs this job twice, once per
+  # BASE_URL, on separate machines at the same time. Staging accounts are named
+  # "stage-testauto…@yopmail.com", production ones "testauto…@yopmail.com".
+  daily-signup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false   # a failure on one environment doesn't cancel the other
+      matrix:
+        include:
+          - env: production
+            url: https://sphere.aastrika.org
+          - env: staging
+            url: https://portal-staging.aastrika.org
+    name: daily-signup (${{ matrix.env }})
+    env:
+      BASE_URL: ${{ matrix.url }}
+      HEADLESS: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Create account on ${{ matrix.env }}
+        run: npx playwright test tests/create-account.spec.ts --project=Chrome
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-signup-${{ matrix.env }}-${{ github.run_number }}
+          path: |
+            brand-reports/
+            playwright-report/
+            test-reports/
+            .last-registered-email.json
+          retention-days: 14

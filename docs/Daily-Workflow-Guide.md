@@ -114,7 +114,7 @@ Not every script can run unattended on GitHub:
 | **Public page UI tests** (`PublicPage`, `public-login`) | ✅ Easy | Nothing (same as the existing `npm run report:ci`) |
 | **Signed-in pages** (`Account`, `Mycourse`, `CourseTOC`, `Competency`) | ✅ With secrets | `TEST_USER_*` secrets |
 | **Signed-in compare** (`compare-env.mjs --auth`) | ⚠️ Partly | `PROD_*` / `STAGING_*` secrets. Staging login is currently blocked, so the staging side of signed-in pages will fail for now. |
-| **Signup specs** (`create-account`, `OTP`, `positiveflow`, `yopmail`) | ❌ Not recommended | Each run creates a **real user on production**. Daily, that is 365 junk accounts a year. |
+| **Signup specs** (`create-account`, `OTP`, `positiveflow`, `yopmail`) | ✅ Running (`create-account`) | Creates real yopmail accounts on each run; these are excluded from production reporting. Runs on both production and staging, see the `daily-signup` section below. |
 | **CourseComplete** | ❌ Not daily | Needs a course name, a Gemini API key and 10+ minutes. It also completes the course, so the next run has nothing left to do. |
 | **CompleteCompetency** | ❌ Not possible | Connects to your own logged-in Chrome over CDP, which does not exist on a GitHub machine. |
 
@@ -217,6 +217,48 @@ step the credentials:
 
 While staging login is blocked, the signed-in staging pages will show as
 failures in the report.
+
+### Create account on both environments (`daily-signup`)
+
+The `daily-signup` job runs `tests/create-account.spec.ts` on **production and
+staging**. It uses a **matrix**: one job definition that GitHub runs twice, once
+per environment, on separate machines at the same time. In the Actions tab it
+appears as two jobs: `daily-signup (production)` and `daily-signup (staging)`.
+
+```yaml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: production
+            url: https://sphere.aastrika.org
+          - env: staging
+            url: https://portal-staging.aastrika.org
+    env:
+      BASE_URL: ${{ matrix.url }}
+```
+
+- `BASE_URL` is the only setting that changes between the two runs. The spec
+  names staging accounts `stage-testauto…@yopmail.com` and production accounts
+  `testauto…@yopmail.com`, so you can tell them apart.
+- `fail-fast: false` means a failure on one environment does not cancel the other.
+- No secrets are needed: every run registers a new yopmail account and reads the
+  OTP from yopmail.
+- Each environment uploads its own artifact:
+  `daily-signup-production-<run>` and `daily-signup-staging-<run>`.
+  `.last-registered-email.json` inside it holds the last email created.
+
+To run more signup specs on both environments, add them to the test line, for
+example:
+
+```yaml
+        run: npx playwright test tests/create-account.spec.ts tests/OTP.spec.ts tests/positiveflow.spec.ts --project=Chrome
+```
+
+To add a third environment, add another `- env: … url: …` entry to the matrix.
+
+Yopmail accounts created by these tests are excluded from production reporting,
+so they do not affect real user numbers.
 
 ### Step 4 — Commit, push, and test
 

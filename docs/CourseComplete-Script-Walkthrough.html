@@ -996,7 +996,7 @@ unlocked.forEach((m) =&gt; console.log(`     • ${m.text}`));</pre>
     </tbody>
   </table>
   <p>The generation flow itself is the fiddliest code in the file. The dialog draws the certificate onto a <code>&lt;canvas&gt;</code> before the download becomes available, so the script waits for that canvas, then registers the download listener and clicks <b>at the same time</b> via <code>Promise.all</code>, with a 25-second window because generating and streaming a certificate is genuinely slow. If the app answers with "certificate is taking time to generate" — one of six wordings it recognises — it closes the tab, waits twenty seconds, and starts the whole attempt again.</p>
-  <p>Downloads are saved as <code>test-reports/certificates/Certificate_&lt;CourseSlug&gt;.&lt;ext&gt;</code>, with <code>jfif</code> and <code>jpeg</code> both normalised to <code>jpg</code>. A failure anywhere in Step 7 is caught and logged — <b>never thrown</b>, because the course still completed and that is what the test is about.</p>
+  <p>Downloads are saved as <code>test-reports/certificates/Certificate_&lt;CourseSlug&gt;_&lt;timestamp&gt;.&lt;ext&gt;</code>, with <code>jfif</code> and <code>jpeg</code> both normalised to <code>jpg</code>. A failure anywhere in Step 7 is caught and logged — <b>never thrown</b>, because the course still completed and that is what the test is about.</p>
 
   <h3>The report</h3>
   <p>Step 8 writes <code>test-reports/course-reports/CourseReport_&lt;slug&gt;_&lt;timestamp&gt;.html</code> through <code>generateCourseReport()</code>. It carries the wall time, the module types in order, every warning the loop collected, the assessment table, the completion verdict, the certificate outcome and the final URL. Like Step 7 it is wrapped in a <code>try</code>: a report-writing failure must not fail a run that actually passed.</p>
@@ -1071,7 +1071,7 @@ unlocked.forEach((m) =&gt; console.log(`     • ${m.text}`));</pre>
     <thead><tr><th style="width:34%">Artifact</th><th>Contents</th></tr></thead>
     <tbody>
       <tr><td class="mono">test-reports/course-reports/<br>CourseReport_&lt;slug&gt;_&lt;ts&gt;.html</td><td><b>The one to open first.</b> Wall time, the module types in order, every warning the loop collected, the assessment table with question counts, the completion verdict, the certificate outcome and the final URL.</td></tr>
-      <tr><td class="mono">test-reports/certificates/<br>Certificate_&lt;CourseSlug&gt;.&lt;ext&gt;</td><td>The generated certificate, if one was attached and generation succeeded.</td></tr>
+      <tr><td class="mono">test-reports/certificates/<br>Certificate_&lt;CourseSlug&gt;_&lt;timestamp&gt;.&lt;ext&gt;</td><td>The generated certificate, if one was attached and generation succeeded.</td></tr>
       <tr><td class="mono">brand-reports/</td><td>The branded HTML report, written on every run by the shared reporter.</td></tr>
       <tr><td class="mono">test-reports/run-reports/</td><td>The full run report, HTML and PDF, carrying every step and every console line.</td></tr>
       <tr><td>Screenshots &#183; video &#183; trace</td><td><code>screenshot: 'on'</code> for every test, video retained on failure, trace on first retry.</td></tr>

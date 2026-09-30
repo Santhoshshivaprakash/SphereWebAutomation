@@ -2402,9 +2402,12 @@ async function generateCertificate(
   // Announce it.
   console.log(`\n🏅 Generating certificate for "${courseName}"`);
 
-  // Normalized filename: Certificate_<CourseSlug>.<ext> (jfif/jpeg → jpg).
+  // Normalized filename: Certificate_<CourseSlug>_<timestamp>.<ext> (jfif/jpeg → jpg).
   // Non-word characters become underscores; trimmed and capped at 60 chars.
   const courseSlug = courseName.replace(/[^\w]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'course';
+  // Run timestamp (e.g. 2026-09-30T06-36-24) so a rerun of the same course
+  // keeps the earlier certificates instead of overwriting them.
+  const stamp = new Date().toISOString().replace(/:/g, '-').slice(0, 19);
   // Saves a download under that normalised name.
   const save = async (dl: import('@playwright/test').Download): Promise<boolean> => {
     // Take the extension from the suggested filename, defaulting to pdf.
@@ -2415,7 +2418,7 @@ async function generateCertificate(
     const certDir = path.join(process.cwd(), 'test-reports', 'certificates');
     // Create it the first time.
     if (!fs.existsSync(certDir)) fs.mkdirSync(certDir, { recursive: true });
-    const dest = path.join(certDir, `Certificate_${courseSlug}.${ext}`);
+    const dest = path.join(certDir, `Certificate_${courseSlug}_${stamp}.${ext}`);
     // Save it. Errors swallowed — the log below still records the attempt.
     await dl.saveAs(dest).catch(() => {});
     console.log(`   ✅ certificate saved → ${dest}`);

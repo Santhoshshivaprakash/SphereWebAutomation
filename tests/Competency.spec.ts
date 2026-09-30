@@ -1036,17 +1036,21 @@ async function openNextAssessment(page: Page): Promise<{ ok: boolean; actualLeve
 async function competenciesExist(page: Page): Promise<boolean> {
   await ensureCompetencyDashboard(page);
   // A small helper so the same count can be taken at three points below.
-  const anyAssess = () => page.getByRole('button', { name: /re-?assess|^assess$/i }).count().catch(() => 0);
+  const assessBtn = page.getByRole('button', { name: /re-?assess|^assess$/i });
+  const anyAssess = () => assessBtn.count().catch(() => 0);
+  // After a tab switch, WAIT for the list to load instead of counting once after a
+  // fixed pause — on slower CI machines the buttons arrive after 1.2s and a single
+  // count reported "no competencies" for an account that has them.
+  const assessAppears = (timeout: number) =>
+    assessBtn.first().waitFor({ state: 'attached', timeout }).then(() => true, () => false);
   // Check the Required tab…
   await clickTab(page, 'Required').catch(() => {});
-  await page.waitForTimeout(1200);
   // …found some, done.
-  if ((await anyAssess()) > 0) return true;
+  if (await assessAppears(10_000)) return true;
   // Otherwise try Job Description.
   await clickTab(page, 'Job Description').catch(() => {});
-  await page.waitForTimeout(1200);
   // Found some there, done.
-  if ((await anyAssess()) > 0) return true;
+  if (await assessAppears(10_000)) return true;
   // Still nothing — the competencies may be hidden inside collapsed role panels.
   const headers = page.locator('[id^="mat-expansion-panel-header"], mat-expansion-panel-header');
   const hc = await headers.count().catch(() => 0);

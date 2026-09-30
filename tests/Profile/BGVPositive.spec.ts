@@ -46,7 +46,7 @@ const YOPMAIL_URL        = 'https://yopmail.com/en/';
 // Where the last-used email is remembered between runs.
 const EMAIL_RECORD       = path.resolve(__dirname, '..', '.last-registered-email.json');
 // An append-only audit log of every address this suite has created.
-const EMAIL_LOG          = path.resolve(__dirname, '..', 'generated-emails.txt');
+const EMAIL_LOG          = path.resolve(__dirname, '..', '..', 'generated-emails.txt'); // project root — the one ledger
 
 // Profile data + the Background type/helpers now live in ../helpers/onboarding.
 // This file only exercises ONE background; the sibling ALL-BGV covers the rest.

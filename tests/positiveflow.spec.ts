@@ -12,6 +12,9 @@
 
 // The test runner, the assertion library, and three types we annotate with.
 import { test, expect, Page, BrowserContext, Locator } from '@playwright/test';
+// File system + paths — used by the last step to save the new user's session.
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Signup can't run on the localhost mirror, so this targets staging
 // (STAGING_URL) by default rather than the shared BASE_URL.
@@ -108,6 +111,8 @@ const YOPMAIL_URL = 'https://yopmail.com/en/';
 
 // The shared, hardened OTP reader (throttling, captcha detection, retries).
 import { getOtpFromYopmail } from './helpers/otp';
+// Appends each signup address to the account ledger (generated-emails.txt).
+import { recordCreatedEmail } from './helpers/yopmail';
 
 // Thin wrapper kept so the call sites below read the same as they did before
 // the shared helper was extracted.
@@ -208,16 +213,24 @@ async function selectDropdownOption(
 
   // Material custom select — click to open, then click the option
   // Material renders its options into a floating panel, so they don't exist until it opens.
-  await dropdown.click();
-  // Let the panel render.
-  await page.waitForTimeout(500);
-
   // Find the option in that panel, covering three Material versions.
   const option = page.locator('mat-option, .mat-mdc-option, [role="option"]')
     .filter({ hasText: optionLabel })
     .first();
-  // Wait for it — the list may load asynchronously.
-  await option.waitFor({ state: 'visible', timeout: 5_000 });
+  // State and City lists load from the server AFTER the previous pick. If the
+  // panel opens before they arrive it can stay empty, so: open, wait up to 15s,
+  // and if the option still isn't there, close and reopen once.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    await dropdown.click();
+    // Let the panel render.
+    await page.waitForTimeout(500);
+    const shown = await option.waitFor({ state: 'visible', timeout: 15_000 }).then(() => true, () => false);
+    if (shown) break;
+    if (attempt === 2) throw new Error(`No option matching ${optionLabel} appeared in the dropdown`);
+    // Close the empty panel and give the list time to load before reopening.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(2_000);
+  }
   // Click it.
   await option.click();
   // Let the panel close.
@@ -233,6 +246,9 @@ async function selectDropdownOption(
 // flow; describe.serial runs them in order and stops if a step fails (a later
 // step can't run if an earlier one didn't complete).
 // ════════════════════════════════════════════════════════════════════
+// The designation the new user signs up with (Step 21).
+const DESIGNATION = process.env.PROFILE_DESIGNATION || 'BSC Nurse';
+
 test.describe.serial('Positive Flow — signup → T&C → profile completion (Healthcare Worker)', () => {
   // The context all 26 steps share.
   let ctx: BrowserContext;
@@ -253,6 +269,8 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
     page = await ctx.newPage();
     // Mint the address.
     email = uniqueEmail();
+    // Record it in the account ledger before signup, so it is kept even if a later step fails.
+    recordCreatedEmail(email, 'positiveflow');
     // Log it up front so a failure at any step still tells you which account was involved.
     console.log(`\n🚀 Positive-flow account: ${email}`);
   });
@@ -376,8 +394,9 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
   });
 
   test('Step 11 — Click Accept on the Terms of Use', async () => {
-    // Accept the terms.
-    await scrollAndClick(page, page.getByRole('button', { name: /^accept$/i }));
+    // Accept the terms. English OR Hindi: the portal has intermittently served this
+    // page in Hindi even though English was picked in Step 02.
+    await scrollAndClick(page, page.getByRole('button', { name: /^(accept|स्वीकार करना|स्वीकार करें)$/i }));
     // Wait for the redirect into the app.
     await page.waitForLoadState('networkidle').catch(() => {});
     await page.waitForTimeout(4000);
@@ -466,22 +485,35 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
     console.log('   ✅ Healthcare Worker selected — "Almost done!" shown');
   });
 
-  test('Step 21 — Select Designation (BSC Nurse)', async () => {
+  // PROFILE_DESIGNATION picks the role (default "BSC Nurse"). Competencies depend
+  // on it: "Normal delivery" and the other maternal-care ones belong to ANM/MPW,
+  // so the course + competency CI job signs its user up with PROFILE_DESIGNATION=ANM/MPW.
+  test(`Step 21 — Select Designation (${DESIGNATION})`, async () => {
     // Re-inspect: this screen has its own, different set of dropdowns.
     await inspectProfileFormDom(page);
     // On this screen the selects are native, so address them directly. Index 0 is Designation.
     const designation = page.locator('select').nth(0);
     // Wait for it to render.
     await designation.waitFor({ state: 'visible', timeout: 5_000 });
-    // Pick by exact label.
-    await designation.selectOption({ label: 'BSC Nurse' });
+    // Match the label loosely ("ANM/MPW", "ANM / MPW"…), then select it exactly.
+    const want = new RegExp('^\\s*' + DESIGNATION.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\?\//g, '\\s*/?\\s*') + '\\s*$', 'i');
+    const opts = await designation.locator('option').allTextContents();
+    const index = opts.findIndex((o) => want.test(o));
+    if (index === -1) throw new Error(`No designation matching "${DESIGNATION}". Options: ${opts.map((o) => o.trim()).join(' | ')}`);
+    const match = opts[index];
+    // By position, not label: some option texts carry padding (" ANM/MPW ") that
+    // an exact label match never finds.
+    await designation.selectOption({ index });
     await page.waitForTimeout(300);
-    console.log('   ✅ Designation selected');
+    console.log(`   ✅ Designation selected: ${match.trim()}`);
   });
 
-  test('Step 22 — Fill RN/RM Number', async () => {
+  test('Step 22 — Fill RN/RM Number (nursing roles only)', async () => {
     // The nursing registration number field, matched by its placeholder.
     const rn = page.getByPlaceholder(/rn\/rm number/i);
+    // Only nursing designations ask for it — skip for roles like ANM/MPW.
+    const needed = await rn.isVisible({ timeout: 3_000 }).catch(() => false);
+    test.skip(!needed && !/nurse/i.test(DESIGNATION), `no RN/RM field for ${DESIGNATION}`);
     // Wait for it.
     await rn.waitFor({ state: 'visible', timeout: 5_000 });
     // Type a value.
@@ -534,5 +566,20 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
     // Leaving onboarding behind is the proof that the profile actually saved.
     expect(stillOnForm).toBe(false);
     console.log('   🎉 Positive flow complete');
+  });
+
+  // Hand the fully-onboarded user to later specs. create-account saves its session
+  // right after T&C, but that user has no profile yet, so authedTest rejects it
+  // ("onboarding unfinished") and the course / competency runners can't use it.
+  // This one has finished onboarding. Consumed by authedTest when USE_FRESH_USER=1.
+  test('Step 27 — Save the onboarded user\'s session for later specs', async () => {
+    const authDir = path.resolve(__dirname, '..', '.auth');
+    fs.mkdirSync(authDir, { recursive: true });
+    // Cookies plus origin storage — signup users are OTP-only, so there is no password to reuse.
+    await ctx.storageState({ path: path.resolve(authDir, 'fresh-user.json') });
+    // Record which account the session belongs to, the same files create-account writes.
+    fs.writeFileSync(path.resolve(authDir, 'fresh-user-email.json'), JSON.stringify({ email, timestamp: Date.now() }, null, 2));
+    fs.writeFileSync(path.resolve(__dirname, '..', '.last-registered-email.json'), JSON.stringify({ email, timestamp: Date.now() }, null, 2));
+    console.log(`   💾 Onboarded session saved for ${email} → .auth/fresh-user.json`);
   });
 });

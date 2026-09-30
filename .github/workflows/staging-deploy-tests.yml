@@ -109,3 +109,87 @@ jobs:
             test-reports/
             playwright-report/
           retention-days: 90
+
+  # The full journey of ONE brand-new user, every run: sign up → My Courses →
+  # course completion → competency → Account → Course TOC → private pages →
+  # role check. A fixed account would have the course and competency finished
+  # after the first run, leaving nothing to test.
+  # positiveflow signs up AND completes onboarding (profile), then saves the
+  # session (.auth/fresh-user.json); USE_FRESH_USER=1 makes every later spec use it.
+  # Runs on its own machine, in parallel with the `test` job above.
+  new-user-journey:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      BASE_URL: ${{ github.event.inputs.base_url || 'https://portal-staging.aastrika.org' }}
+      HEADLESS: 'true'
+      USE_FRESH_USER: '1'
+      COURSE_NAME: Developmental Psychology
+      COMPETENCY_NAME: Normal delivery
+      PROFILE_DESIGNATION: ANM/MPW   # Normal delivery is an ANM/MPW competency
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}   # quiz-answer fallback
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      # Signup has intermittent failures (slow city list, Terms page served in the
+      # wrong language), so retry up to 3 times, each with a brand-new user.
+      - name: Sign up + onboard a new user
+        id: signup
+        run: |
+          for attempt in 1 2 3; do
+            echo "::group::Signup attempt $attempt"
+            npx playwright test tests/positiveflow.spec.ts --project=Chrome && { echo "::endgroup::"; exit 0; }
+            echo "::endgroup::"
+          done
+          echo "::error::Signup failed 3 times"; exit 1
+
+      # Every step below runs as THAT new user (USE_FRESH_USER=1), in this order:
+      #   My Courses → course completion → competency → Account → Course TOC →
+      #   private pages → role check. Each is skipped only if signup failed, and
+      #   still runs when an earlier step fails, so one failure doesn't hide the rest.
+      - name: My Courses
+        if: ${{ !cancelled() && steps.signup.outcome == 'success' }}
+        run: npx playwright test tests/Mycourse.spec.ts --project=Chrome
+
+      - name: Complete course — ${{ env.COURSE_NAME }}
+        if: ${{ !cancelled() && steps.signup.outcome == 'success' }}
+        run: npx playwright test tests/CourseComplete.spec.ts --project=Chrome
+
+      - name: Complete competency — ${{ env.COMPETENCY_NAME }}
+        if: ${{ !cancelled() && steps.signup.outcome == 'success' }}
+        run: npx playwright test tests/CompleteCompetency.spec.ts --project=Chrome
+
+      - name: Account
+        if: ${{ !cancelled() && steps.signup.outcome == 'success' }}
+        run: npx playwright test tests/Account.spec.ts --project=Chrome
+
+      - name: Course TOC
+        if: ${{ !cancelled() && steps.signup.outcome == 'success' }}
+        run: npx playwright test tests/CourseTOC.spec.ts --project=Chrome
+
+      - name: Private (signed-in) pages
+        if: ${{ !cancelled() && steps.signup.outcome == 'success' }}
+        run: npx playwright test tests/PrivatePage.spec.ts --project=Chrome
+
+      # LAST: switches the user through every designation (Account → Organization
+      # Details) and checks the courses offered follow the role. It changes the
+      # user's role, so nothing that depends on ANM/MPW may run after it; it
+      # restores ANM/MPW when done.
+      - name: Courses follow the role (every designation)
+        if: ${{ !cancelled() && steps.signup.outcome == 'success' }}
+        run: npx playwright test tests/RoleCourses.spec.ts --project=Chrome
+
+      - name: Upload reports + certificate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: new-user-journey-staging-report
+          path: |
+            brand-reports/
+            test-reports/
+            playwright-report/
+          retention-days: 90

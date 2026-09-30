@@ -817,7 +817,7 @@ async function runQuizOnce(
   // depending on how we arrived it may drop us straight onto Q1. Handle both.
   const startBtn = page.getByRole('button', { name: /start now/i }).first();
   // A 15s window, because the viewer can be slow to paint.
-  const hasStart = await startBtn.isVisible({ timeout: 15_000 }).catch(() => false);
+  const hasStart = await startBtn.waitFor({ state: 'visible', timeout: 15_000 }).then(() => true, () => false).catch(() => false);
 
   // Read the question count off the intro screen.
   const qText = await page.getByText(/\d+\s*questions?/i).first().textContent().catch(() => null);
@@ -956,7 +956,7 @@ async function detectQuizPassed(page: Page): Promise<boolean> {
   ];
   // Try each in turn; the first match wins.
   for (const re of passMarkers) {
-    if (await page.getByText(re).first().isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await page.getByText(re).first().waitFor({ state: 'visible', timeout: 2000 }).then(() => true, () => false).catch(() => false)) {
       return true;
     }
   }
@@ -1102,13 +1102,13 @@ async function openLevel(
   // Its Re-Assess button — for a competency already started.
   let reAssessBtn = card.getByRole('button', { name: /re-?assess/i }).first();
   // Not there? Then this is a FRESH competency…
-  if (!(await reAssessBtn.isVisible({ timeout: 3_000 }).catch(() => false))) {
+  if (!(await reAssessBtn.waitFor({ state: 'visible', timeout: 3_000 }).then(() => true, () => false).catch(() => false))) {
     // …so look for "Assess" instead. Anchored, so it can't match "Re-Assess".
     reAssessBtn = card.getByRole('button', { name: /^assess$/i }).first();
   }
 
   // Neither button on the card — give up cleanly.
-  if (!(await reAssessBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
+  if (!(await reAssessBtn.waitFor({ state: 'visible', timeout: 5_000 }).then(() => true, () => false).catch(() => false))) {
     console.log(`   ❌ Assess / Re-Assess button not visible on the "${competencyName}" card`);
     return { ok: false, actualLevel: 0 };
   }
@@ -1124,7 +1124,7 @@ async function openLevel(
   //       level as a link (href → /viewer/quiz/...). We must click the level.
   const startBtn = page.getByRole('button', { name: /start now/i }).first();
   // Flow (A): the modal appeared.
-  if (await startBtn.isVisible({ timeout: 6_000 }).catch(() => false)) {
+  if (await startBtn.waitFor({ state: 'visible', timeout: 6_000 }).then(() => true, () => false).catch(() => false)) {
     // Read its heading inside the browser.
     const headerText = await page.evaluate(() => {
       const dialog = document.querySelector('mat-dialog-container, [class*="modal"], [class*="dialog"]');
@@ -1225,7 +1225,7 @@ async function waitForCompetencyId(page: Page, timeoutMs = 25_000): Promise<stri
   // The intro's Start button.
   const startBtn = page.getByRole('button', { name: /start now/i }).first();
   // Click it if it's there — that's what triggers the navigation.
-  if (await startBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+  if (await startBtn.waitFor({ state: 'visible', timeout: 3_000 }).then(() => true, () => false).catch(() => false)) {
     await startBtn.click().catch(() => {});
   }
   // Poll until the deadline.
@@ -1252,7 +1252,7 @@ async function closeAssessmentModal(page: Page) {
   await page.waitForTimeout(400);
   // If that didn't work, look for an explicit close control INSIDE the dialog.
   const close = page.locator('mat-dialog-container button[aria-label*="close" i], mat-dialog-container .close, mat-dialog-container button:has-text("×")').first();
-  if (await close.isVisible({ timeout: 1_500 }).catch(() => false)) {
+  if (await close.waitFor({ state: 'visible', timeout: 1_500 }).then(() => true, () => false).catch(() => false)) {
     await close.click().catch(() => {});
   }
   await page.waitForTimeout(400);
@@ -1277,7 +1277,7 @@ async function openLevelFromToc(
   // Every level link on the page.
   const links = page.locator('a[href*="/viewer/quiz/"]');
   // None — neither flow produced anything usable.
-  if (!(await links.first().isVisible({ timeout: 8_000 }).catch(() => false))) {
+  if (!(await links.first().waitFor({ state: 'visible', timeout: 8_000 }).then(() => true, () => false).catch(() => false))) {
     console.log(`   ❌ No "Start Now" modal and no level list appeared after Assess`);
     return { ok: false, actualLevel: 0 };
   }
@@ -1291,7 +1291,7 @@ async function openLevelFromToc(
 
   // No such level — that's the SUCCESS case: the climb is complete. The log says
   // so rather than reporting a failure.
-  if (!(await levelLink.isVisible({ timeout: 3_000 }).catch(() => false))) {
+  if (!(await levelLink.waitFor({ state: 'visible', timeout: 3_000 }).then(() => true, () => false).catch(() => false))) {
     console.log(`   🏁 No "Level ${targetLevel}" in the list (competency has ${total} level(s)) — climb complete`);
     return { ok: false, actualLevel: 0 };
   }
@@ -1327,14 +1327,24 @@ async function openViaJobDescription(page: Page, competencyName: string, targetL
   // NEVER fall back to "any Assess button on the page" — that opens a DIFFERENT
   // competency's quiz (a real bug we hit: answered a labour quiz for an
   // immunization request). If the named button isn't here, fail cleanly.
-  // Three card shapes, narrowed to the one naming this competency.
-  const namedCard = page.locator('mat-card, mat-expansion-panel, [class*="card" i]')
-    .filter({ hasText: competencyName });
-  // Its Assess / Re-Assess button — and ONLY its.
-  const assessBtn = namedCard.getByRole('button', { name: /^(re-?assess|assess)$/i }).first();
+  // Start from the competency's OWN title and take the NEAREST ancestor that holds
+  // an Assess button — the same approach as the Required tab. Filtering containers
+  // by "mentions the name" is not enough: the whole ROLE panel mentions it too, and
+  // its first Assess button belongs to a different competency (a real bug: asked
+  // for "Normal delivery", it climbed "Vaginal examination…", the entry above it).
+  const escaped = competencyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const titles = page.getByText(new RegExp(`^\\s*${escaped}\\s*$`, 'i'));
+  const nearestAssess = (i: number) => titles.nth(i)
+    .locator('xpath=ancestor::*[.//button[normalize-space()="Assess" or normalize-space()="Re-Assess" or normalize-space()="Reassess"]][1]')
+    .getByRole('button', { name: /^(re-?assess|assess)$/i }).first();
+  let assessBtn = nearestAssess(0);
+  // The same competency can sit under several roles — use the first visible copy.
+  for (let i = 0; i < (await titles.count()); i++) {
+    if (await nearestAssess(i).isVisible().catch(() => false)) { assessBtn = nearestAssess(i); break; }
+  }
 
   // Not there — fail cleanly rather than grabbing someone else's button.
-  if (!(await assessBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
+  if (!(await assessBtn.waitFor({ state: 'visible', timeout: 5_000 }).then(() => true, () => false))) {
     console.log(`   ❌ No Assess/Re-Assess button for "${competencyName}" under Job Description → Roles`);
     return { ok: false, actualLevel: 0 };
   }
@@ -1346,7 +1356,7 @@ async function openViaJobDescription(page: Page, competencyName: string, targetL
   // Same two flows as the Required path: a "Start Now!" modal, or a TOC list.
   const startBtn = page.getByRole('button', { name: /start now/i }).first();
   // Flow (A): the modal appeared.
-  if (await startBtn.isVisible({ timeout: 6_000 }).catch(() => false)) {
+  if (await startBtn.waitFor({ state: 'visible', timeout: 6_000 }).then(() => true, () => false).catch(() => false)) {
     // Read its heading inside the browser.
     const headerText = await page.evaluate(() => {
       const d = document.querySelector('mat-dialog-container, [class*="modal"], [class*="dialog"]');
@@ -1400,7 +1410,7 @@ async function openCompetencyDashboard(page: Page) {
   const nav = page.getByRole('button', { name: /^(competency|योग्यता)$/i })
     .or(page.getByText(/^(competency|योग्यता)$/i)).first();
   // Prefer clicking it — that keeps the SPA's auth state intact.
-  if (await nav.isVisible({ timeout: 4000 }).catch(() => false)) {
+  if (await nav.waitFor({ state: 'visible', timeout: 4000 }).then(() => true, () => false).catch(() => false)) {
     await nav.click().catch(() => {});
   // No nav control — fall back to a direct URL.
   } else {
@@ -1421,7 +1431,7 @@ async function assertLoggedIn(page: Page) {
   const loginCta = page.getByRole('button', { name: /^log\s?in$/i })
     .or(page.getByRole('link', { name: /^log\s?in$/i })).first();
   // Signal 1: the login CTA is on screen.
-  const showsLogin = await loginCta.isVisible({ timeout: 3_000 }).catch(() => false);
+  const showsLogin = await loginCta.waitFor({ state: 'visible', timeout: 3_000 }).then(() => true, () => false).catch(() => false);
   // Signal 2: we're on a public route.
   const onPublic  = /\/public\//.test(page.url());
 
@@ -1443,7 +1453,7 @@ async function assertLoggedIn(page: Page) {
 async function onCompetencyDashboard(page: Page): Promise<boolean> {
   return await page.getByRole('tab', { name: /required/i })
     .or(page.getByText(/competency dashboard/i)).first()
-    .isVisible({ timeout: 2500 }).catch(() => false);
+    .waitFor({ state: 'visible', timeout: 2500 }).then(() => true, () => false).catch(() => false);
 }
 
 // Get us to the dashboard, retrying up to three times.
@@ -1454,7 +1464,7 @@ async function ensureCompetencyDashboard(page: Page) {
     // Prefer the header nav — it keeps us authenticated.
     const nav = page.getByRole('button', { name: /^(competency|योग्यता)$/i })
       .or(page.getByText(/^(competency|योग्यता)$/i)).first();
-    if (await nav.isVisible({ timeout: 2500 }).catch(() => false)) {
+    if (await nav.waitFor({ state: 'visible', timeout: 2500 }).then(() => true, () => false).catch(() => false)) {
       await nav.click().catch(() => {});
     // Not on screen — go home first, then click it from there.
     } else {
@@ -1532,10 +1542,16 @@ test.describe('Complete a single named competency', () => {
     setupQuizKeyInterceptor(page);
     setupApiHeaderCapture(page); // capture org/rootOrg headers for the S3 key fetch
     // In CDP mode we never log in, so TEST_USER_EMAIL is NOT the account used —
-    // it is whoever is already signed into that Chrome tab.
+    // it is whoever is already signed into that Chrome tab. With USE_FRESH_USER=1
+    // it is the last signed-up user (the "🔑 Auth:" line above names it too).
+    const freshEmail = (() => {
+      try { return JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', '.auth', 'fresh-user-email.json'), 'utf-8')).email; } catch { return ''; }
+    })();
     console.log(process.env.USE_CDP === '1'
       ? `👤 Account: whoever is signed into that Chrome tab (CDP — no login performed)`
-      : `👤 Account: ${process.env.TEST_USER_EMAIL}`);
+      : process.env.USE_FRESH_USER === '1'
+        ? `👤 Account: ${freshEmail || 'the last signed-up user'} (signed-up session)`
+        : `👤 Account: ${process.env.TEST_USER_EMAIL}`);
     // Log the env and whether the AI fallback is available.
     console.log(`🌐 Env: ${BASE_URL}`);
     console.log(GEMINI_API_KEY ? `🤖 Gemini AI ready (${GEMINI_PRIMARY})` : `⚠️  No GEMINI_API_KEY`);
@@ -1694,7 +1710,7 @@ test.describe('Complete a single named competency', () => {
       const entry = page.locator('mat-card, [class*="card" i], tr, [class*="row" i]')
         .filter({ hasText: COMPETENCY_NAME }).first();
       // A 20s window — the Passbook loads slowly.
-      const found = await entry.isVisible({ timeout: 20_000 }).catch(() => false);
+      const found = await entry.waitFor({ state: 'visible', timeout: 20_000 }).then(() => true, () => false).catch(() => false);
       // Not there — dump what IS listed, so the failure is diagnosable.
       if (!found) {
         const titles = await page.evaluate(() =>

@@ -1,5 +1,8 @@
 // The Page type, used to annotate the browser tab this helper drives.
 import { Page } from '@playwright/test';
+// File system + paths — used by recordCreatedEmail() to append to the account ledger.
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * The prefix that marks which ENVIRONMENT an account was created on.
@@ -143,4 +146,28 @@ export async function fetchOtpFromYopmail(
 
   // Safety net — unreachable in practice, but TypeScript needs every path to return or throw.
   throw new Error('OTP fetch failed');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CREATED-ACCOUNT LEDGER
+// ══════════════════════════════════════════════════════════════════════
+/**
+ * Append a signup address to generated-emails.txt at the project root — the one
+ * list of every account the suite has created.
+ *
+ * Line format: `<ISO time>\t<environment>\t<spec>\t<email>`. The email stays the
+ * LAST column because scripts/login-check.mjs reads each line's last word, so
+ * the older two-column lines (`<ISO time>\t<email>`) still parse.
+ *
+ * Call it when an address is about to be SUBMITTED for signup (not for throwaway
+ * form-fill checks), so the account is recorded even if the run crashes later.
+ * Never throws: a logging problem must not fail a signup that worked.
+ */
+export function recordCreatedEmail(email: string, source: string): void {
+  try {
+    const host = new URL(process.env.BASE_URL ?? 'https://sphere.aastrika.org').hostname;
+    const env = /portal-staging/i.test(host) ? 'staging' : /^sphere\./i.test(host) ? 'production' : host;
+    const file = path.resolve(__dirname, '..', '..', 'generated-emails.txt');
+    fs.appendFileSync(file, `${new Date().toISOString()}\t${env}\t${source}\t${email}\n`, 'utf-8');
+  } catch { /* ignore */ }
 }

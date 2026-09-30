@@ -1,5 +1,5 @@
 // The test runner, the assertion library, and three types we annotate with.
-import { generateTestEmail } from './helpers/yopmail';
+import { generateTestEmail, recordCreatedEmail } from './helpers/yopmail';
 import { test, expect, Page, BrowserContext, Locator } from '@playwright/test';
 // The shared, hardened OTP reader (throttling, captcha detection, retries).
 import { getOtpFromYopmail } from './helpers/otp';
@@ -172,6 +172,8 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
   test.beforeEach(async ({ page }) => {
     // A brand-new address, because an email can only ever register once.
     signupEmail = uniqueEmail();
+    // Record it in the account ledger (generated-emails.txt) before it is submitted.
+    recordCreatedEmail(signupEmail, 'OTP');
     // Drive signup as far as the OTP screen.
     await completeSignup(page, signupEmail);
     // After Confirm name on OTP flow → user should be on "Check your Email!" screen

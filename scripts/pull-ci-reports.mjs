@@ -38,9 +38,15 @@ const flag = (name, fallback) => {
 const LIMIT = flag('--limit', '100');
 const WORKFLOW = flag('--workflow', '');
 
+// `gh` on PATH, else the default Windows install location — a terminal opened
+// before gh was installed (e.g. inside an already-running VS Code) still has the
+// old PATH and can't find it by name.
+const GH_DEFAULT = join(process.env.ProgramFiles || 'C:\\Program Files', 'GitHub CLI', 'gh.exe');
+const GH_BIN = spawnSync('gh', ['--version']).error && existsSync(GH_DEFAULT) ? GH_DEFAULT : 'gh';
+
 /** Run the GitHub CLI from the repo folder (it reads the repo from the git remote). */
 function gh(args) {
-  return spawnSync('gh', args, { cwd: ROOT, encoding: 'utf-8', shell: false });
+  return spawnSync(GH_BIN, args, { cwd: ROOT, encoding: 'utf-8', shell: false });
 }
 
 // ── preflight: gh installed and logged in ─────────────────────────────

@@ -37,7 +37,7 @@ const CREATE_ACCOUNT_URL = `${BASE_URL}/app/create-account`;
 // yopmail's English homepage.
 const YOPMAIL_URL        = 'https://yopmail.com/en/';
 // An append-only audit log of every address created.
-const EMAIL_LOG          = path.resolve(__dirname, '..', 'generated-emails.txt');
+const EMAIL_LOG          = path.resolve(__dirname, '..', '..', 'generated-emails.txt'); // project root — the one ledger
 
 // The answers typed into the Tell-Us-More screen.
 const PROFILE_DATA = {

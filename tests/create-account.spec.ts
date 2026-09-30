@@ -19,7 +19,7 @@
  * way it is; the short `//` notes explain WHAT the line does.
  */
 // Pull in Playwright's test runner, its assertion library, and the three types we annotate with.
-import { generateTestEmail } from './helpers/yopmail';
+import { generateTestEmail, recordCreatedEmail } from './helpers/yopmail';
 import { test, expect, Page, BrowserContext, Locator } from '@playwright/test';
 // Node's file-system module — used to write the generated email and the saved session to disk.
 import * as fs from 'fs';
@@ -75,6 +75,8 @@ function saveEmail(email: string) {
   fs.writeFileSync(EMAIL_RECORD_FILE, JSON.stringify({ email, timestamp: Date.now() }, null, 2));
   // Print what was saved so it shows up in the run log.
   console.log(`💾 Saved email to ${path.basename(EMAIL_RECORD_FILE)}: ${email}`);
+  // …and add it to the ledger of every account created (generated-emails.txt).
+  recordCreatedEmail(email, 'create-account');
 }
 
 // ══════════════════════════════════════════════════════════════════════

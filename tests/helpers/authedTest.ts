@@ -104,7 +104,11 @@ async function isAuthenticated(ctx: BrowserContext): Promise<boolean> {
   try {
     await page.goto(`${BASE_URL}/page/home`, { waitUntil: 'domcontentloaded' }).catch(() => {});
     await page.waitForLoadState('networkidle').catch(() => {});
-    await page.waitForTimeout(2_000);
+    // WAIT for the signed-in search box rather than looking once after a fixed
+    // pause — on a slow load the header wasn't there yet at 2s and a perfectly
+    // good session was reported as signed out.
+    await page.locator('input[placeholder*="learn today" i]').first()
+      .waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
     return await page.evaluate(() => {
       const vis = (e: Element) => (e as HTMLElement).offsetParent !== null;
       const clean = (s: string | null) => (s || '').replace(/\s+/g, ' ').trim();
@@ -153,12 +157,15 @@ async function canUseAppPages(ctx: BrowserContext): Promise<boolean> {
     const nav = page.getByRole('link', { name: /^(account|खाता)$/i })
       .or(page.getByRole('button', { name: /^(account|खाता)$/i }))
       .or(page.getByText(/^(account|खाता)$/i)).first();
-    if (!(await nav.isVisible({ timeout: 10_000 }).catch(() => false))) return false;
+    // waitFor, not isVisible: isVisible() ignores its timeout and answers at once,
+    // so a slow page made this report "onboarding unfinished" for a session that
+    // worked seconds later — one run accepted a session, the next rejected it.
+    const shown = (l: typeof nav, timeout: number) =>
+      l.waitFor({ state: 'visible', timeout }).then(() => true, () => false);
+    if (!(await shown(nav, 15_000))) return false;
     await nav.click({ timeout: 8_000 }).catch(() => {});
     await page.waitForLoadState('domcontentloaded').catch(() => {});
-    await page.waitForTimeout(2_500);
-    return await page.getByText(/^(personal details|व्यक्तिगत विवरण)$/i).first()
-      .isVisible({ timeout: 8_000 }).catch(() => false);
+    return await shown(page.getByText(/^(personal details|व्यक्तिगत विवरण)$/i).first(), 15_000);
   } catch {
     return false;
   } finally {
@@ -332,6 +339,15 @@ async function openAuthedContext(browser: Browser, authFile: string): Promise<{ 
   return { ctx, close: true };
 }
 
+// Save a signed-up user's session back to its file before the context closes,
+// so the next spec in a chain (signup → course → competency) starts from the
+// newest cookies/storage the portal issued rather than the ones from signup.
+// Only the signup session is written — the .env account simply logs in again.
+async function persistFreshSession(ctx: BrowserContext, authFile: string): Promise<void> {
+  if (authFile !== FRESH_FILE) return;
+  await ctx.storageState({ path: FRESH_FILE }).catch(() => {});
+}
+
 // The extended test object. The second type parameter declares WORKER-scoped fixtures,
 // which are built once per worker process rather than once per test.
 export const test = base.extend<{}, { authFile: string; authContext: BrowserContext }>({
@@ -389,6 +405,8 @@ export const test = base.extend<{}, { authFile: string; authContext: BrowserCont
       const { ctx, close } = await openAuthedContext(browser, authFile);
       // Hand it to the tests.
       await use(ctx);
+      // Keep the signup session current for the next spec (see persistFreshSession).
+      await persistFreshSession(ctx, authFile);
       // Teardown — but never close a browser the developer owns (CDP mode).
       if (close) await ctx.close().catch(() => {});
     },
@@ -402,6 +420,8 @@ export const test = base.extend<{}, { authFile: string; authContext: BrowserCont
     // Same helper as above, but test-scoped this time.
     const { ctx, close } = await openAuthedContext(browser, authFile);
     await use(ctx);
+    // Keep the signup session current for the next spec (see persistFreshSession).
+    await persistFreshSession(ctx, authFile);
     // Again, only close what we created.
     if (close) await ctx.close().catch(() => {});
   },

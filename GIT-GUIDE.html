@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Git for SphereWebAutomation — plain English</title>
+<style>
+  :root{
+    --navy:#0B2545; --teal:#1B9AAA; --gold:#E8B02B;
+    --ink:#1F2933; --muted:#6B7684; --line:#E3E8EF; --bg:#F7F9FB; --card:#fff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:'Open Sans',Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.65}
+  .wrap{max-width:900px;margin:0 auto;padding:24px 20px 72px}
+  header{background:var(--navy);color:#fff;border-radius:8px;padding:26px 28px;margin-bottom:8px}
+  header h1{margin:0 0 6px;font-size:24px;font-weight:600}
+  header p{margin:0;color:#C7D2E0;font-size:13px}
+  h2{color:var(--navy);font-size:19px;margin:34px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--gold)}
+  h3{color:var(--navy);font-size:15.5px;margin:22px 0 6px}
+  p{margin:10px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--teal);
+        border-radius:6px;padding:14px 18px;margin:14px 0}
+  .note{background:#FFF9EC;border-left-color:var(--gold)}
+  .warn{background:#FDF3F2;border-left-color:#C0392B}
+  code{font-family:Consolas,Monaco,monospace;font-size:13px;background:#EEF2F6;
+       padding:2px 6px;border-radius:4px;color:var(--navy)}
+  pre{background:var(--navy);color:#E8EEF6;border-radius:6px;padding:14px 16px;overflow-x:auto;
+      font-family:Consolas,Monaco,monospace;font-size:13px;line-height:1.6;margin:10px 0}
+  pre .c{color:#8FA7C4}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+  th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:600;white-space:nowrap}
+  td{border-bottom:1px solid var(--line);padding:9px 12px;vertical-align:top;background:#fff}
+  td:first-child{white-space:nowrap}
+  ol,ul{margin:10px 0;padding-left:22px} li{margin:5px 0}
+  .step{display:flex;gap:14px;margin:16px 0;align-items:flex-start}
+  .num{flex:0 0 30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;
+       display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+  .step > div:last-child{flex:1;min-width:0}
+  .flow{background:#fff;border:1px solid var(--line);border-radius:6px;padding:16px;margin:14px 0;
+        font-family:Consolas,Monaco,monospace;font-size:12.5px;color:var(--navy);overflow-x:auto}
+  .tag{display:inline-block;background:var(--teal);color:#fff;border-radius:10px;
+       padding:1px 9px;font-size:11px;font-weight:600;margin-left:6px}
+  .tag.no{background:#C0392B}
+  footer{margin-top:40px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+  @media(max-width:600px){.wrap{padding:16px 14px 48px}header{padding:20px}}
+</style></head>
+<body><div class="wrap">
+
+<header>
+  <h1>Git for SphereWebAutomation</h1>
+  <p>What git is doing here, in plain English — and exactly what to run when a new build lands on staging.</p>
+</header>
+
+<h2>1. What git is for in this project</h2>
+
+<p>Git keeps a history of <b>the test code you write</b>. It does not keep your test results or your passwords.
+That split is the single most important idea here:</p>
+
+<table>
+  <thead><tr><th>Goes into git</th><th>Never goes into git</th></tr></thead>
+  <tbody>
+  <tr>
+    <td>
+      <code>tests/</code> — the specs<br/>
+      <code>scripts/</code> — the runners<br/>
+      <code>config/</code> — routes, accounts list<br/>
+      <code>package.json</code>, <code>playwright.config.ts</code>
+    </td>
+    <td>
+      <code>.env</code> <span class="tag no">secrets</span><br/>
+      <code>test-reports/</code>, <code>brand-reports/</code><br/>
+      <code>compare-reports/</code>, <code>test-results/</code><br/>
+      <code>.auth/</code> (saved logins), <code>node_modules/</code>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+<div class="card note">
+  <b>Why reports are excluded.</b> They are produced fresh by every run and would bloat the history within days.
+  Share the HTML or PDF report by attaching it to an email or chat, not by committing it.
+  <br/><br/>
+  <b>Why <code>.env</code> is excluded.</b> It holds real passwords and API tokens. It is listed in
+  <code>.gitignore</code>, so git will not offer to commit it even if you forget. If you add a new variable,
+  tell the team what to add — do not push the file.
+</div>
+
+<h3>The four places your work lives</h3>
+
+<div class="flow">
+  your folder  ──<b>git add</b>──▶  staging area  ──<b>git commit</b>──▶  your history  ──<b>git push</b>──▶  GitHub
+  <br/>&nbsp;(edits)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(chosen&nbsp;changes)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(saved&nbsp;forever)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(shared)
+  <br/><br/>
+  GitHub  ──<b>git pull</b>──▶  your folder&nbsp;&nbsp;&nbsp;(what other people pushed)
+</div>
+
+<p>This project has one branch, <code>main</code>, and one remote called <code>origin</code>:
+<code>github.com/Santhoshshivaprakash/SphereWebAutomation</code>.</p>
+
+<h2>2. A new build is deployed to staging — what do I do?</h2>
+
+<p>Staging is <code>https://portal-staging.aastrika.org</code>. Nothing about a deployment changes your code
+automatically — you pull the latest tests, run them against staging, and then deal with whatever fails.</p>
+
+<div class="step"><div class="num">1</div><div>
+  <h3 style="margin-top:0">Get the latest test code</h3>
+  <p>Someone may have fixed a selector or added a spec since you last ran. Start clean.</p>
+<pre><span class="c"># go to the project (git only works inside it)</span>
+cd D:\Automation\SphereWebAutomation
+
+<span class="c"># is anything half-finished from last time?</span>
+git status
+
+<span class="c"># bring in everyone else's work</span>
+git pull</pre>
+  <p><code>git status</code> should say <i>nothing to commit, working tree clean</i>. If it lists files, see §4.</p>
+</div></div>
+
+<div class="step"><div class="num">2</div><div>
+  <h3 style="margin-top:0">Install anything new (only if dependencies changed)</h3>
+<pre><span class="c"># safe to run any time; required if package.json changed in the pull</span>
+npm install</pre>
+</div></div>
+
+<div class="step"><div class="num">3</div><div>
+  <h3 style="margin-top:0">Run the tests against staging</h3>
+  <p>The saved scripts point at production. For staging you set <code>BASE_URL</code> first.</p>
+<pre><span class="c"># point this terminal at staging (stays set until you close it)</span>
+$env:BASE_URL="https://portal-staging.aastrika.org"
+
+<span class="c"># the interactive runner — asks which environment and which spec</span>
+npm run go
+
+<span class="c"># or the whole UI suite</span>
+npm run test:ui
+
+<span class="c"># or one spec</span>
+npx playwright test tests/PublicPage.spec.ts --project=Chrome --headed</pre>
+</div></div>
+
+<div class="step"><div class="num">4</div><div>
+  <h3 style="margin-top:0">Read the result and decide which kind of failure it is</h3>
+  <table>
+    <thead><tr><th>What happened</th><th>What it means</th><th>What to do</th></tr></thead>
+    <tbody>
+    <tr><td>Test fails, app is fine</td><td>The build changed a label, id or flow — the test is out of date</td><td>Fix the test code, commit, push (step 5)</td></tr>
+    <tr><td>Test fails, app is broken</td><td>A real defect in the new build</td><td>Raise the bug with the report attached. <b>Do not</b> change the test to make it pass</td></tr>
+    <tr><td>Login fails</td><td>Usually a wrong or missing credential for that environment</td><td>Fix <code>.env</code> locally — nothing to commit, it is not tracked</td></tr>
+    </tbody>
+  </table>
+</div></div>
+
+<div class="step"><div class="num">5</div><div>
+  <h3 style="margin-top:0">Save and share your fix</h3>
+<pre><span class="c"># what did I change?</span>
+git status
+git diff
+
+<span class="c"># stage the files you actually want (not everything blindly)</span>
+git add tests/CourseComplete.spec.ts
+
+<span class="c"># save it with a message that says WHY, not just what</span>
+git commit -m "Fix course search after staging build changed the placeholder"
+
+<span class="c"># send it to GitHub for the team</span>
+git push</pre>
+  <div class="card note" style="margin-top:12px">
+    Working straight on <code>main</code> is fine for small fixes because this repo has one author.
+    For anything larger, branch first — see §3.
+  </div>
+</div></div>
+
+<h2>3. Using a branch (for bigger changes)</h2>
+
+<p>A branch is a side copy where you can experiment without disturbing <code>main</code>.</p>
+
+<pre><span class="c"># create a branch and switch to it</span>
+git checkout -b fix/staging-login
+
+<span class="c"># ...edit, run, repeat...</span>
+git add .
+git commit -m "Verify the session before saving it"
+
+<span class="c"># push the branch the first time</span>
+git push -u origin fix/staging-login
+
+<span class="c"># when it works, bring it back into main</span>
+git checkout main
+git pull
+git merge fix/staging-login
+git push</pre>
+
+<h2>4. Common situations</h2>
+
+<h3>"git status shows files I did not mean to change"</h3>
+<pre><span class="c"># throw away changes to one file</span>
+git restore tests/SomeSpec.spec.ts
+
+<span class="c"># put everything aside temporarily (get it back with: git stash pop)</span>
+git stash</pre>
+
+<h3>"git pull says there is a conflict"</h3>
+<p>You and someone else changed the same lines. Git marks them in the file like this:</p>
+<pre>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+your version
+=======
+their version
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; origin/main</pre>
+<p>Open the file, keep the correct lines, delete the <code>&lt;&lt;&lt;</code> <code>===</code> <code>&gt;&gt;&gt;</code> markers, then:</p>
+<pre>git add &lt;the file&gt;
+git commit</pre>
+
+<h3>"I want to see what changed recently"</h3>
+<pre>git log --oneline -10                    <span class="c"># last 10 commits</span>
+git log --oneline -- tests/Account.spec.ts   <span class="c"># history of one file</span>
+git show 71d57f6                         <span class="c"># what a commit contained</span></pre>
+
+<div class="card warn">
+  <b>Two things to never do.</b> Do not commit <code>.env</code> (it is ignored — keep it that way), and do not
+  use <code>git push --force</code> on <code>main</code>. Force-pushing rewrites shared history and can delete
+  someone else's work.
+</div>
+
+<h2>5. The commands, all together</h2>
+
+<table>
+  <thead><tr><th>Purpose</th><th>Command</th></tr></thead>
+  <tbody>
+  <tr><td>Go to the project</td><td><code>cd D:\Automation\SphereWebAutomation</code></td></tr>
+  <tr><td>What is changed?</td><td><code>git status</code></td></tr>
+  <tr><td>Get the latest code</td><td><code>git pull</code></td></tr>
+  <tr><td>Install dependencies</td><td><code>npm install</code></td></tr>
+  <tr><td>Point at staging</td><td><code>$env:BASE_URL="https://portal-staging.aastrika.org"</code></td></tr>
+  <tr><td>Point at production</td><td><code>$env:BASE_URL="https://sphere.aastrika.org"</code></td></tr>
+  <tr><td>Interactive runner</td><td><code>npm run go</code></td></tr>
+  <tr><td>Whole UI suite</td><td><code>npm run test:ui</code></td></tr>
+  <tr><td>One spec, visible browser</td><td><code>npx playwright test tests/&lt;name&gt;.spec.ts --project=Chrome --headed</code></td></tr>
+  <tr><td>Complete a course</td><td><code>npm run run:course</code></td></tr>
+  <tr><td>Compare staging with production</td><td><code>npm run compare</code></td></tr>
+  <tr><td>Full regression (production)</td><td><code>npm run test:regression</code></td></tr>
+  <tr><td>Open the last Playwright report</td><td><code>npx playwright show-report</code></td></tr>
+  <tr><td>Stage a file</td><td><code>git add &lt;file&gt;</code></td></tr>
+  <tr><td>Save a commit</td><td><code>git commit -m "message"</code></td></tr>
+  <tr><td>Share it</td><td><code>git push</code></td></tr>
+  <tr><td>New branch</td><td><code>git checkout -b fix/&lt;short-name&gt;</code></td></tr>
+  <tr><td>Undo a file's changes</td><td><code>git restore &lt;file&gt;</code></td></tr>
+  <tr><td>Recent history</td><td><code>git log --oneline -10</code></td></tr>
+  </tbody>
+</table>
+
+<h2>6. The short version</h2>
+<div class="card">
+  <ol style="margin:0">
+    <li><code>git pull</code> — start from the latest tests.</li>
+    <li>Set <code>BASE_URL</code> to staging, run the suite.</li>
+    <li>App broken → raise a bug. Test outdated → fix the test.</li>
+    <li><code>git add</code> → <code>git commit -m "..."</code> → <code>git push</code>.</li>
+    <li>Reports and <code>.env</code> stay on your machine — git already ignores them.</li>
+  </ol>
+</div>
+
+<footer>
+  SphereWebAutomation · branch <code>main</code> · remote <code>origin</code> →
+  github.com/Santhoshshivaprakash/SphereWebAutomation<br/>
+  Staging <code>https://portal-staging.aastrika.org</code> · Production <code>https://sphere.aastrika.org</code>
+</footer>
+
+</div></body></html>

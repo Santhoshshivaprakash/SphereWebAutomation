@@ -6,7 +6,7 @@ name: Synthetic Monitor (prod + staging)
 # email notification covers it.
 on:
   schedule:
-    - cron: '*/15 * * * *' # every 15 minutes (GitHub may delay a few min)
+    - cron: '30 3,9,15 * * *' # 3× a day: 09:00, 15:00, 21:00 IST (03:30/09:30/15:30 UTC; GitHub may delay a few min)
   workflow_dispatch: {}      # allow manual runs from the Actions tab
 
 concurrency:

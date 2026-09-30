@@ -79,15 +79,36 @@ jobs:
           path: |
             compare-reports/compare_production_vs_staging_*
           retention-days: 90
+
+  # The UI + API suite on BOTH environments: the matrix runs this job twice, once
+  # per BASE_URL, on separate machines at the same time. Each environment signs
+  # in with its own account (production and staging are separate backends),
+  # picked by secret NAME:
+  #   production → TEST_USER_EMAIL / TEST_USER_PASSWORD
+  #   staging    → STAGING_EMAIL   / STAGING_PASSWORD
   daily-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    strategy:
+      fail-fast: false   # a failure on one environment doesn't cancel the other
+      matrix:
+        include:
+          - env: production
+            url: https://sphere.aastrika.org
+            email_secret: TEST_USER_EMAIL
+            password_secret: TEST_USER_PASSWORD
+          - env: staging
+            url: https://portal-staging.aastrika.org
+            email_secret: STAGING_EMAIL
+            password_secret: STAGING_PASSWORD
+    name: daily-tests (${{ matrix.env }})
     env:
-      BASE_URL: https://sphere.aastrika.org
+      BASE_URL: ${{ matrix.url }}
       HEADLESS: 'true'
-      SKIP_SIGNUP: '1'   # never create real prod users
-      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      SKIP_SIGNUP: '1'   # signup runs in daily-signup; keep it out of this suite
+      JSON_OUT: test-reports/results.json   # machine-readable results for daily-report
+      TEST_USER_EMAIL: ${{ secrets[matrix.email_secret] }}
+      TEST_USER_PASSWORD: ${{ secrets[matrix.password_secret] }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -106,7 +127,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: daily-test-reports-${{ github.run_number }}
+          name: daily-test-reports-${{ matrix.env }}-${{ github.run_number }}
           path: |
             brand-reports/
             playwright-report/
@@ -131,6 +152,7 @@ jobs:
     env:
       BASE_URL: ${{ matrix.url }}
       HEADLESS: 'true'
+      JSON_OUT: test-reports/results.json   # machine-readable results for daily-report
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -149,4 +171,60 @@ jobs:
             playwright-report/
             test-reports/
             .last-registered-email.json
+            generated-emails.txt
+          retention-days: 90
+
+  # ONE report for the whole run, emailed when everything has finished.
+  # Waits for every job (even failed ones), downloads all their artifacts, and
+  # builds daily-summary.html: compare, test results for both environments with
+  # every failure and its reason, and the accounts created. It is emailed (with
+  # the compare PDF attached) when the SMTP secrets are set, shown on the run's
+  # Summary page, and uploaded as the daily-summary-<N> artifact.
+  # Only this job gets the SMTP secrets, so each run sends exactly one email.
+  daily-report:
+    needs: [compare, daily-tests, daily-signup]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+      ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci   # nodemailer, for the email
+
+      - name: Download every job's reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-reports
+          pattern: '*-${{ github.run_number }}'
+
+      - name: Build the report and email it
+        env:
+          JOBS: ${{ toJSON(needs) }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >
+          node scripts/daily-summary.mjs
+          --dir all-reports
+          --out daily-summary
+          --run-number ${{ github.run_number }}
+          --run-url "$RUN_URL"
+          --jobs "$JOBS"
+
+      - name: Show it on the run's Summary page
+        if: always()
+        run: cat daily-summary/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-summary-${{ github.run_number }}
+          path: daily-summary/
           retention-days: 90

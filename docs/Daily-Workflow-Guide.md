@@ -94,6 +94,29 @@ so the script's own exit code decides.
 
 Artifacts are kept on GitHub for 90 days (the maximum).
 
+### One combined report, emailed
+
+The last job, `daily-report`, waits for every other job (even failed ones),
+collects their results and builds **one report** for the whole run
+(`scripts/daily-summary.mjs`):
+
+- headline numbers: tests passed / failed / skipped, compare pages with blocking
+  differences, accounts created
+- the result of every job
+- test results for **production and staging side by side**, per spec file
+- every failed test with its reason
+- the prod vs staging compare: each public page's verdict, API parity, and the
+  course catalogue counts
+- the accounts created by the signup jobs
+
+It is shown on the run's **Summary** page, uploaded as `daily-summary-<N>`, and
+**emailed** (HTML body, with the report and the compare PDF attached) when these
+secrets are set: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`,
+`ALERT_EMAIL_TO`, `ALERT_EMAIL_FROM`. Only this job receives them, so each run
+sends exactly one email. The subject starts with ✅ when everything passed and ⚠️
+otherwise. If the email can't be sent, the report is still uploaded and the job
+turns red.
+
 ### Keeping reports on your PC for good
 
 `npm run reports:pull` downloads every finished run's artifacts, from all

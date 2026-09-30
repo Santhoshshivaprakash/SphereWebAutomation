@@ -31,6 +31,8 @@ const DIR = flag('--dir', 'all-reports');
 const OUT = flag('--out', 'daily-summary');
 const RUN_URL = flag('--run-url');
 const RUN_NUMBER = flag('--run-number', '');
+// Product name in the subject and header — the same script serves Sphere and e-Kshamata.
+const TITLE = flag('--title', 'Sphere');
 let JOBS = {};
 try { JOBS = JSON.parse(flag('--jobs', '{}')); } catch { /* ignore */ }
 
@@ -79,15 +81,28 @@ function flattenPlaywright(report) {
   return rows;
 }
 
+// Friendly names for the artifact prefixes the workflows use.
+const JOB_LABELS = {
+  'daily-test-reports': 'UI + API tests',
+  'daily-signup': 'Signup (create account)',
+  'daily-journey': 'New-user journey',
+  'daily-orgs': 'Per-org suites',
+};
 const suites = []; // { job, env, rows, stats }
-for (const p of files.filter((f) => /results\.json$/.test(f))) {
+// results.json is the job's main suite; results-<name>.json is an extra step of
+// the same job (e.g. results-create-user.json), reported as its own row.
+for (const p of files.filter((f) => /results(-[\w-]+)?\.json$/.test(basename(f)))) {
+  const step = (basename(p).match(/^results-([\w-]+)\.json$/) || [])[1];
   const art = artifactOf(p);
-  const m = art.match(/^(daily-test-reports|daily-signup)-(production|staging)-/);
+  // Any "<job>-<production|staging>-<run>" artifact with a results.json counts.
+  const m = art.match(/^(.+?)-(production|staging)-\d+$/);
   if (!m) continue;
   const report = readJson(p);
   if (!report) continue;
   suites.push({
-    job: m[1] === 'daily-test-reports' ? 'UI + API tests' : 'Signup (create account)',
+    job: step
+      ? step.replace(/-/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
+      : JOB_LABELS[m[1]] || m[1].replace(/^daily-/, '').replace(/-/g, ' '),
     env: m[2],
     rows: flattenPlaywright(report),
     durationMs: report.stats?.duration || 0,
@@ -101,12 +116,22 @@ const cmp = cmpFile ? readJson(cmpFile) : null;
 const cmpPdf = files.filter((f) => /compare_production_vs_staging_.*_SIMPLE\.pdf$/.test(f)).sort().at(-1);
 
 // ── accounts created this run ──────────────────────────────────────────
-// generated-emails.txt holds the whole history; keep only lines from this run.
+// Both ledgers hold the whole history; keep only lines from this run.
+//   Sphere      generated-emails.txt   "ISO \t env \t spec \t email"  (older: "ISO \t email")
+//   e-Kshamata  created-users.txt      "ISO | ORG | role | email | password | userId | env=host"
 const runStart = Date.now() - 6 * 3600_000; // generous: the run is at most a few hours old
 const accounts = [];
-for (const p of files.filter((f) => /generated-emails\.txt$/.test(f))) {
+for (const p of files.filter((f) => /(generated-emails|created-users)\.txt$/.test(f))) {
   const env = (artifactOf(p).match(/-(production|staging)-/) || [])[1] || '';
   for (const line of readFileSync(p, 'utf-8').split(/\r?\n/)) {
+    if (line.includes(' | ')) {
+      // Only the email is taken — the password column never goes into the report.
+      const c = line.split(' | ').map((x) => x.trim());
+      if (Date.parse(c[0]) < runStart || !/@/.test(c[3] || '')) continue;
+      const host = (c.find((x) => x.startsWith('env=')) || '').slice(4);
+      accounts.push({ when: c[0], env: /staging/i.test(host) ? 'staging' : host ? 'production' : env, source: [c[1], c[2]].filter(Boolean).join(' · '), email: c[3] });
+      continue;
+    }
     const parts = line.trim().split(/\t/);
     if (parts.length < 2 || Date.parse(parts[0]) < runStart) continue;
     accounts.push({ when: parts[0], env: parts.length >= 4 ? parts[1] : env, source: parts.length >= 4 ? parts[2] : '', email: parts.at(-1) });
@@ -123,8 +148,8 @@ const cmpBlocking = cmp ? cmp.routes.filter((r) => r.worst === 'error').length :
 const ok = failed.length === 0 && jobProblem.length === 0;
 const today = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' });
 const subject = ok
-  ? `✅ Sphere daily run ${today} — all ${allRows.length - count(allRows, 'skipped')} checks passed`
-  : `⚠️ Sphere daily run ${today} — ${failed.length} failed test(s)${jobProblem.length ? `, ${jobProblem.length} job(s) not green` : ''}`;
+  ? `✅ ${TITLE} daily run ${today} — all ${allRows.length - count(allRows, 'skipped')} checks passed`
+  : `⚠️ ${TITLE} daily run ${today} — ${failed.length} failed test(s)${jobProblem.length ? `, ${jobProblem.length} job(s) not green` : ''}`;
 const fmtMs = (ms) => (ms >= 60_000 ? `${Math.floor(ms / 60_000)}m ${Math.round((ms % 60_000) / 1000)}s` : `${Math.round(ms / 1000)}s`);
 
 // ── HTML (inline styles: it is also the email body, and mail clients drop <style>) ──
@@ -144,11 +169,11 @@ const table = (head, rows) => `<table role="presentation" cellspacing="0" cellpa
 const stat = (label, value, color = C.navy) => `<div style="display:inline-block;vertical-align:top;min-width:120px;max-width:200px;margin:0 8px 8px 0;padding:12px 16px;background:#fff;border:1px solid ${C.border};border-radius:8px;${font}">`
   + `<div style="font-size:24px;font-weight:700;color:${color}">${esc(value)}</div><div style="font-size:12px;color:${C.muted}">${esc(label)}</div></div>`;
 
-let html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sphere daily run</title></head>`
+let html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(TITLE)} daily run</title></head>`
   + `<body style="margin:0;background:${C.bg};${font};color:${C.text}"><div style="max-width:960px;margin:0 auto;padding:24px 16px">`;
 
 html += `<div style="background:${C.navy};color:#fff;border-radius:8px;padding:20px 24px">`
-  + `<div style="font-size:12px;color:#BEC5CE;letter-spacing:.5px">SPHERE · DAILY PROD VS STAGING${RUN_NUMBER ? ` · RUN #${esc(RUN_NUMBER)}` : ''}</div>`
+  + `<div style="font-size:12px;color:#BEC5CE;letter-spacing:.5px">${esc(TITLE.toUpperCase())} · DAILY PROD VS STAGING${RUN_NUMBER ? ` · RUN #${esc(RUN_NUMBER)}` : ''}</div>`
   + `<div style="font-size:22px;font-weight:700;margin-top:4px">${esc(subject.replace(/^\S+\s/, ''))}</div>`
   + `<div style="font-size:13px;color:#BEC5CE;margin-top:6px">${esc(new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))} IST`
   + (RUN_URL ? ` · <a href="${esc(RUN_URL)}" style="color:${C.gold}">Open the run on GitHub</a>` : '') + `</div></div>`;
@@ -201,7 +226,7 @@ html += failed.length
   : `<div style="background:${C.okBg};color:${C.ok};border-left:4px solid ${C.ok};padding:10px 14px;border-radius:6px">No test failed.</div>`;
 
 // Compare
-html += h2('Production vs staging — public pages');
+html += h2('Production vs staging — compared pages');
 if (!cmp) {
   html += `<p style="color:${C.err}">The compare report is missing — the compare job may have failed.</p>`;
 } else {
@@ -232,7 +257,7 @@ html += `</div></body></html>`;
 // ── markdown for the run's Summary page ────────────────────────────────
 let md = `## ${subject}\n\n| Job | Environment | Passed | Failed | Skipped |\n|---|---|---|---|---|\n`;
 for (const s of bySuite) md += `| ${s.job} | ${s.env} | ${count(s.rows, 'passed')} | ${count(s.rows, 'failed')} | ${count(s.rows, 'skipped')} |\n`;
-if (cmp) md += `\n**Compare:** ${cmpBlocking} of ${cmp.routes.length} public pages with blocking differences.\n`;
+if (cmp) md += `\n**Compare:** ${cmpBlocking} of ${cmp.routes.length} compared pages with blocking differences.\n`;
 if (failed.length) md += `\n### Failures\n${failed.map((r) => `- **${r.env}** · ${r.file} · ${r.title} — ${r.error.slice(0, 160)}`).join('\n')}\n`;
 md += `\nAccounts created: ${uniqueAccounts.length}. The full report is in the **daily-summary-${RUN_NUMBER}** artifact.\n`;
 
@@ -244,8 +269,9 @@ if (process.env.GITHUB_ACTIONS) {
   const oneLine = (s) => String(s).replace(/\r?\n/g, ' ').replace(/%/g, '%25');
   const perEnv = bySuite.map((s) => `${s.job} ${s.env}: ${count(s.rows, 'passed')} passed, ${count(s.rows, 'failed')} failed`).join(' · ');
   console.log(`::notice title=Daily run summary::${oneLine(`${subject.replace(/^\S+\s/, '')} — ${perEnv}`)}`);
-  if (cmp) console.log(`::notice title=Prod vs staging compare::${oneLine(`${cmpBlocking} of ${cmp.routes.length} public pages with blocking differences · catalogue prod ${cmp.catalogue?.totalA ?? '?'} / staging ${cmp.catalogue?.totalB ?? '?'}`)}`);
-  console.log(`::notice title=Accounts created::${oneLine(uniqueAccounts.length ? uniqueAccounts.map((a) => `${a.env}: ${a.email}`).join(' · ') : 'none')}`);
+  if (cmp) console.log(`::notice title=Prod vs staging compare::${oneLine(`${cmpBlocking} of ${cmp.routes.length} compared pages with blocking differences · catalogue prod ${cmp.catalogue?.totalA ?? '?'} / staging ${cmp.catalogue?.totalB ?? '?'}`)}`);
+  const shown = uniqueAccounts.slice(0, 10).map((a) => `${a.env}: ${a.email}`).join(" · ");
+  console.log(`::notice title=Accounts created (${uniqueAccounts.length})::${oneLine(uniqueAccounts.length ? shown + (uniqueAccounts.length > 10 ? ` · … ${uniqueAccounts.length - 10} more in the report` : "") : "none")}`);
   for (const r of failed.slice(0, 9)) console.log(`::error title=${oneLine(`Failed on ${r.env}: ${r.file}`)}::${oneLine(`${r.title} — ${r.error.slice(0, 200)}`)}`);
   if (failed.length > 9) console.log(`::error title=More failures::${failed.length - 9} more — see the daily-summary artifact`);
   for (const j of jobProblem) console.log(`::warning title=Job not green::${j.name}: ${j.result}`);

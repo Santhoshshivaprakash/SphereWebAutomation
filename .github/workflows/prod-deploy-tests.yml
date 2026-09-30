@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 30
     env:
       BASE_URL: https://sphere.aastrika.org
-      STAGING_URL: https://staging.aastrika.org
+      STAGING_URL: https://portal-staging.aastrika.org
       # Authenticated specs use storageState via UI login (Phase 1). Provide a
       # prod test account so the authed suite can run headless in CI.
       TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}

@@ -14,9 +14,9 @@
  * per-run provisioning — we don't want to create a prod user every 15 min.
  *
  * Env:
- *   BASE_URL          production URL (default https://sphere.aastrika.org)
- *   MONITOR_EMAIL     dedicated monitor account
- *   MONITOR_PASSWORD  its password
+ *   BASE_URL          environment URL (default https://sphere.aastrika.org)
+ *   MONITOR_EMAIL     monitor account (falls back to TEST_USER_EMAIL)
+ *   MONITOR_PASSWORD  its password (falls back to TEST_USER_PASSWORD)
  *   SLACK_WEBHOOK_URL where failures are announced (handled by the reporter)
  */
 // Straight from Playwright — this spec needs no custom fixtures.
@@ -26,10 +26,11 @@ import { loginWithPassword } from '../helpers/login';
 
 // Which environment to monitor. Defaults to production.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
-// The dedicated monitoring account's email (empty string if unset).
-const MONITOR_EMAIL = process.env.MONITOR_EMAIL || '';
+// The monitoring account's email — falls back to the TEST_USER account, the same
+// order helpers/authedTest.ts uses (empty string if neither is set).
+const MONITOR_EMAIL = process.env.MONITOR_EMAIL || process.env.TEST_USER_EMAIL || '';
 // Its password.
-const MONITOR_PASSWORD = process.env.MONITOR_PASSWORD || '';
+const MONITOR_PASSWORD = process.env.MONITOR_PASSWORD || process.env.TEST_USER_PASSWORD || '';
 // True only when BOTH are configured — tests 2 and 3 skip without them.
 const hasMonitorCreds = Boolean(MONITOR_EMAIL && MONITOR_PASSWORD);
 
@@ -67,9 +68,13 @@ test.describe('Prod synthetic monitor @monitor', () => {
     test.skip(!hasMonitorCreds, 'MONITOR_EMAIL / MONITOR_PASSWORD not set');
     // Log in again — each test gets a fresh page, so the session from test 2 isn't reused.
     await loginWithPassword(page, MONITOR_EMAIL, MONITOR_PASSWORD);
-    // We should be inside the app (any /app/ route) with real content painted.
+    // We should be inside the signed-in app, off the public pages. Prod lands on
+    // /page/home after login (older builds used /app/…), so don't pin one route.
     // `toHaveURL` polls, so this tolerates a slow redirect.
-    await expect(page).toHaveURL(/\/app\//, { timeout: 20_000 });
+    await expect(page).toHaveURL(/\/(app|page)\//, { timeout: 20_000 });
+    // The signed-in header only renders for a logged-in user — proof the app
+    // itself loaded, whatever the landing route is called.
+    await expect(page.getByRole('button', { name: 'My Courses' })).toBeVisible({ timeout: 20_000 });
     // Read whatever text the page rendered.
     const body = await page.locator('body').innerText().catch(() => '');
     // A blank page would mean the shell loaded but the app failed — catch that here.

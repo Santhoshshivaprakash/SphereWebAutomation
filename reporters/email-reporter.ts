@@ -63,7 +63,8 @@ class EmailReporter implements Reporter {
     const failList = this.failures
       .map((f) => `• ${f.title}\n    ${f.error}`)
       .join('\n');
-    const subject = `🚨 Sphere prod monitor FAILED — ${this.failures.length} check(s) down`;
+    const envName = /portal-staging/i.test(env) ? 'staging' : /^https?:\/\/sphere\./i.test(env) ? 'prod' : new URL(env).host;
+    const subject = `🚨 Sphere ${envName} monitor FAILED — ${this.failures.length} check(s) down`;
     const body =
       `Sphere synthetic monitor FAILED (${result.status}).\n\n` +
       `Env:    ${env}\n` +

@@ -87,7 +87,8 @@ export default defineConfig({
     baseURL: process.env.BASE_URL ?? 'https://sphere.aastrika.org',
     // Headed by default (matches the run:* scripts). The master report run sets
     // HEADLESS=true for a fast, unattended full-suite pass.
-    headless: process.env.HEADLESS === 'true',
+    // CI machines (GitHub sets CI=true) have no screen, so they are always headless.
+    headless: process.env.HEADLESS === 'true' || !!process.env.CI,
     viewport: { width: 1280, height: 800 },
     actionTimeout: 15_000,
     navigationTimeout: 60_000,

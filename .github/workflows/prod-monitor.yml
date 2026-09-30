@@ -36,6 +36,7 @@ jobs:
     name: monitor (${{ matrix.env }})
     env:
       BASE_URL: ${{ matrix.url }}
+      HEADLESS: 'true'   # GitHub machines have no screen
       MONITOR_EMAIL: ${{ secrets[matrix.email_secret] }}
       MONITOR_PASSWORD: ${{ secrets[matrix.password_secret] }}
       # SMTP alerting (used by reporters/email-reporter.ts)

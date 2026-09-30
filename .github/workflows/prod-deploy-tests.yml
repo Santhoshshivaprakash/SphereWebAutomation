@@ -50,8 +50,18 @@ jobs:
       - name: Run public/login tests + branded report
         run: npm run report:ci
 
+      # Fail fast, and say WHICH account is unusable. Without this a bad secret
+      # shows up as every signed-in test failing at once, with the real reason
+      # buried in the first fixture error. Non-interactive by design: it asks
+      # nothing and exits 1 when no account can sign in.
+      - name: Check the credentials before running the signed-in suite
+        if: ${{ env.TEST_USER_EMAIL != '' }}
+        run: npm run check:login
+
       # Authenticated suite — Phase 1 done, so these run headless via storageState
       # when a prod test account is configured. Runs against prod (BASE_URL).
+      # Signed-in suite. The fixture tries the last signed-up session first and
+      # falls back to the account in the secrets, naming whichever it uses.
       - name: Run authenticated suite (if a test account is configured)
         if: ${{ env.TEST_USER_EMAIL != '' }}
         run: npx cross-env HEADLESS=true playwright test tests/Account.spec.ts tests/Mycourse.spec.ts tests/CourseTOC.spec.ts tests/PrivatePage.spec.ts --project=Chrome

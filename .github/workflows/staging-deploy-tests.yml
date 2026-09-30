@@ -1,0 +1,103 @@
+name: Staging Deploy Tests
+
+# Runs the automation against STAGING whenever staging is deployed, and publishes
+# the branded report as an artifact.
+#
+# Trigger it from the staging deploy pipeline with one HTTP call at the end of a
+# successful deploy (see docs/CI-ON-DEPLOY.md):
+#
+#   curl -X POST \
+#     -H "Authorization: token $GH_PAT" \
+#     -H "Accept: application/vnd.github+json" \
+#     https://api.github.com/repos/Santhoshshivaprakash/SphereWebAutomation/dispatches \
+#     -d '{"event_type":"staging-deployed"}'
+#
+# …or press "Run workflow" on the Actions tab.
+on:
+  repository_dispatch:
+    types: [staging-deployed]
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Portal to test (leave as-is for staging)'
+        required: false
+        default: 'https://portal-staging.aastrika.org'
+      run_authenticated:
+        description: 'Also run the signed-in suite'
+        required: false
+        type: boolean
+        default: true
+
+# One staging run at a time. Deploys often land in bursts, and two runs sharing
+# the same test account trip over each other's session.
+concurrency:
+  group: staging-deploy-tests
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # NOTE: do NOT use the npm `report:*` scripts here — they hard-pin
+      # BASE_URL to production, so they would silently test prod from a
+      # staging workflow. The steps below invoke playwright directly.
+      BASE_URL: ${{ github.event.inputs.base_url || 'https://portal-staging.aastrika.org' }}
+      HEADLESS: 'true'
+      # The signed-in specs authenticate once via tests/helpers/authedTest.ts.
+      # A staging-specific account is used when one is configured; otherwise the
+      # standard test account, which works on both backends.
+      TEST_USER_EMAIL: ${{ secrets.STAGING_TEST_USER_EMAIL || secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.STAGING_TEST_USER_PASSWORD || secrets.TEST_USER_PASSWORD }}
+      # Emailed alert on failure (optional — skipped when unset).
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+      ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Show what is being tested
+        run: echo "Testing $BASE_URL as ${TEST_USER_EMAIL:-'(no account configured)'}"
+
+      # Public pages need no account, so these run even when no secret is set.
+      - name: Public site + login page
+        run: npx playwright test tests/PublicPage.spec.ts tests/public-login.spec.ts --project=Chrome
+
+      # Fail fast, and say WHICH account is unusable. Without this a bad secret
+      # shows up as every signed-in test failing at once, with the real reason
+      # buried in the first fixture error. Non-interactive by design: it asks
+      # nothing and exits 1 when no account can sign in.
+      - name: Check the credentials before running the signed-in suite
+        if: ${{ env.TEST_USER_EMAIL != '' }}
+        run: npm run check:login
+
+      # Signed-in suite. The fixture tries the last signed-up session first and
+      # falls back to the account in the secrets, naming whichever it uses.
+      - name: Signed-in suite
+        if: ${{ env.TEST_USER_EMAIL != '' && github.event.inputs.run_authenticated != 'false' }}
+        run: npx playwright test tests/Account.spec.ts tests/Mycourse.spec.ts tests/CourseTOC.spec.ts tests/PrivatePage.spec.ts --project=Chrome
+
+      - name: Publish reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sphere-staging-report
+          path: |
+            brand-reports/
+            test-reports/
+            playwright-report/
+          retention-days: 30

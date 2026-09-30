@@ -91,3 +91,63 @@ Single shared tab per file where safe (done for `Mycourse`); shared
 
 **Suggested order:** Phase 1 (unblocks CI) → 3 (quick wins) → 2 → 4 (largest, do
 incrementally per spec) → 5. Each phase should be run/verified before the next.
+
+---
+
+## C. Triggering from Jenkins (staging)
+
+The staging deploy is a Jenkins job, so the trigger is a post-build step that
+fires **only on success**. It posts a `repository_dispatch` to GitHub, which
+starts `.github/workflows/staging-deploy-tests.yml`.
+
+### What the dev team adds — declarative pipeline
+
+```groovy
+post {
+  success {
+    withCredentials([string(credentialsId: 'gh-pat-sphere-automation', variable: 'GH_PAT')]) {
+      sh label: 'Start Sphere automation', script: '''
+        set -e
+        PAYLOAD=$(printf '{"event_type":"staging-deployed","client_payload":{"build":"%s","job":"%s"}}' "$BUILD_NUMBER" "$JOB_NAME")
+        curl -sS -f -X POST \
+          -H "Authorization: token $GH_PAT" \
+          -H "Accept: application/vnd.github+json" \
+          -d "$PAYLOAD" \
+          https://api.github.com/repos/Santhoshshivaprakash/SphereWebAutomation/dispatches
+      '''
+    }
+  }
+}
+```
+
+`printf` builds the JSON so nothing has to be escaped through Groovy — quoting
+is where this snippet usually goes wrong. `-f` makes curl fail the step on an
+HTTP error, so a bad or expired token is visible in Jenkins instead of silently
+never starting the tests. A successful dispatch returns **204 No Content**.
+
+### Freestyle job
+
+Add a post-build action → *Execute shell* (condition: build is stable), with a
+"Secret text" binding for `GH_PAT`, and the same `curl` block.
+
+### The checklist to hand to dev
+
+1. **Which job** deploys staging — name and URL.
+2. **Add the post-success step** above to that job.
+3. **Store the token** as a Jenkins credential of kind *Secret text*,
+   id `gh-pat-sphere-automation`. QA supplies the value; it never goes in this
+   repo. A classic PAT needs scope `repo`; a fine-grained token needs
+   **Contents: read and write** on this repository only.
+4. **Confirm the agent can reach `api.github.com`** — many build agents sit
+   behind a proxy or an egress allowlist. If it cannot, say so: the polling
+   watcher (§D) is then the way, and no Jenkins change is needed at all.
+5. **Optional but useful:** keep `BUILD_NUMBER` in the payload, so a test report
+   can be traced back to the exact build it ran against.
+
+### Checking it worked
+
+- Jenkins console shows the curl step with no error (204).
+- GitHub → **Actions** → *Staging Deploy Tests* shows a run that started
+  seconds after the deploy, with "repository_dispatch" as its trigger.
+- If nothing appears: the workflow file must be on the **default branch**, and
+  the token must have access to this repository.

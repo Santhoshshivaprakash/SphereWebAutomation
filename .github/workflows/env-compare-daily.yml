@@ -1,0 +1,81 @@
+name: Daily Prod vs Staging Compare
+
+# Once a day, opens every PUBLIC page in config/compare-routes.json on
+# production and staging side by side (scripts/compare-env.mjs, no --auth) and
+# publishes the reports. Differences are REPORTED, not treated as a failure:
+# the job only goes red when the comparison itself could not run. The
+# plain-English report is shown on the run's Summary page; full HTML/PDF/JSON
+# reports and screenshots are in the uploaded artifact.
+on:
+  schedule:
+    - cron: '30 3 * * *' # 03:30 UTC = 09:00 IST, daily (GitHub may delay a few min)
+  workflow_dispatch: {}   # allow manual runs from the Actions tab
+
+concurrency:
+  group: env-compare-daily
+  cancel-in-progress: true
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      # compare-env.mjs exits 1 when it finds BLOCKING differences as well as
+      # when it crashes, so the exit code alone can't tell them apart. The JSON
+      # report is written only after a complete run, so its presence is the
+      # real "did the comparison run" signal.
+      - name: Compare public pages (production vs staging)
+        id: compare
+        run: |
+          set +e
+          node scripts/compare-env.mjs \
+            --a https://sphere.aastrika.org \
+            --b https://portal-staging.aastrika.org
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          if ! ls compare-reports/compare_production_vs_staging_*.json >/dev/null 2>&1; then
+            echo "::error::Comparison did not complete — no JSON report was written."
+            exit 1
+          fi
+
+      - name: Write summary
+        if: always()
+        run: |
+          txt=$(ls -t compare-reports/*_SIMPLE.txt 2>/dev/null | head -1)
+          {
+            echo "## Production vs Staging — public pages"
+            if [ "${{ steps.compare.outputs.exit }}" = "1" ]; then
+              echo "⚠️ Blocking differences found — see the report below."
+            elif [ "${{ steps.compare.outputs.exit }}" = "0" ]; then
+              echo "✅ No blocking differences."
+            fi
+            echo
+            echo "Full HTML/PDF reports and screenshots: **env-compare-report-${{ github.run_number }}** artifact."
+            if [ -n "$txt" ]; then
+              echo
+              echo '```'
+              cat "$txt"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: env-compare-report-${{ github.run_number }}
+          path: |
+            compare-reports/compare_production_vs_staging_*
+          retention-days: 14

@@ -79,3 +79,36 @@ jobs:
           path: |
             compare-reports/compare_production_vs_staging_*
           retention-days: 14
+  daily-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASE_URL: https://sphere.aastrika.org
+      HEADLESS: 'true'
+      SKIP_SIGNUP: '1'   # never create real prod users
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run UI + API tests
+        run: >
+          npx playwright test
+          tests/PublicPage.spec.ts tests/public-login.spec.ts
+          tests/Account.spec.ts tests/Mycourse.spec.ts
+          tests/CourseTOC.spec.ts tests/Competency.spec.ts
+          tests/api/
+          --project=Chrome --project=api
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-test-reports-${{ github.run_number }}
+          path: |
+            brand-reports/
+            playwright-report/
+            test-reports/
+          retention-days: 14

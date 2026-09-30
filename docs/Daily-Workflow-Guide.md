@@ -92,7 +92,42 @@ so the script's own exit code decides.
    - `....json`: machine-readable results
    - `..._assets/`: screenshots of both sites
 
-Artifacts are kept for 14 days.
+Artifacts are kept on GitHub for 90 days (the maximum).
+
+### Keeping reports on your PC for good
+
+`npm run reports:pull` downloads every finished run's artifacts, from all
+workflows, into `ci-reports/` in the project folder:
+
+```
+ci-reports/
+  synthetic-monitor-prod-staging/
+    2026-09-30_15-00_run42_success/
+      monitor-report-production-42/test-reports/run-reports/RunReport_….pdf
+      monitor-report-staging-42/…
+  daily-prod-vs-staging-compare/
+    2026-09-30_09-00_run3_failure/…
+```
+
+- Folder names use your PC's local time, the run number and its result.
+- Runs already downloaded are listed in `ci-reports/.pulled.json` and skipped, so
+  run it as often as you like; only new runs are fetched.
+- A download that fails (network, permissions) is not recorded and is retried on
+  the next pull.
+- `ci-reports/` is git-ignored: the reports stay on your PC and are never pushed.
+- Run it at least once every 90 days, or GitHub deletes reports before they are
+  copied.
+
+Options: `-- --limit 300` looks further back than the newest 100 runs;
+`-- --workflow prod-monitor.yml` pulls one workflow only.
+
+One-time setup (the script uses the GitHub CLI):
+
+```powershell
+winget install --id GitHub.cli
+# open a NEW terminal, then:
+gh auth login      # GitHub.com → HTTPS → log in with a web browser
+```
 
 ### The GitHub machine starts empty
 

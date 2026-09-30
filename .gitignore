@@ -56,3 +56,6 @@ regression-results/
 
 # Stray duplicates left by a file-manager copy, not records worth keeping.
 *copy*.json
+
+# CI reports downloaded from GitHub Actions (npm run reports:pull)
+/ci-reports/

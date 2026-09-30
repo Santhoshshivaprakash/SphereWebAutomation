@@ -78,7 +78,7 @@ jobs:
           name: env-compare-report-${{ github.run_number }}
           path: |
             compare-reports/compare_production_vs_staging_*
-          retention-days: 14
+          retention-days: 90
   daily-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -111,7 +111,7 @@ jobs:
             brand-reports/
             playwright-report/
             test-reports/
-          retention-days: 14
+          retention-days: 90
 
   # Signup on BOTH environments: the matrix runs this job twice, once per
   # BASE_URL, on separate machines at the same time. Staging accounts are named
@@ -149,4 +149,4 @@ jobs:
             playwright-report/
             test-reports/
             .last-registered-email.json
-          retention-days: 14
+          retention-days: 90

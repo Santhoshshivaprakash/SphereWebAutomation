@@ -49,6 +49,7 @@
     "report:api-blob": "cross-env BASE_URL=https://sphere.aastrika.org BLOB=1 BLOB_DIR=blob-reports/api BLOB_NAME=api.zip playwright test --project=api",
     "report:ci": "cross-env HEADLESS=true BASE_URL=https://sphere.aastrika.org playwright test tests/PublicPage.spec.ts tests/public-login.spec.ts --project=Chrome",
     "report:merge": "node scripts/merge-branded.mjs",
+    "reports:pull": "node scripts/pull-ci-reports.mjs",
     "report:sanity": "node -e \"require('fs').rmSync('blob-reports',{recursive:true,force:true})\" && npm run report:auth && npm run report:app && npm run report:course && npm run report:merge",
     "test:everything": "node -e \"require('fs').rmSync('blob-reports',{recursive:true,force:true})\" && npm run report:auth && npm run report:course && npm run report:app && npm run report:api-blob && npm run report:merge",
     "compare:all": "node scripts/compare-env.mjs --auth --open",

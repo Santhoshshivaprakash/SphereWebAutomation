@@ -53,4 +53,4 @@ jobs:
             brand-reports/
             playwright-report/
             test-reports/
-          retention-days: 30
+          retention-days: 90

@@ -63,10 +63,14 @@ jobs:
       - name: Run synthetic monitor
         run: npm run test:monitor
 
-      - name: Upload report on failure
-        if: failure()
+      # The runner is deleted after the job, so anything not uploaded here is lost.
+      - name: Upload reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: monitor-report-${{ matrix.env }}
-          path: playwright-report/
-          retention-days: 7
+          name: monitor-report-${{ matrix.env }}-${{ github.run_number }}
+          path: |
+            test-reports/run-reports/
+            brand-reports/
+            playwright-report/
+          retention-days: 90

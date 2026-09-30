@@ -8,6 +8,7 @@
     "go": "node scripts/run.mjs",
     "go:both": "cross-env BASE_URL=both node scripts/run.mjs",
     "login:check": "node scripts/login-check.mjs",
+    "check:login": "node scripts/check-login.mjs",
     "//compare": "── Environment comparison (prod vs staging, side by side) ──",
     "compare": "node scripts/run-compare.mjs",
     "compare:auth": "node scripts/compare-env.mjs --auth",

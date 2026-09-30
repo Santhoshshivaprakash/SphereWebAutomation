@@ -40,6 +40,10 @@ const STATE_FILE = path.resolve(__dirname, '..', '..', '.auth', 'state.json');
 // Used to COMPLETE a course as a brand-new user (fresh email users are OTP-only,
 // so there's no password to log in with). See create-account.spec.ts.
 const FRESH_FILE = path.resolve(__dirname, '..', '..', '.auth', 'fresh-user.json');
+// The address that session belongs to (written alongside it by create-account).
+const FRESH_EMAIL_FILE = path.resolve(__dirname, '..', '..', '.auth', 'fresh-user-email.json');
+// The signup specs also drop the newest address here, at the project root.
+const LAST_REGISTERED_FILE = path.resolve(__dirname, '..', '..', '.last-registered-email.json');
 // Which environment to authenticate against.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
 // Use 127.0.0.1, NOT "localhost": on Windows localhost resolves to ::1 (IPv6)
@@ -52,6 +56,8 @@ const CDP_ENDPOINT = process.env.CDP_ENDPOINT ?? 'http://127.0.0.1:9222';
 const useCdp = () => process.env.USE_CDP === '1';
 // Should we reuse the session create-account minted?
 const useFreshUser = () => process.env.USE_FRESH_USER === '1';
+// Skip the signup session entirely and use the .env account.
+const skipFreshUser = () => process.env.SKIP_FRESH_USER === '1';
 
 // Works out which email/password to log in with, provisioning a user first if asked to.
 async function resolveCreds(): Promise<{ email: string; password: string }> {
@@ -90,6 +96,100 @@ async function resolveCreds(): Promise<{ email: string; password: string }> {
   }
   // Credentials found.
   return { email, password };
+}
+
+/** Is this context signed in? Boolean form — see verifyAuthenticated to throw. */
+async function isAuthenticated(ctx: BrowserContext): Promise<boolean> {
+  const page = await ctx.newPage();
+  try {
+    await page.goto(`${BASE_URL}/page/home`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForTimeout(2_000);
+    return await page.evaluate(() => {
+      const vis = (e: Element) => (e as HTMLElement).offsetParent !== null;
+      const clean = (s: string | null) => (s || '').replace(/\s+/g, ' ').trim();
+      const search = document.querySelector('input[placeholder*="learn today" i]');
+      const loginBtn = Array.from(document.querySelectorAll('button, a'))
+        .filter(vis).find((b) => /^log\s*in$/i.test(clean(b.textContent)));
+      return Boolean(search && vis(search)) && !loginBtn;
+    });
+  } catch {
+    return false;
+  } finally {
+    await page.close().catch(() => {});
+  }
+}
+
+/** The address of the last account create-account signed up, if it recorded one. */
+function lastSignedUpEmail(): string {
+  for (const f of [FRESH_EMAIL_FILE, LAST_REGISTERED_FILE]) {
+    try {
+      if (fs.existsSync(f)) {
+        const j = JSON.parse(fs.readFileSync(f, 'utf-8'));
+        if (j?.email) return String(j.email);
+      }
+    } catch { /* unreadable — treat as absent */ }
+  }
+  return '';
+}
+
+/**
+ * Can this session reach the SIGNED-IN APP, not just the signed-in header?
+ *
+ * A brand-new signup user is genuinely logged in and still cannot open the
+ * Account pages — onboarding is unfinished, so the profile never mounts, and
+ * every Account/CourseTOC test then fails with "Account page failed to mount".
+ *
+ * The route matters: the specs reach Account by clicking the header, because
+ * (as Account.spec.ts puts it) "a direct URL renders the Account route blank".
+ * Checking by direct navigation passed sessions that the suite then could not
+ * use, so this walks the same path the specs do.
+ */
+async function canUseAppPages(ctx: BrowserContext): Promise<boolean> {
+  const page = await ctx.newPage();
+  try {
+    await page.goto(`${BASE_URL}/page/home`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+    await page.waitForTimeout(2_000);
+    const nav = page.getByRole('link', { name: /^(account|खाता)$/i })
+      .or(page.getByRole('button', { name: /^(account|खाता)$/i }))
+      .or(page.getByText(/^(account|खाता)$/i)).first();
+    if (!(await nav.isVisible({ timeout: 10_000 }).catch(() => false))) return false;
+    await nav.click({ timeout: 8_000 }).catch(() => {});
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    await page.waitForTimeout(2_500);
+    return await page.getByText(/^(personal details|व्यक्तिगत विवरण)$/i).first()
+      .isVisible({ timeout: 8_000 }).catch(() => false);
+  } catch {
+    return false;
+  } finally {
+    await page.close().catch(() => {});
+  }
+}
+
+/**
+ * The LAST SIGNED-UP user's saved session, when it still works.
+ *
+ * Signup accounts are OTP-only — they have no password — so the saved session
+ * is the only way to run as one. Sessions expire, and the file may have been
+ * left behind by a run against the other environment, so it is checked against
+ * the portal before being trusted rather than assumed good.
+ */
+async function usableFreshSession(browser: Browser): Promise<boolean> {
+  if (!fs.existsSync(FRESH_FILE)) return false;
+  const email = lastSignedUpEmail();
+  let ctx: BrowserContext | null = null;
+  try {
+    ctx = await browser.newContext({ storageState: FRESH_FILE });
+    const ok = (await isAuthenticated(ctx)) && (await canUseAppPages(ctx));
+    console.log(ok
+      ? `🔑 Auth: using the last signed-up account${email ? ` (${email})` : ''} — saved session still valid`
+      : `🔑 Auth: the last signed-up session${email ? ` (${email})` : ''} cannot open the signed-in app (expired, wrong environment, or onboarding unfinished) — falling back to the .env account`);
+    return ok;
+  } catch {
+    return false;
+  } finally {
+    await ctx?.close().catch(() => {});
+  }
 }
 
 /**
@@ -243,19 +343,36 @@ export const test = base.extend<{}, { authFile: string; authContext: BrowserCont
         await use(''); // CDP mode needs no storageState
         return;
       }
-      // Reuse the fresh signup session (to complete a course as a brand-new
-      // user). Run create-account first to mint it.
-      if (useFreshUser()) {
-        // Only if create-account actually left one behind.
-        if (fs.existsSync(FRESH_FILE)) {
-          console.log(`🔑 Auth: reusing fresh-user session → ${FRESH_FILE}`);
+
+      // ── Account order: LAST SIGNED-UP USER first, then the .env account ──
+      //
+      // The signup specs mint a throwaway learner and save its session. That is
+      // the freshest, most representative account, and it is the only way to run
+      // as one at all — signup accounts are OTP-only, so a password login for
+      // one can never succeed. The session is CHECKED against the portal first,
+      // because it expires and may belong to the other environment.
+      //
+      // Whatever happens here is decided without asking anyone, so a deployment
+      // pipeline gets the same behaviour as a developer's terminal.
+      //   USE_FRESH_USER=1  → only the signup session; fail rather than fall back
+      //   SKIP_FRESH_USER=1 → ignore it and go straight to the .env account
+      const wantFreshOnly = useFreshUser();
+      if (!skipFreshUser()) {
+        if (await usableFreshSession(browser)) {
           await use(FRESH_FILE);
           return;
         }
-        // Asked for it but it isn't there — say so clearly, then fall through to a normal login.
-        console.log('⚠️  USE_FRESH_USER=1 but .auth/fresh-user.json not found — run create-account first. Falling back to credential login.');
+        if (wantFreshOnly) {
+          throw new Error(
+            'USE_FRESH_USER=1 but there is no usable signed-up session'
+            + ` for ${new URL(BASE_URL).hostname}.\n`
+            + '  Mint one first:  npm run mint:fresh-user\n'
+            + '  …or drop USE_FRESH_USER to fall back to the account in .env.',
+          );
+        }
       }
-      // Normal path: log in once and save the session.
+
+      // Fall back to the credentials in .env (or the CI secrets).
       const file = await buildStorageState(browser);
       // Hand the path to every test in this worker.
       await use(file);

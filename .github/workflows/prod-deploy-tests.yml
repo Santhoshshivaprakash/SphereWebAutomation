@@ -23,9 +23,10 @@ jobs:
       # prod test account so the authed suite can run headless in CI.
       TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-      # Login smoke + email report (used if configured)
-      MONITOR_EMAIL: ${{ secrets.MONITOR_EMAIL }}
-      MONITOR_PASSWORD: ${{ secrets.MONITOR_PASSWORD }}
+      # Login smoke + email report. Uses a dedicated monitor account when one is
+      # configured, otherwise the TEST_USER account (same order as the monitor spec).
+      MONITOR_EMAIL: ${{ secrets.MONITOR_EMAIL || secrets.TEST_USER_EMAIL }}
+      MONITOR_PASSWORD: ${{ secrets.MONITOR_PASSWORD || secrets.TEST_USER_PASSWORD }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
@@ -69,6 +70,14 @@ jobs:
       - name: Prod login smoke (if a monitor account is configured)
         if: ${{ env.MONITOR_EMAIL != '' }}
         run: npm run test:monitor
+
+      # Signup — registers a new yopmail user on prod. Kept LAST on purpose:
+      # create-account saves the new user's session and the signed-in fixture
+      # prefers it, so running it earlier would switch the signed-in suite to a
+      # brand-new account with no courses. Runs even if earlier steps failed.
+      - name: Create account (signup)
+        if: ${{ !cancelled() }}
+        run: npx cross-env HEADLESS=true playwright test tests/create-account.spec.ts --project=Chrome
 
       - name: Publish branded report
         if: always()

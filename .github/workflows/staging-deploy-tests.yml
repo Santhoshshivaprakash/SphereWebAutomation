@@ -91,6 +91,14 @@ jobs:
         if: ${{ env.TEST_USER_EMAIL != '' && github.event.inputs.run_authenticated != 'false' }}
         run: npx playwright test tests/Account.spec.ts tests/Mycourse.spec.ts tests/CourseTOC.spec.ts tests/PrivatePage.spec.ts --project=Chrome
 
+      # Signup — registers a new "stage-…" yopmail user. Kept LAST on purpose:
+      # create-account saves the new user's session and the signed-in fixture
+      # prefers it, so running it earlier would switch the signed-in suite to a
+      # brand-new account with no courses. Runs even if earlier steps failed.
+      - name: Create account (signup)
+        if: ${{ !cancelled() }}
+        run: npx playwright test tests/create-account.spec.ts --project=Chrome
+
       - name: Publish reports
         if: always()
         uses: actions/upload-artifact@v4

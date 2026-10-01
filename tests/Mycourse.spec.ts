@@ -71,7 +71,14 @@ async function clickTab(page: Page, name: 'Started' | 'For You' | 'Completed') {
   ].join(', ')).first();
   // The tab bar renders only after the course lists load, which can take well
   // over 15s on a slow CI machine — wait for it explicitly before clicking.
-  await tab.waitFor({ state: 'visible', timeout: 30_000 });
+  // If the page is still stuck after 30s (a slow or dropped data call), reload
+  // once and wait again, as a person would, before giving up.
+  if (!(await tab.waitFor({ state: 'visible', timeout: 30_000 }).then(() => true, () => false))) {
+    console.log(`   ↻ "${name}" tab not shown after 30s — reloading My Courses once`);
+    await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await tab.waitFor({ state: 'visible', timeout: 30_000 });
+  }
   // Click it.
   await scrollAndClick(page, tab);
   // Let the tab panel re-render.

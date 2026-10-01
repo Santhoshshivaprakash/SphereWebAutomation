@@ -1506,7 +1506,11 @@ test.describe('Competency Dashboard — full flow', () => {
     await goBackToDashboard(page).catch(() => {});
     // Open the Passbook.
     await clickTab(page, 'Passbook');
-    await page.waitForTimeout(2500);
+    // Wait for the Passbook to settle — either entries or its empty-state message —
+    // instead of counting once after a fixed pause.
+    await page.locator('mat-card, [class*="card" i]').first()
+      .or(page.getByText(/no data to display/i)).first()
+      .waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
 
     // How many entries does it hold?
     const cards = await page.locator('mat-card, [class*="card" i]').count().catch(() => 0);
@@ -1527,10 +1531,14 @@ test.describe('Competency Dashboard — full flow', () => {
     console.log(`Passbook shows "${flow.competencyTitle}": ${showsCompetency}`);
     console.log(`Passbook preview: ${bodyText.slice(0, 220)}`);
 
-    // The passbook must have entries...
-    expect(cards).toBeGreaterThan(0);
-    // ...and if we cleared levels this run, the completed competency must appear.
-    // Conditional, because a run that cleared nothing can't expect a new entry.
-    if (passedLevels > 0) expect(showsCompetency).toBe(true);
+    // Only a run that CLEARED a level can expect a Passbook entry. An account that
+    // has never passed a level has an empty Passbook ("No data to display, please
+    // take self-assessment") — correct, not a failure — so that case is recorded only.
+    if (passedLevels > 0) {
+      expect(cards, 'Passbook should list entries after levels were passed').toBeGreaterThan(0);
+      expect(showsCompetency, `Passbook should show "${flow.competencyTitle}"`).toBe(true);
+    } else {
+      console.log(`ℹ️  No level was passed this run — Passbook not asserted (${cards} entries shown)`);
+    }
   });
 });

@@ -7,7 +7,16 @@ name: Synthetic Monitor (prod + staging)
 on:
   schedule:
     - cron: '30 3,9,15 * * *' # 3× a day: 09:00, 15:00, 21:00 IST (03:30/09:30/15:30 UTC; GitHub may delay a few min)
-  workflow_dispatch: {}      # allow manual runs from the Actions tab
+  workflow_dispatch:         # allow manual runs from the Actions tab
+    inputs:
+      environments:
+        description: 'Environments to monitor (scheduled runs: production + staging)'
+        type: choice
+        default: production + staging
+        options:
+          - production + staging
+          - uat only
+          - production + staging + uat
 
 concurrency:
   group: prod-monitor
@@ -18,27 +27,20 @@ jobs:
   # Each environment signs in with its own account, picked by secret NAME:
   #   production → TEST_USER_EMAIL / TEST_USER_PASSWORD
   #   staging    → STAGING_EMAIL   / STAGING_PASSWORD
+  #   uat        → UAT_EMAIL       / UAT_PASSWORD   (manual runs only, for now)
   monitor:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false   # a failure on one environment doesn't cancel the other
       matrix:
-        include:
-          - env: production
-            url: https://sphere.aastrika.org
-            email_secret: TEST_USER_EMAIL
-            password_secret: TEST_USER_PASSWORD
-          - env: staging
-            url: https://portal-staging.aastrika.org
-            email_secret: STAGING_EMAIL
-            password_secret: STAGING_PASSWORD
+        env: ${{ fromJSON(inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging + uat' && '["production","staging","uat"]' || '["production","staging"]') }}
     name: monitor (${{ matrix.env }})
     env:
-      BASE_URL: ${{ matrix.url }}
+      BASE_URL: ${{ matrix.env == 'production' && 'https://sphere.aastrika.org' || matrix.env == 'staging' && 'https://portal-staging.aastrika.org' || 'https://uat.aastrika.org' }}
       HEADLESS: 'true'   # GitHub machines have no screen
-      MONITOR_EMAIL: ${{ secrets[matrix.email_secret] }}
-      MONITOR_PASSWORD: ${{ secrets[matrix.password_secret] }}
+      MONITOR_EMAIL: ${{ secrets[matrix.env == 'production' && 'TEST_USER_EMAIL' || matrix.env == 'staging' && 'STAGING_EMAIL' || 'UAT_EMAIL'] }}
+      MONITOR_PASSWORD: ${{ secrets[matrix.env == 'production' && 'TEST_USER_PASSWORD' || matrix.env == 'staging' && 'STAGING_PASSWORD' || 'UAT_PASSWORD'] }}
       # SMTP alerting (used by reporters/email-reporter.ts)
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}

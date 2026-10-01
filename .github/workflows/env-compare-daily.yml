@@ -6,19 +6,42 @@ name: Daily Prod vs Staging Compare
 # the job only goes red when the comparison itself could not run. The
 # plain-English report is shown on the run's Summary page; full HTML/PDF/JSON
 # reports and screenshots are in the uploaded artifact.
+#
+# ENVIRONMENTS: scheduled runs test production + staging. The "Run workflow"
+# button offers a choice — "uat only" or all three — so UAT (uat.aastrika.org,
+# its own backend) can be run on demand. Each job turns the choice into its
+# matrix with fromJSON; on a scheduled run there is no input, so the default
+# (production + staging) applies.
 on:
   schedule:
     - cron: '30 3 * * *' # 03:30 UTC = 09:00 IST, daily (GitHub may delay a few min)
-  workflow_dispatch: {}   # allow manual runs from the Actions tab
+  workflow_dispatch:      # allow manual runs from the Actions tab
+    inputs:
+      environments:
+        description: 'Environments to test'
+        type: choice
+        default: production + staging
+        options:
+          - production + staging
+          - uat only
+          - production + staging + uat
 
 concurrency:
   group: env-compare-daily
   cancel-in-progress: true
 
 jobs:
+  # Production is always the baseline; the matrix picks what it's compared with.
   compare:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging + uat' && '["staging","uat"]' || '["staging"]') }}
+    name: compare (production vs ${{ matrix.target }})
+    env:
+      TARGET_URL: ${{ matrix.target == 'uat' && 'https://uat.aastrika.org' || 'https://portal-staging.aastrika.org' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -37,15 +60,15 @@ jobs:
       # when it crashes, so the exit code alone can't tell them apart. The JSON
       # report is written only after a complete run, so its presence is the
       # real "did the comparison run" signal.
-      - name: Compare public pages (production vs staging)
+      - name: Compare public pages (production vs ${{ matrix.target }})
         id: compare
         run: |
           set +e
           node scripts/compare-env.mjs \
             --a https://sphere.aastrika.org \
-            --b https://portal-staging.aastrika.org
+            --b "$TARGET_URL"
           echo "exit=$?" >> "$GITHUB_OUTPUT"
-          if ! ls compare-reports/compare_production_vs_staging_*.json >/dev/null 2>&1; then
+          if ! ls compare-reports/compare_production_vs_*.json >/dev/null 2>&1; then
             echo "::error::Comparison did not complete — no JSON report was written."
             exit 1
           fi
@@ -55,14 +78,14 @@ jobs:
         run: |
           txt=$(ls -t compare-reports/*_SIMPLE.txt 2>/dev/null | head -1)
           {
-            echo "## Production vs Staging — public pages"
+            echo "## Production vs ${{ matrix.target }} — public pages"
             if [ "${{ steps.compare.outputs.exit }}" = "1" ]; then
               echo "⚠️ Blocking differences found — see the report below."
             elif [ "${{ steps.compare.outputs.exit }}" = "0" ]; then
               echo "✅ No blocking differences."
             fi
             echo
-            echo "Full HTML/PDF reports and screenshots: **env-compare-report-${{ github.run_number }}** artifact."
+            echo "Full HTML/PDF reports and screenshots: **env-compare-report-${{ matrix.target }}-${{ github.run_number }}** artifact."
             if [ -n "$txt" ]; then
               echo
               echo '```'
@@ -75,9 +98,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: env-compare-report-${{ github.run_number }}
+          name: env-compare-report-${{ matrix.target }}-${{ github.run_number }}
           path: |
-            compare-reports/compare_production_vs_staging_*
+            compare-reports/compare_production_vs_*
           retention-days: 90
 
   # The UI + API suite on BOTH environments: the matrix runs this job twice, once
@@ -92,23 +115,17 @@ jobs:
     strategy:
       fail-fast: false   # a failure on one environment doesn't cancel the other
       matrix:
-        include:
-          - env: production
-            url: https://sphere.aastrika.org
-            email_secret: TEST_USER_EMAIL
-            password_secret: TEST_USER_PASSWORD
-          - env: staging
-            url: https://portal-staging.aastrika.org
-            email_secret: STAGING_EMAIL
-            password_secret: STAGING_PASSWORD
+        env: ${{ fromJSON(inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging + uat' && '["production","staging","uat"]' || '["production","staging"]') }}
     name: daily-tests (${{ matrix.env }})
     env:
-      BASE_URL: ${{ matrix.url }}
+      # production → sphere + TEST_USER_*, staging → portal-staging + STAGING_*,
+      # uat → uat.aastrika.org + UAT_* (each backend has its own accounts).
+      BASE_URL: ${{ matrix.env == 'production' && 'https://sphere.aastrika.org' || matrix.env == 'staging' && 'https://portal-staging.aastrika.org' || 'https://uat.aastrika.org' }}
       HEADLESS: 'true'
       SKIP_SIGNUP: '1'   # signup runs in daily-signup; keep it out of this suite
       JSON_OUT: test-reports/results.json   # machine-readable results for daily-report
-      TEST_USER_EMAIL: ${{ secrets[matrix.email_secret] }}
-      TEST_USER_PASSWORD: ${{ secrets[matrix.password_secret] }}
+      TEST_USER_EMAIL: ${{ secrets[matrix.env == 'production' && 'TEST_USER_EMAIL' || matrix.env == 'staging' && 'STAGING_EMAIL' || 'UAT_EMAIL'] }}
+      TEST_USER_PASSWORD: ${{ secrets[matrix.env == 'production' && 'TEST_USER_PASSWORD' || matrix.env == 'staging' && 'STAGING_PASSWORD' || 'UAT_PASSWORD'] }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -143,14 +160,10 @@ jobs:
     strategy:
       fail-fast: false   # a failure on one environment doesn't cancel the other
       matrix:
-        include:
-          - env: production
-            url: https://sphere.aastrika.org
-          - env: staging
-            url: https://portal-staging.aastrika.org
+        env: ${{ fromJSON(inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging + uat' && '["production","staging","uat"]' || '["production","staging"]') }}
     name: daily-signup (${{ matrix.env }})
     env:
-      BASE_URL: ${{ matrix.url }}
+      BASE_URL: ${{ matrix.env == 'production' && 'https://sphere.aastrika.org' || matrix.env == 'staging' && 'https://portal-staging.aastrika.org' || 'https://uat.aastrika.org' }}
       HEADLESS: 'true'
       JSON_OUT: test-reports/results.json   # machine-readable results for daily-report
     steps:

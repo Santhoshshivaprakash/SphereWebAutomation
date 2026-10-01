@@ -94,6 +94,30 @@ so the script's own exit code decides.
 
 Artifacts are kept on GitHub for 90 days (the maximum).
 
+### Environments (production, staging, UAT)
+
+Scheduled runs test **production + staging**. The **Run workflow** button has an
+**Environments** choice:
+
+| Choice | What runs |
+|---|---|
+| `production + staging` (default) | Same as the schedule |
+| `uat only` | Compare production vs UAT, plus tests and signup on UAT |
+| `production + staging + uat` | Everything, with two compares (vs staging and vs UAT) |
+
+UAT is `uat.aastrika.org` (Sphere) and `ekshamata-uat.aastrika.org` (e-Kshamata).
+It is its own backend, so it has its own accounts:
+
+| Repo | Secrets UAT needs |
+|---|---|
+| Sphere | `UAT_EMAIL`, `UAT_PASSWORD` |
+| e-Kshamata | `SPHERE_UAT_API_TOKEN` (creates the UAT test users on UAT) |
+
+The same choice is on the Synthetic Monitor (Sphere) and the e-Kshamata daily
+workflow. For Staging Deploy Tests, type `https://uat.aastrika.org` in
+"Portal to test"; it then signs in with the UAT account. In the terminal, every
+runner's environment menu lists UAT after Staging.
+
 ### One combined report, emailed
 
 The last job, `daily-report`, waits for every other job (even failed ones),

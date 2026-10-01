@@ -94,6 +94,7 @@ const requireTTY = (what) => {
 const ENVIRONMENTS = [
   ['Production', 'https://sphere.aastrika.org'],
   ['Staging',    'https://portal-staging.aastrika.org'],
+  ['UAT',        'https://uat.aastrika.org'],
   ['Localhost',  'http://localhost:3000'],
 ];
 

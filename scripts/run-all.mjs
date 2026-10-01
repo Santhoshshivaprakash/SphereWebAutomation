@@ -58,6 +58,7 @@ const projects = ['Chrome', 'api', 'monitor'];
 const ENVS = [
   ['Production', process.env.ENV_PROD_URL || 'https://sphere.aastrika.org'],
   ['Staging (Portal)', process.env.ENV_STAGING_URL || 'https://portal-staging.aastrika.org'],
+  ['UAT (Sphere)',     process.env.ENV_UAT_URL || 'https://uat.aastrika.org'],
   ['Localhost', process.env.ENV_LOCAL_URL || 'http://localhost:3000'],
 ];
 const ALIASES = { prod: 0, production: 0, staging: 1, stage: 1, portal: 1, local: 2, localhost: 2 };

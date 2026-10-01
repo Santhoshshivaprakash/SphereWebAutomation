@@ -80,6 +80,7 @@ function labelFor(url) {
   const h = new URL(url).hostname;
   if (/^sphere\./i.test(h)) return 'Production';
   if (/portal-staging/i.test(h)) return 'Staging';
+  if (/^uat\./i.test(h)) return 'UAT';
   if (/^localhost|^127\./.test(h)) return 'Localhost';
   return h;
 }

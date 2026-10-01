@@ -107,7 +107,7 @@ export async function authState(browser, baseUrl, email, password, { refresh = f
  */
 export function credentialsFor(baseUrl) {
   const host = new URL(baseUrl).hostname;
-  const prefix = /portal-staging/i.test(host) ? 'STAGING' : /^localhost|127\.0\.0\.1/.test(host) ? 'LOCAL' : 'PROD';
+  const prefix = /portal-staging/i.test(host) ? 'STAGING' : /^uat\./i.test(host) ? 'UAT' : /^localhost|127\.0\.0\.1/.test(host) ? 'LOCAL' : 'PROD';
 
   const pairs = [
     [process.env[`${prefix}_EMAIL`], process.env[`${prefix}_PASSWORD`], `${prefix}_EMAIL`],

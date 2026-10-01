@@ -34,6 +34,7 @@ function ask(query) {
 const BASE_URLS = [
   ['Production (Sphere)', 'https://sphere.aastrika.org'],
   ['Staging (Portal)',    'https://portal-staging.aastrika.org'],
+  ['UAT (Sphere)',        'https://uat.aastrika.org'],
   ['Localhost',           'http://localhost:3000'],
 ];
 async function pickBaseUrl() {

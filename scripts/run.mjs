@@ -62,6 +62,7 @@ function ask(query) {
 const BASE_URLS = [
   ['Sphere PRODUCTION', 'https://sphere.aastrika.org'],
   ['Sphere STAGING',    'https://portal-staging.aastrika.org'],
+  ['Sphere UAT',        'https://uat.aastrika.org'],
   ['Localhost',         'http://localhost:3000'],
 ];
 const PROD = BASE_URLS[0][1];

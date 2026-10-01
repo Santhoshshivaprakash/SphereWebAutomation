@@ -24,7 +24,8 @@ export function envPrefix(): string {
   if (explicit) return /^none$/i.test(explicit) ? '' : `${explicit.toLowerCase()}-`;
   try {
     const host = new URL(process.env.BASE_URL || '').hostname;
-    return /^portal-staging\.aastrika\.org$/i.test(host) ? 'stage-' : '';
+    return /^portal-staging\.aastrika\.org$/i.test(host) ? 'stage-'
+      : /^uat\.aastrika\.org$/i.test(host) ? 'uat-' : '';
   } catch {
     return '';
   }
@@ -166,7 +167,7 @@ export async function fetchOtpFromYopmail(
 export function recordCreatedEmail(email: string, source: string): void {
   try {
     const host = new URL(process.env.BASE_URL ?? 'https://sphere.aastrika.org').hostname;
-    const env = /portal-staging/i.test(host) ? 'staging' : /^sphere\./i.test(host) ? 'production' : host;
+    const env = /portal-staging/i.test(host) ? 'staging' : /^uat\./i.test(host) ? 'uat' : /^sphere\./i.test(host) ? 'production' : host;
     const file = path.resolve(__dirname, '..', '..', 'generated-emails.txt');
     fs.appendFileSync(file, `${new Date().toISOString()}\t${env}\t${source}\t${email}\n`, 'utf-8');
   } catch { /* ignore */ }

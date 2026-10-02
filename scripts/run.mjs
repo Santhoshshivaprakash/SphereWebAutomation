@@ -385,6 +385,10 @@ async function runJourney(baseUrl, targetEnv, jsonFile) {
     }
     const env = {
       ...targetEnv,
+      // Never stop to serve the HTML report: on a failure Playwright otherwise
+      // opens it and waits for Ctrl+C, which halts the rest of the journey.
+      // Every step's report is still written to playwright-report/ and brand-reports/.
+      PW_TEST_HTML_REPORT_OPEN: 'never',
       // Competency content belongs to the role: ANM/MPW sees the maternal-care
       // competencies (Normal delivery…). PROFILE_DESIGNATION overrides it.
       PROFILE_DESIGNATION: process.env.PROFILE_DESIGNATION || 'ANM/MPW',

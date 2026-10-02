@@ -97,8 +97,12 @@ test.beforeEach(async ({ page }) => {
   // test (mobile/tablet) doesn't bleed into the next one.
   // This is the specific hazard the shared-tab design creates.
   await page.setViewportSize({ width: 1280, height: 800 }).catch(() => {});
-  // Back to My Courses, whatever the last test did.
-  await page.goto(MY_COURSES_URL);
+  // Back to My Courses, whatever the last test did. One retry: a single network
+  // timeout (seen on UAT: net::ERR_TIMED_OUT) shouldn't fail a test about the page.
+  await page.goto(MY_COURSES_URL).catch(async (e) => {
+    console.log(`   ↻ My Courses didn't load (${String(e.message).split('\n')[0]}) — retrying once`);
+    await page.goto(MY_COURSES_URL);
+  });
   // Wait for the app's data calls to settle.
   await page.waitForLoadState('networkidle');
 });

@@ -22,7 +22,7 @@
  * If BASE_URL is already set in the environment the URL prompt is skipped;
  * likewise COURSE_NAME / COMPETENCY_NAME skip their prompt.
  */
-import { readdirSync, mkdirSync } from 'node:fs';
+import { readdirSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import readline from 'node:readline';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -289,12 +289,12 @@ if (account) {
 
 const cli = require.resolve('@playwright/test/cli');
 
-function runPlaywright(baseUrl, extraEnv) {
+function runPlaywright(baseUrl, extraEnv, specList = target ? [target] : []) {
   return new Promise((res) => {
     // Headed by default — you are meant to watch these. HEADLESS=true for CI
     // or an unattended both-environment sweep.
     const headed = process.env.HEADLESS === 'true' ? [] : ['--headed'];
-    const args = [cli, 'test', ...(target ? [target] : []), '--project=Chrome', ...headed];
+    const args = [cli, 'test', ...specList, '--project=Chrome', ...headed];
     const child = spawn(process.execPath, args, {
       stdio: 'inherit',
       env: {
@@ -337,6 +337,90 @@ const jsonFor = (baseUrl) =>
   resolve(REPORT_DIR, `.results_${new URL(baseUrl).hostname.replace(/[^a-z0-9]/gi, '_')}.json`);
 if (BOTH) mkdirSync(REPORT_DIR, { recursive: true });
 
+// ── ALL specs = the user's journey, in order, as ONE new user ───────────
+// Playwright orders files alphabetically inside a run (Account first, before any
+// account exists), so ALL runs these as separate, ordered invocations:
+//   public page → create account → My Courses → course completion →
+//   competency dashboard → Account tab → everything else
+// The account is created by positiveflow (signup + full onboarding — create-account
+// stops at T&C, and authedTest rejects a user with unfinished onboarding), which
+// saves its session. Every later step runs with USE_FRESH_USER=1, so it signs in
+// as THAT user on whichever environment was picked — and fails loudly rather than
+// falling back to an .env account that belongs to another backend.
+const SIGNUP_ONLY = ['create-account.spec.ts', 'OTP.spec.ts', 'yopmail.spec.ts'];
+// Left out of ALL for now (still runnable on its own from the menu).
+const NOT_IN_ALL = ['SCROM.spec.ts'];
+function journeySteps(competencyChosen) {
+  const used = new Set(['PublicPage.spec.ts', 'public-login.spec.ts', 'positiveflow.spec.ts', 'Mycourse.spec.ts',
+    'CourseComplete.spec.ts', 'Competency.spec.ts', 'CompleteCompetency.spec.ts', 'Account.spec.ts',
+    'RoleCourses.spec.ts', ...SIGNUP_ONLY, ...NOT_IN_ALL]);
+  const t = (s) => `tests/${s}`;
+  const rest = specs.filter((s) => !used.has(s));
+  return [
+    { name: 'Public page', specs: [t('PublicPage.spec.ts'), t('public-login.spec.ts')] },
+    { name: 'Create account (signup + onboarding)', specs: [t('positiveflow.spec.ts')], creates: true },
+    { name: 'My Courses', specs: [t('Mycourse.spec.ts')], fresh: true },
+    { name: 'Course completion', specs: [t('CourseComplete.spec.ts')], fresh: true },
+    { name: 'Competency dashboard', specs: [t('Competency.spec.ts'), ...(competencyChosen ? [t('CompleteCompetency.spec.ts')] : [])], fresh: true },
+    { name: 'Account tab', specs: [t('Account.spec.ts')], fresh: true },
+    // The rest: other signed-in specs, then the role sweep (it changes the user's
+    // role), then the specs that sign up accounts of their own.
+    { name: 'Everything else', specs: [...rest.map(t), t('RoleCourses.spec.ts')], fresh: true },
+    { name: 'Other signup flows', specs: SIGNUP_ONLY.map(t) },
+  ].filter((s) => s.specs.length);
+}
+
+/** Run the journey on one environment; returns the worst exit code. */
+async function runJourney(baseUrl, targetEnv, jsonFile) {
+  const steps = journeySteps(Boolean(targetEnv.COMPETENCY_NAME));
+  const stepJson = [];
+  const summary = [];
+  let haveUser = true;
+  for (const [i, step] of steps.entries()) {
+    console.log(`\n${'─'.repeat(70)}\n  STEP ${i + 1}/${steps.length} — ${step.name}\n${'─'.repeat(70)}`);
+    if (step.fresh && !haveUser) {
+      console.log('  ⏭  skipped — the account could not be created, so there is no user to run as');
+      summary.push({ name: step.name, code: 'skipped' });
+      continue;
+    }
+    const env = {
+      ...targetEnv,
+      // Competency content belongs to the role: ANM/MPW sees the maternal-care
+      // competencies (Normal delivery…). PROFILE_DESIGNATION overrides it.
+      PROFILE_DESIGNATION: process.env.PROFILE_DESIGNATION || 'ANM/MPW',
+      ...(step.fresh ? { USE_FRESH_USER: '1' } : {}),
+      ...(jsonFile ? { JSON_OUT: `${jsonFile}.step${i + 1}.json` } : {}),
+    };
+    // Signup has occasional flaky steps (slow city list, Terms page language),
+    // so it gets a second try — with a brand-new user.
+    let code = await runPlaywright(baseUrl, env, step.specs);
+    if (code !== 0 && step.creates) {
+      console.log('\n  ↻ signup failed — retrying once with a new user');
+      code = await runPlaywright(baseUrl, env, step.specs);
+    }
+    if (step.creates && code !== 0) haveUser = false;
+    if (jsonFile) stepJson.push(env.JSON_OUT);
+    summary.push({ name: step.name, code });
+  }
+  console.log(`\n  Journey on ${baseUrl}:`);
+  for (const s of summary) console.log(`    ${s.code === 0 ? '✅' : s.code === 'skipped' ? '⏭ ' : '❌'}  ${s.name}`);
+  // One results file per environment, as the both-environment report expects:
+  // the steps' files merged into one (their suites side by side).
+  if (jsonFile) {
+    const merged = { suites: [], errors: [] };
+    for (const f of stepJson) {
+      try {
+        const r = JSON.parse(readFileSync(f, 'utf-8'));
+        merged.suites.push(...(r.suites || []));
+        merged.errors.push(...(r.errors || []));
+        if (!merged.config && r.config) merged.config = r.config;
+      } catch { /* a step that never started wrote no file */ }
+    }
+    writeFileSync(jsonFile, JSON.stringify(merged));
+  }
+  return summary.some((s) => s.code !== 0) ? 1 : 0;
+}
+
 const results = [];
 for (const baseUrl of ENVS) {
   if (BOTH) {
@@ -351,6 +435,10 @@ for (const baseUrl of ENVS) {
       console.log(`${'═'.repeat(70)}`);
     }
     console.log(`\n▶  Running ${spec || 'ALL specs'} on ${baseUrl}${t.label ? ` — "${t.label}"` : ''}\n`);
+    if (runningAll) {
+      results.push({ baseUrl, courseName: t.label, code: await runJourney(baseUrl, t.env, BOTH ? jsonFor(baseUrl) : null) });
+      continue;
+    }
     const extra = BOTH ? { ...t.env, JSON_OUT: jsonFor(baseUrl) } : t.env;
     results.push({ baseUrl, courseName: t.label, code: await runPlaywright(baseUrl, extra) });
   }

@@ -1,6 +1,6 @@
-name: Synthetic Monitor (prod + staging)
+name: Synthetic Monitor (prod + staging + UAT)
 
-# Runs a tiny login + authenticated-page smoke against PRODUCTION and STAGING on a schedule.
+# Runs a tiny login + authenticated-page smoke against PRODUCTION, STAGING and UAT on a schedule.
 # On failure, the email reporter sends an alert via SMTP. If the job itself breaks
 # before the reporter runs (e.g. npm ci fails), GitHub's built-in workflow-failure
 # email notification covers it.
@@ -10,13 +10,13 @@ on:
   workflow_dispatch:         # allow manual runs from the Actions tab
     inputs:
       environments:
-        description: 'Environments to monitor (scheduled runs: production + staging)'
+        description: 'Environments to monitor (scheduled runs: all three)'
         type: choice
-        default: production + staging
+        default: production + staging + uat
         options:
+          - production + staging + uat
           - production + staging
           - uat only
-          - production + staging + uat
 
 concurrency:
   group: prod-monitor
@@ -27,14 +27,15 @@ jobs:
   # Each environment signs in with its own account, picked by secret NAME:
   #   production → TEST_USER_EMAIL / TEST_USER_PASSWORD
   #   staging    → STAGING_EMAIL   / STAGING_PASSWORD
-  #   uat        → UAT_EMAIL       / UAT_PASSWORD   (manual runs only, for now)
+  #   uat        → UAT_EMAIL       / UAT_PASSWORD
+  # Scheduled runs have no input, so they fall through to all three.
   monitor:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false   # a failure on one environment doesn't cancel the other
       matrix:
-        env: ${{ fromJSON(inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging + uat' && '["production","staging","uat"]' || '["production","staging"]') }}
+        env: ${{ fromJSON(inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging' && '["production","staging"]' || '["production","staging","uat"]') }}
     name: monitor (${{ matrix.env }})
     env:
       BASE_URL: ${{ matrix.env == 'production' && 'https://sphere.aastrika.org' || matrix.env == 'staging' && 'https://portal-staging.aastrika.org' || 'https://uat.aastrika.org' }}

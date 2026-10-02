@@ -258,3 +258,5 @@
 2026-09-30T13:45:36.000Z	production	recovered-from-today-runs	testautomation31412@yopmail.com
 2026-09-30T13:45:36.000Z	production	recovered-from-today-runs	testautomation37562@yopmail.com
 2026-09-30T14:09:37.249Z	production?	recovered-from-reports	testautomation88736@yopmail.com
+2026-10-02T00:50:31.309Z	uat	create-account	uat-testautoma69019@yopmail.com
+2026-10-02T00:51:09.106Z	uat	create-account	uat-testautoma65525@yopmail.com

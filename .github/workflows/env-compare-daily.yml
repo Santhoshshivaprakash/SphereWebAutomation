@@ -132,14 +132,24 @@ jobs:
         with: { node-version: 20, cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      # Public pages + API always run. The signed-in specs need this environment's
+      # account secrets (production TEST_USER_*, staging STAGING_*, uat UAT_*);
+      # without them they are SKIPPED with a warning instead of failing 100+ tests
+      # on "Authenticated specs need credentials" — the same rule as the monitor.
       - name: Run UI + API tests
-        run: >
-          npx playwright test
-          tests/PublicPage.spec.ts tests/public-login.spec.ts
-          tests/Account.spec.ts tests/Mycourse.spec.ts
-          tests/CourseTOC.spec.ts tests/Competency.spec.ts
-          tests/api/
-          --project=Chrome --project=api
+        run: |
+          specs="tests/PublicPage.spec.ts tests/public-login.spec.ts tests/api/"
+          if [ -n "$TEST_USER_EMAIL" ] && [ -n "$TEST_USER_PASSWORD" ]; then
+            specs="$specs tests/Account.spec.ts tests/Mycourse.spec.ts tests/CourseTOC.spec.ts tests/Competency.spec.ts"
+          else
+            case "${{ matrix.env }}" in
+              production) need="TEST_USER_EMAIL / TEST_USER_PASSWORD" ;;
+              staging)    need="STAGING_EMAIL / STAGING_PASSWORD" ;;
+              *)          need="UAT_EMAIL / UAT_PASSWORD" ;;
+            esac
+            echo "::warning title=Signed-in tests skipped on ${{ matrix.env }}::No account for ${{ matrix.env }} — add the $need secrets to run Account, My Courses, Course TOC and Competency. Public pages and API tests still ran."
+          fi
+          npx playwright test $specs --project=Chrome --project=api
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4

@@ -51,6 +51,14 @@ export interface OtpOptions {
   attempts?: number;
   /** Base delay between attempts in ms (default 5000; jittered). */
   intervalMs?: number;
+  /**
+   * The code that was already in the inbox before this request. It is skipped
+   * for the first `ignoreAttempts` polls (default 4, ~20s) in case the new mail
+   * is still on its way — after that it is accepted, because Sunbird re-sends
+   * the SAME OTP while the previous one is still valid.
+   */
+  ignore?: string | null;
+  ignoreAttempts?: number;
 }
 
 /** Open a fresh yopmail tab, poll the inbox, and return the OTP code. */
@@ -136,7 +144,12 @@ export async function getOtpFromYopmail(
           // Try to pull a code out.
           const otp = extractOtp(body);
           // Found it — log and return, ending the loop and closing the tab via `finally`.
-          if (otp) {
+          if (otp && otp === opts.ignore && attempt <= (opts.ignoreAttempts ?? 4)) {
+            console.log(`   ⏳ Attempt ${attempt}/${attempts} — newest mail still has the earlier code ${otp}, waiting for a new one`);
+            if (attempt < attempts) await sleep(jitter(intervalMs));
+            continue;
+          } else if (otp) {
+            if (otp === opts.ignore) console.log(`   ↺ no newer mail — the portal re-sent the same code`);
             console.log(`   ✅ OTP: ${otp} (attempt ${attempt}/${attempts})`);
             return otp;
           }

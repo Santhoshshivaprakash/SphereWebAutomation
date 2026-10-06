@@ -36,6 +36,8 @@
     "run:login": "cross-env BASE_URL=https://sphere.aastrika.org playwright test tests/public-login.spec.ts --headed",
     "run:create-account": "cross-env BASE_URL=https://sphere.aastrika.org playwright test tests/create-account.spec.ts --headed",
     "run:otp": "cross-env BASE_URL=https://sphere.aastrika.org playwright test tests/OTP.spec.ts --headed",
+    "forgot": "node scripts/run-forgot.mjs",
+    "test:forgot": "playwright test tests/forgot-password.spec.ts --project=Chrome --headed",
     "run:fastlogin": "cross-env BASE_URL=https://sphere.aastrika.org playwright test tests/apiFastLogin.spec.ts --headed",
     "//regression": "── Full regression (run after every release) ──",
     "test:regression": "npm run test:everything",

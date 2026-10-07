@@ -349,7 +349,8 @@ if (BOTH) mkdirSync(REPORT_DIR, { recursive: true });
 // falling back to an .env account that belongs to another backend.
 const SIGNUP_ONLY = ['create-account.spec.ts', 'OTP.spec.ts', 'yopmail.spec.ts'];
 // Left out of ALL for now (still runnable on its own from the menu).
-const NOT_IN_ALL = ['SCROM.spec.ts'];
+// Performance: ~10 min (slow-3G half) — run it on its own: npm run run:perf.
+const NOT_IN_ALL = ['SCROM.spec.ts', 'Performance.spec.ts'];
 function journeySteps(competencyChosen) {
   const used = new Set(['PublicPage.spec.ts', 'public-login.spec.ts', 'positiveflow.spec.ts', 'Mycourse.spec.ts',
     'CourseComplete.spec.ts', 'Competency.spec.ts', 'CompleteCompetency.spec.ts', 'Account.spec.ts',

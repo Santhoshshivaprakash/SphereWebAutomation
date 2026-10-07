@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Create Account — how the script works</title>
+<style>
+  :root{
+    --navy:#0B2545; --teal:#1B9AAA; --gold:#E8B02B;
+    --ink:#1F2933; --muted:#6B7684; --line:#E3E8EF; --bg:#F7F9FB;
+    --ok:#1E8E5A; --warn:#B9770E;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:'Open Sans',Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.6}
+  .wrap{max-width:1000px;margin:0 auto;padding:24px 20px 72px}
+  header{background:var(--navy);color:#fff;border-radius:8px;padding:26px 28px}
+  header h1{margin:0 0 6px;font-size:24px;font-weight:600}
+  header p{margin:0;color:#C7D2E0;font-size:13px}
+  h2{color:var(--navy);font-size:19px;margin:36px 0 4px;padding-bottom:6px;border-bottom:2px solid var(--gold)}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+
+  /* ── the big picture strip ── */
+  .strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
+         border-radius:8px;padding:18px;margin:16px 0}
+  .chip{background:var(--navy);color:#fff;border-radius:6px;padding:9px 13px;font-size:12.5px;font-weight:600;white-space:nowrap}
+  .chip.alt{background:var(--teal)}
+  .chip.end{background:var(--ok)}
+  .arrow{color:var(--muted);font-size:17px;font-weight:700}
+
+  /* ── step rows: diagram left, explanation right ── */
+  .step{display:grid;grid-template-columns:270px 1fr;gap:20px;align-items:start;
+        background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);
+        border-radius:8px;padding:16px 18px;margin:14px 0}
+  .step.branch{border-left-color:var(--gold)}
+  .step.finish{border-left-color:var(--ok)}
+  .screen{border:2px solid var(--navy);border-radius:7px;padding:12px;background:#FBFCFE}
+  .screen .t{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:7px}
+  .screen .b{font-size:13.5px;font-weight:600;color:var(--navy);margin-bottom:8px}
+  .screen ul{margin:0;padding-left:16px;font-size:12.5px;color:var(--ink)}
+  .screen li{margin:3px 0}
+  .down{text-align:center;color:var(--muted);font-size:20px;margin:-6px 0 -6px}
+  .n{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;
+     align-items:center;justify-content:center;font-size:12.5px;font-weight:700;margin-right:8px}
+  .why{margin:0 0 8px}
+  .why b{color:var(--navy)}
+  .k{font-family:Consolas,Monaco,monospace;font-size:12.5px;background:#EEF2F6;padding:1px 6px;border-radius:4px;color:var(--navy)}
+  .note{background:#FFF9EC;border-left:3px solid var(--gold);border-radius:5px;padding:9px 12px;margin:9px 0 0;font-size:13px}
+  .note.bad{background:#FDF3F2;border-left-color:#C0392B}
+
+  /* ── the OTP fallback ladder ── */
+  .ladder{display:grid;grid-template-columns:1fr;gap:0;background:#fff;border:1px solid var(--line);
+          border-radius:8px;padding:18px;margin:14px 0}
+  .rung{display:grid;grid-template-columns:210px 1fr;gap:16px;align-items:center;padding:11px 0;border-bottom:1px dashed var(--line)}
+  .rung:last-child{border-bottom:0}
+  .rung .box{border:2px solid var(--teal);border-radius:6px;padding:9px 11px;font-size:13px;font-weight:600;color:var(--navy);background:#F4FBFC}
+  .rung .box small{display:block;font-weight:400;color:var(--muted);font-size:11.5px;margin-top:2px}
+
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+  th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;white-space:nowrap}
+  td{border-bottom:1px solid var(--line);padding:9px 12px;background:#fff;vertical-align:top}
+  td:first-child{white-space:nowrap}
+  pre{background:var(--navy);color:#E8EEF6;border-radius:6px;padding:13px 15px;overflow-x:auto;
+      font-family:Consolas,Monaco,monospace;font-size:12.5px;line-height:1.6}
+  footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+  @media(max-width:760px){
+    .step,.rung{grid-template-columns:1fr}
+    .wrap{padding:16px 14px 48px}
+  }
+</style></head>
+<body><div class="wrap">
+
+<header>
+  <h1>Create Account — how the script works</h1>
+  <p>tests/create-account.spec.ts · signs up a brand-new learner end to end, reading the real OTP from the inbox</p>
+</header>
+
+<h2>The whole thing at a glance</h2>
+<p class="sub">Six screens, in this order. Everything after is detail.</p>
+<div class="strip">
+  <span class="chip">1 · Pick language</span><span class="arrow">→</span>
+  <span class="chip">2 · Personal details</span><span class="arrow">→</span>
+  <span class="chip">3 · Confirm name</span><span class="arrow">→</span>
+  <span class="chip">4 · Enter OTP</span><span class="arrow">→</span>
+  <span class="chip">5 · Terms &amp; conditions</span><span class="arrow">→</span>
+  <span class="chip end">6 · Logged in ✓</span>
+</div>
+
+<h2>Step by step</h2>
+<p class="sub">The box on the left is what the browser shows. The text beside it is what the script does there, and why.</p>
+
+<div class="step">
+  <div class="screen">
+    <div class="t">Before anything</div>
+    <div class="b">Make a throwaway identity</div>
+    <ul>
+      <li>email: <b>stage-testauto<i>48213</i>@yopmail.com</b></li>
+      <li>phone: 9999999999</li>
+      <li>name: Test Aastrika</li>
+      <li>password: Sunbird@123</li>
+    </ul>
+  </div>
+  <div>
+    <p class="why"><span class="n">0</span><b>A fresh address every run.</b> Five random digits make the address unique, so the
+      same signup can run again tomorrow without "this email already exists".</p>
+    <p class="why">The environment is stamped into the name — <span class="k">stage-</span> on staging — so you can tell at a
+      glance where an account was born. Addresses are capped at 19 characters before the <span class="k">@</span>.</p>
+    <div class="note">That cap is not cosmetic. The portal rejects a longer local part, and it fails <i>silently</i> —
+      the wizard just resets to a blank form, which looks like a button that never got clicked.</div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="step">
+  <div class="screen">
+    <div class="t">Screen 1</div>
+    <div class="b">Select language</div>
+    <ul><li>English / हिंदी</li><li><b>Next</b> — disabled at first</li></ul>
+  </div>
+  <div>
+    <p class="why"><span class="n">1</span><b>Pick a language, then continue.</b> The script also proves the rules of this
+      screen: Next stays disabled until something is chosen, and picking one language unselects the other.</p>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="step">
+  <div class="screen">
+    <div class="t">Screen 2</div>
+    <div class="b">Personal details</div>
+    <ul>
+      <li>First name · Last name</li>
+      <li>Email <i>or</i> phone</li>
+      <li>Sign in by: <b>OTP</b> / Password</li>
+    </ul>
+  </div>
+  <div>
+    <p class="why"><span class="n">2</span><b>Fill the form and choose how to sign in.</b> Before submitting, the script
+      checks the empty-field rules so a broken form is caught here rather than three screens later.</p>
+    <p class="why">Two paths exist and both are tested: <b>email + OTP</b> (the main one) and <b>phone + password</b>.</p>
+    <div class="note">If the portal says the phone already exists, the script bumps the number by one and retries,
+      rather than failing — 9999999999 is shared by many test runs.</div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="step">
+  <div class="screen">
+    <div class="t">Screen 3</div>
+    <div class="b">"Is this your name?"</div>
+    <ul><li>Test Aastrika</li><li><b>Confirm name</b></li></ul>
+  </div>
+  <div>
+    <p class="why"><span class="n">3</span><b>A modal interrupts before the OTP is sent.</b> It must be confirmed or
+      nothing is emailed, so the script clicks it and only then waits for the OTP screen.</p>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="step branch">
+  <div class="screen">
+    <div class="t">Screen 4</div>
+    <div class="b">Enter the 6-digit OTP</div>
+    <ul><li>six boxes</li><li>Resend OTP</li><li><b>Verify</b></li></ul>
+  </div>
+  <div>
+    <p class="why"><span class="n">4</span><b>The script reads the real email.</b> No shortcut and no fixed code: it opens
+      the throwaway inbox, finds the message, pulls the six digits, types them in. See the ladder below for how it
+      copes when the inbox is slow.</p>
+    <div class="note">The code is matched <b>by its context in the message</b>, not by "the first six digits" —
+      otherwise it would happily type the year, <span class="k">2026</span>, into the box.</div>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="step">
+  <div class="screen">
+    <div class="t">Screen 5</div>
+    <div class="b">Terms of Use</div>
+    <ul><li>the T&amp;C text</li><li><b>Accept</b></li></ul>
+  </div>
+  <div>
+    <p class="why"><span class="n">5</span><b>Accept the terms.</b> A new account lands here first; until it is accepted
+      the learner cannot reach any real page, so an unaccepted account looks "logged in but broken".</p>
+  </div>
+</div>
+<div class="down">▼</div>
+
+<div class="step finish">
+  <div class="screen">
+    <div class="t">Screen 6</div>
+    <div class="b">Signed-in home ✓</div>
+    <ul><li>search bar in the header</li><li>courses visible</li></ul>
+  </div>
+  <div>
+    <p class="why"><span class="n">6</span><b>Proof, not assumption.</b> The run only passes when the signed-in home
+      actually renders — the header search box is the giveaway, since the public page has a "Log in" button instead.</p>
+    <p class="why">The live session is then <b>saved to disk</b> so other scripts can run as this brand-new learner.</p>
+  </div>
+</div>
+
+<h2>Getting the OTP — three ways, in order</h2>
+<p class="sub">Each is tried only if the one above it fails, so a slow or blocked inbox does not end the run.</p>
+<div class="ladder">
+  <div class="rung">
+    <div class="box">1 · Inbox API<small>easy-yopmail over HTTP</small></div>
+    <div>Fastest — asks the mail service directly, no browser involved. Works almost every time.</div>
+  </div>
+  <div class="rung">
+    <div class="box">2 · Inbox in a second tab<small>reads the message on screen</small></div>
+    <div>When the API is unavailable, a second browser tab opens the inbox and reads the message like a person would.</div>
+  </div>
+  <div class="rung">
+    <div class="box">3 · OTP service<small>the project's own endpoint</small></div>
+    <div>Last resort. If all three fail, the run stops and says the OTP never arrived — rather than typing a guess.</div>
+  </div>
+</div>
+<div class="note">Each attempt <b>polls and waits</b>; mail takes a few seconds to land. Consecutive signups are also
+  spaced apart deliberately, so a burst of runs doesn't get throttled by the mail service.</div>
+
+<h2>What the run leaves behind</h2>
+<table>
+  <thead><tr><th>File</th><th>What it holds</th><th>Who uses it</th></tr></thead>
+  <tbody>
+    <tr><td><span class="k">.last-registered-email.json</span></td><td>the newest signup address</td><td>anyone who needs to look the account up later</td></tr>
+    <tr><td><span class="k">.auth/fresh-user.json</span></td><td>the live signed-in session</td><td>other specs, to run <i>as</i> this new learner</td></tr>
+    <tr><td><span class="k">.auth/fresh-user-email.json</span></td><td>which address that session belongs to</td><td>the login chain, to name the account in its logs</td></tr>
+    <tr><td><span class="k">brand-reports/</span>, <span class="k">test-reports/</span></td><td>the HTML / Excel / PDF report</td><td>whoever reads the results</td></tr>
+  </tbody>
+</table>
+<div class="note">Signup accounts are <b>OTP-only</b> — they never get a password. That saved session is the only way to
+  run as one, which is why it is written to disk at the end.</div>
+
+<h2>Running it</h2>
+<pre>cd D:\Automation\SphereWebAutomation
+
+# watch it happen (staging)
+$env:BASE_URL="https://portal-staging.aastrika.org"
+npx playwright test tests/create-account.spec.ts --project=Chrome --headed
+
+# just mint a user and save the session (the last step only)
+npm run mint:fresh-user</pre>
+
+<footer>
+  tests/create-account.spec.ts · helpers: yopmail.ts (addresses), otp.ts (the code), createAccount.ts (form filling)<br/>
+  Staging <span class="k">portal-staging.aastrika.org</span> · Production <span class="k">sphere.aastrika.org</span>
+</footer>
+
+</div></body></html>

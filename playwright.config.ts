@@ -67,6 +67,14 @@ const SIGNUP_SPECS = [
 ];
 const signupIgnore = process.env.SKIP_SIGNUP === '1' ? SIGNUP_SPECS : [];
 
+// What the Firefox and WebKit projects run (see projects below).
+const CROSS_BROWSER = [
+  '**/PublicPage.spec.ts',
+  '**/LoggedOut.spec.ts',
+  '**/Search.spec.ts',
+  '**/Unhappy.spec.ts',
+];
+
 export default defineConfig({
   testDir: './tests',
 
@@ -120,5 +128,11 @@ export default defineConfig({
     // dedicated specs, and its failures were test rot, not product defects.
     // Layer 1 — UI / E2E tests. Excludes API and monitor.
     { name: 'Chrome', testIgnore: ['**/api/**', '**/monitor/**', '**/SphereCase.spec.ts', ...signupIgnore], use: { ...devices['Desktop Chrome'] } },
+    // Other browsers — a cross-browser subset (public pages, login, search,
+    // logged-out access), not the whole suite. Their own launchOptions: the
+    // shared `args` above are Chrome-only flags.
+    //   npm run test:firefox   npm run test:webkit   npm run test:browsers
+    { name: 'Firefox', testMatch: CROSS_BROWSER, use: { ...devices['Desktop Firefox'], launchOptions: { args: [] } } },
+    { name: 'WebKit', testMatch: CROSS_BROWSER, use: { ...devices['Desktop Safari'], launchOptions: { args: [] } } },
   ],
 });

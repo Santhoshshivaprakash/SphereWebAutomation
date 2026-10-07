@@ -25,6 +25,7 @@ on:
           - production + staging
           - uat only
           - production + staging + uat
+          - production only
 
 concurrency:
   group: env-compare-daily
@@ -33,6 +34,8 @@ concurrency:
 jobs:
   # Production is always the baseline; the matrix picks what it's compared with.
   compare:
+    # Nothing to compare production with when it's the only environment picked.
+    if: ${{ inputs.environments != 'production only' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -115,7 +118,7 @@ jobs:
     strategy:
       fail-fast: false   # a failure on one environment doesn't cancel the other
       matrix:
-        env: ${{ fromJSON(inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging + uat' && '["production","staging","uat"]' || '["production","staging"]') }}
+        env: ${{ fromJSON(inputs.environments == 'production only' && '["production"]' || inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging + uat' && '["production","staging","uat"]' || '["production","staging"]') }}
     name: daily-tests (${{ matrix.env }})
     env:
       # production → sphere + TEST_USER_*, staging → portal-staging + STAGING_*,
@@ -138,9 +141,9 @@ jobs:
       # on "Authenticated specs need credentials" — the same rule as the monitor.
       - name: Run UI + API tests
         run: |
-          specs="tests/PublicPage.spec.ts tests/public-login.spec.ts tests/api/"
+          specs="tests/PublicPage.spec.ts tests/public-login.spec.ts tests/LoggedOut.spec.ts tests/Unhappy.spec.ts tests/api/"
           if [ -n "$TEST_USER_EMAIL" ] && [ -n "$TEST_USER_PASSWORD" ]; then
-            specs="$specs tests/Account.spec.ts tests/Mycourse.spec.ts tests/CourseTOC.spec.ts tests/Competency.spec.ts"
+            specs="$specs tests/Account.spec.ts tests/Mycourse.spec.ts tests/CourseTOC.spec.ts tests/Competency.spec.ts tests/Search.spec.ts tests/Certificates.spec.ts"
           else
             case "${{ matrix.env }}" in
               production) need="TEST_USER_EMAIL / TEST_USER_PASSWORD" ;;
@@ -170,7 +173,7 @@ jobs:
     strategy:
       fail-fast: false   # a failure on one environment doesn't cancel the other
       matrix:
-        env: ${{ fromJSON(inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging + uat' && '["production","staging","uat"]' || '["production","staging"]') }}
+        env: ${{ fromJSON(inputs.environments == 'production only' && '["production"]' || inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging + uat' && '["production","staging","uat"]' || '["production","staging"]') }}
     name: daily-signup (${{ matrix.env }})
     env:
       BASE_URL: ${{ matrix.env == 'production' && 'https://sphere.aastrika.org' || matrix.env == 'staging' && 'https://portal-staging.aastrika.org' || 'https://uat.aastrika.org' }}

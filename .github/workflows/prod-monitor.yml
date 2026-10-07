@@ -17,6 +17,7 @@ on:
           - production + staging + uat
           - production + staging
           - uat only
+          - production only
 
 concurrency:
   group: prod-monitor
@@ -35,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false   # a failure on one environment doesn't cancel the other
       matrix:
-        env: ${{ fromJSON(inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging' && '["production","staging"]' || '["production","staging","uat"]') }}
+        env: ${{ fromJSON(inputs.environments == 'production only' && '["production"]' || inputs.environments == 'uat only' && '["uat"]' || inputs.environments == 'production + staging' && '["production","staging"]' || '["production","staging","uat"]') }}
     name: monitor (${{ matrix.env }})
     env:
       BASE_URL: ${{ matrix.env == 'production' && 'https://sphere.aastrika.org' || matrix.env == 'staging' && 'https://portal-staging.aastrika.org' || 'https://uat.aastrika.org' }}

@@ -19,6 +19,7 @@
 import { Page, Locator } from '@playwright/test';
 // `test` here is the AUTHENTICATED one: every test gets a logged-in context.
 import { test, expect } from './helpers/authedTest';
+import { SEARCH_PLACEHOLDER, hiAlso } from './helpers/i18n';
 
 // Which environment to test.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
@@ -47,7 +48,7 @@ const SLOW_BANNER_MS = Number(process.env.TOC_SLOW_BANNER_MS ?? 10_000);
 async function searchAndOpenCourse(page: Page, courseName: string): Promise<boolean> {
   console.log(`\n🔎 Searching: "${courseName}"`);
   // The search box, matched by its placeholder — the most stable handle for a search input.
-  const search = page.getByPlaceholder(/what do you want to learn today/i);
+  const search = page.getByPlaceholder(SEARCH_PLACEHOLDER);
   // Wait for it to render.
   await search.waitFor({ state: 'visible', timeout: 10_000 });
   // Type the course name.
@@ -101,8 +102,8 @@ async function searchAndOpenCourse(page: Page, courseName: string): Promise<bool
 function startOrResumeBtn(page: Page): Locator {
   // Class first (works for both the button and the link forms), then the two roles.
   return page.locator('.banner-btn, [class*="resumeButton"]')
-    .or(page.getByRole('button', { name: /^(resume|start|start again)$/i }))
-    .or(page.getByRole('link', { name: /^(resume|start|start again)$/i }))
+    .or(page.getByRole('button', { name: hiAlso(/^(resume|start|start again)$/i) }))
+    .or(page.getByRole('link', { name: hiAlso(/^(resume|start|start again)$/i) }))
     .first();
 }
 
@@ -130,11 +131,11 @@ async function startOrResume(page: Page): Promise<boolean> {
     // The class-based locator first: it covers both the <button> (in progress)
     // and the <a> (completed) forms of the same control.
     startOrResumeBtn(page),
-    page.getByRole('button', { name: /^(resume|start|start again)$/i }).first(),
-    page.getByRole('link', { name: /^(resume|start|start again)$/i }).first(),
+    page.getByRole('button', { name: hiAlso(/^(resume|start|start again)$/i) }).first(),
+    page.getByRole('link', { name: hiAlso(/^(resume|start|start again)$/i) }).first(),
     page.locator('.resumeButton, [class*="resumeButton"]').first(),
     page.locator('.banner-btn').first(),
-    page.getByText(/^(resume|start|start again)$/i).first(),
+    page.getByText(hiAlso(/^(resume|start|start again)$/i)).first(),
   ];
   // Try each in turn.
   for (const btn of candidates) {
@@ -209,7 +210,7 @@ test.describe('Course TOC — full element coverage', () => {
     // Cheapest check first: is the URL even a TOC overview?
     if (!/\/toc\/.*\/overview/.test(page.url())) return false;
     // Then WAIT for the tabs. `.then(true).catch(false)` turns the wait into a boolean.
-    const tabs = await page.getByText(/^(Details|Overview|Modules)$/i).first()
+    const tabs = await page.getByText(hiAlso(/^(Details|Overview|Modules)$/i)).first()
       .waitFor({ state: 'visible', timeout: TABS_READY_MS }).then(() => true).catch(() => false);
     // No tabs means this isn't a rendered TOC.
     if (!tabs) return false;
@@ -281,7 +282,7 @@ test.describe('Course TOC — full element coverage', () => {
 
   test('TOC: "CNE hours" badge is visible', async ({ page }) => {
     // The colon is what distinguishes the badge from prose mentioning CNE hours.
-    await expect(page.getByText(/CNE hours?\s*:/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/CNE hours?\s*:/i)).first()).toBeVisible();
     console.log('   ✅ CNE hours badge visible');
   });
 
@@ -300,16 +301,16 @@ test.describe('Course TOC — full element coverage', () => {
 
   test('TOC: author "By: <organization>" is visible', async ({ page }) => {
     // Anchored at the start, so it can't match "By:" appearing mid-sentence.
-    await expect(page.getByText(/^\s*By\s*:/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^\s*By\s*:/i)).first()).toBeVisible();
     console.log('   ✅ Author line visible');
   });
 
   // ─── ACTION ICONS ────────────────────────────────────────────────
   test('TOC: Details / Certificate / Share icons are visible', async ({ page }) => {
     // All three anchored, so they match the icon labels and not longer text.
-    await expect(page.getByText(/^Details$/i).first()).toBeVisible();
-    await expect(page.getByText(/^Certificate$/i).first()).toBeVisible();
-    await expect(page.getByText(/^Share$/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^Details$/i)).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^Certificate$/i)).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^Share$/i)).first()).toBeVisible();
     console.log('   ✅ Details, Certificate, Share icons visible');
   });
 
@@ -360,7 +361,7 @@ test.describe('Course TOC — full element coverage', () => {
     // Nothing opened — skip rather than fail, since the previous test already covers that case.
     skipIfAbsent(await popup.isVisible({ timeout: 6000 }).catch(() => false), 'Certificate popup');
     // Prefer a labelled Close button.
-    const closeBtn = page.getByRole('button', { name: /^close$/i }).first();
+    const closeBtn = page.getByRole('button', { name: hiAlso(/^close$/i) }).first();
     if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) await closeBtn.click();
     // Otherwise fall back to the generic dismiss helper.
     else await closeAnyPopup(page);
@@ -375,8 +376,8 @@ test.describe('Course TOC — full element coverage', () => {
     // Accept any of three signals: a share-styled container, a social link, or a social button.
     await expect(
       page.locator('[class*="share"], [class*="social"]')
-        .or(page.getByRole('link', { name: /facebook|twitter|whatsapp|linkedin|copy|telegram/i }))
-        .or(page.getByRole('button', { name: /facebook|twitter|whatsapp|linkedin|copy link/i })).first(),
+        .or(page.getByRole('link', { name: hiAlso(/facebook|twitter|whatsapp|linkedin|copy|telegram/i) }))
+        .or(page.getByRole('button', { name: hiAlso(/facebook|twitter|whatsapp|linkedin|copy link/i) })).first(),
     ).toBeVisible({ timeout: 5000 });
     console.log('   ✅ Share options shown');
     await closeAnyPopup(page);
@@ -400,15 +401,15 @@ test.describe('Course TOC — full element coverage', () => {
 
   test('TOC: Overview / Modules / Discussion tabs are visible', async ({ page }) => {
     // All three anchored so they match the tab labels exactly.
-    await expect(page.getByText(/^Overview$/i).first()).toBeVisible();
-    await expect(page.getByText(/^Modules$/i).first()).toBeVisible();
-    await expect(page.getByText(/^Discussion$/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^Overview$/i)).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^Modules$/i)).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^Discussion$/i)).first()).toBeVisible();
     console.log('   ✅ Overview, Modules, Discussion tabs visible');
   });
 
   test('TOC: "Modules" tab opens the module list', async ({ page }) => {
     // Switch to the Modules tab.
-    await page.getByText(/^Modules$/i).first().click();
+    await page.getByText(hiAlso(/^Modules$/i)).first().click();
     await page.waitForTimeout(1500);
     // Five selector shapes, covering the component names this app has shipped.
     const modules = page.locator(
@@ -423,7 +424,7 @@ test.describe('Course TOC — full element coverage', () => {
 
   test('TOC: "Discussion" tab is clickable', async ({ page }) => {
     // Switch to Discussion.
-    await page.getByText(/^Discussion$/i).first().click();
+    await page.getByText(hiAlso(/^Discussion$/i)).first().click();
     await page.waitForTimeout(1200);
     // The destination is logged, not asserted — discussion may be a tab or a separate route.
     console.log(`   ✅ Discussion tab opened → ${page.url()}`);
@@ -432,10 +433,10 @@ test.describe('Course TOC — full element coverage', () => {
   // ─── DESCRIPTION + LICENSE ───────────────────────────────────────
   test('TOC: "Description" section is visible', async ({ page }) => {
     // Go back to the Overview tab, in case a previous test left us elsewhere.
-    await page.getByText(/^Overview$/i).first().click().catch(() => {});
+    await page.getByText(hiAlso(/^Overview$/i)).first().click().catch(() => {});
     await page.waitForTimeout(600);
     // The Description heading.
-    const desc = page.getByText(/^Description$/i).first();
+    const desc = page.getByText(hiAlso(/^Description$/i)).first();
     // It's below the fold, so scroll to it first.
     await desc.scrollIntoViewIfNeeded().catch(() => {});
     await expect(desc).toBeVisible();
@@ -444,7 +445,7 @@ test.describe('Course TOC — full element coverage', () => {
 
   test('TOC: "License terms" section is visible', async ({ page }) => {
     // Matches both "License term" and "License terms".
-    const license = page.getByText(/license\s*terms?/i).first();
+    const license = page.getByText(hiAlso(/license\s*terms?/i)).first();
     // Right at the bottom of the page.
     await license.scrollIntoViewIfNeeded().catch(() => {});
     await expect(license).toBeVisible();
@@ -467,7 +468,7 @@ test.describe('Course TOC — full element coverage', () => {
     // Prefer the structural selector; fall back to a blue link naming a known org type.
     const author = page.locator('.details .blue-link, .blue-link.cursor-pointer')
       .or(page.locator('.blue-link, [class*="blue-link"]')
-        .filter({ hasText: /alliance|council|foundation|jhpiego|unfpa|others|india/i })).first();
+        .filter({ hasText: hiAlso(/alliance|council|foundation|jhpiego|unfpa|others|india/i) })).first();
     // Skip when the course has no linked organisation.
     skipIfAbsent(await author.isVisible({ timeout: 3000 }).catch(() => false), 'Author org link');
     // Register the popup listener BEFORE clicking — Promise.all starts both at once,

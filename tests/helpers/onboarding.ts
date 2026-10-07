@@ -12,6 +12,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 // Shared form helpers — DOB filling, Material dropdown picking, and two named selects.
 import { fillDob, selectMatOption, designationSelect, orgTypeSelect } from './profileForm';
+import { hiAlso } from './i18n';
 
 // The six background options a user can pick. A union type, so a typo is a compile error.
 export type Background =
@@ -61,7 +62,7 @@ export async function fillTellUsMoreForm(page: Page) {
   // Announce the stage.
   console.log(`📝 Filling "Tell us more about you"`);
   // Confirm we're on the right screen before touching any field.
-  await expect(page.getByText(/tell us more about you/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(hiAlso(/tell us more about you/i))).toBeVisible({ timeout: 10000 });
 
   // DOB — native <select>s addressed by accessible name. The old #year/#month/
   // #date ids are gone, Month options are labels (not numeric values), and the
@@ -107,7 +108,7 @@ export async function pickBackground(page: Page, bg: Background) {
   // Announce the choice.
   console.log(`🎯 Choosing background: ${bg}`);
   // Confirm we're on the right screen.
-  await expect(page.getByText(/choose your background/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(hiAlso(/choose your background/i))).toBeVisible({ timeout: 10000 });
 
   // The card structure has multiple divs containing the background text;
   // .nth(1) is the actual clickable card div (the recording confirmed this).
@@ -130,7 +131,7 @@ export async function fillAlmostDone(page: Page, bg: Background) {
   // Announce the stage.
   console.log(`📝 Filling "Almost done!" for ${bg}`);
   // Confirm we're on the right screen.
-  await expect(page.getByText(/almost done!?/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(hiAlso(/almost done!?/i))).toBeVisible({ timeout: 10000 });
 
   // Each background asks for different fields, so branch on it.
   switch (bg) {
@@ -144,7 +145,7 @@ export async function fillAlmostDone(page: Page, bg: Background) {
       console.log(`   ✅ Designation: ANM/MPW`);
 
       // The nursing registration number.
-      await page.getByRole('textbox', { name: /RN\/RM Number/i }).fill('1234');
+      await page.getByRole('textbox', { name: hiAlso(/RN\/RM Number/i) }).fill('1234');
       console.log(`   ✅ RN/RM Number: 1234`);
 
       // What kind of organisation they work for.
@@ -152,7 +153,7 @@ export async function fillAlmostDone(page: Page, bg: Background) {
       console.log(`   ✅ Org Type: Private Sector`);
 
       // And its name.
-      await page.getByRole('textbox', { name: /Organization Name/i }).fill('Aastrika');
+      await page.getByRole('textbox', { name: hiAlso(/Organization Name/i) }).fill('Aastrika');
       console.log(`   ✅ Org Name: Aastrika`);
       break;
     }
@@ -162,13 +163,13 @@ export async function fillAlmostDone(page: Page, bg: Background) {
       await designationSelect(page).selectOption({ label: 'Anganwadi Workers' }).catch(() => {});
       await orgTypeSelect(page).selectOption({ label: 'NGO' }).catch(() => {});
       // The org name is a free-text field, so it always works.
-      await page.getByRole('textbox', { name: /Organization Name/i }).fill('Aastrika Volunteer Org');
+      await page.getByRole('textbox', { name: hiAlso(/Organization Name/i) }).fill('Aastrika Volunteer Org');
       break;
     }
     case 'ASHA': {
       // ASHA workers are identified by their administrative area instead of an employer.
-      await page.getByRole('textbox', { name: /Block/i }).fill('Test Block');
-      await page.getByRole('textbox', { name: /Sub Centre/i }).fill('Test Sub Centre');
+      await page.getByRole('textbox', { name: hiAlso(/Block/i) }).fill('Test Block');
+      await page.getByRole('textbox', { name: hiAlso(/Sub Centre/i) }).fill('Test Sub Centre');
       break;
     }
     case 'Student': {
@@ -176,10 +177,10 @@ export async function fillAlmostDone(page: Page, bg: Background) {
       await designationSelect(page).selectOption({ label: 'Bsc nursing' }).catch(() => {});
       // Institution Name is REQUIRED — Done stays disabled without it.
       // No .catch() here, deliberately: skipping it would leave the form unsubmittable.
-      await page.getByRole('textbox', { name: /Institution Name/i }).fill('Aastrika Institute');
+      await page.getByRole('textbox', { name: hiAlso(/Institution Name/i) }).fill('Aastrika Institute');
       console.log(`   ✅ Institution: Aastrika Institute`);
       // Qualification is optional and doesn't appear on every build.
-      const qual = page.getByRole('textbox', { name: /Qualification/i });
+      const qual = page.getByRole('textbox', { name: hiAlso(/Qualification/i) });
       // Only fill it if it's actually there.
       if (await qual.isVisible({ timeout: 1500 }).catch(() => false)) {
         await qual.fill('Bsc Nursing');
@@ -191,7 +192,7 @@ export async function fillAlmostDone(page: Page, bg: Background) {
       // Optional select.
       await designationSelect(page).selectOption({ label: 'Nursing Faculty' }).catch(() => {});
       // Institution Name is REQUIRED — Done stays disabled without it.
-      await page.getByRole('textbox', { name: /Institution Name/i }).fill('Aastrika Institute');
+      await page.getByRole('textbox', { name: hiAlso(/Institution Name/i) }).fill('Aastrika Institute');
       console.log(`   ✅ Institution: Aastrika Institute`);
       break;
     }
@@ -232,7 +233,7 @@ export async function completeOnboarding(page: Page, bg: Background = 'Healthcar
   // The cap of 6 guarantees termination even if a screen somehow never advances.
   for (let step = 0; step < 6 && !page.isClosed(); step++) {
     // Stage 1?
-    if (await page.getByText(/tell us more about you/i).first().isVisible({ timeout: 1500 }).catch(() => false)) {
+    if (await page.getByText(hiAlso(/tell us more about you/i)).first().isVisible({ timeout: 1500 }).catch(() => false)) {
       // Fill DOB and location.
       await fillTellUsMoreForm(page);
       // Advance.
@@ -241,12 +242,12 @@ export async function completeOnboarding(page: Page, bg: Background = 'Healthcar
       continue;
     }
     // Stage 2?
-    if (await page.getByText(/choose your background/i).first().isVisible({ timeout: 1500 }).catch(() => false)) {
+    if (await page.getByText(hiAlso(/choose your background/i)).first().isVisible({ timeout: 1500 }).catch(() => false)) {
       await pickBackground(page, bg); // picking the card advances the flow
       continue;
     }
     // Stage 3?
-    if (await page.getByText(/almost done!?/i).first().isVisible({ timeout: 1500 }).catch(() => false)) {
+    if (await page.getByText(hiAlso(/almost done!?/i)).first().isVisible({ timeout: 1500 }).catch(() => false)) {
       // Fill the role-specific form.
       await fillAlmostDone(page, bg);
       // Submit it.

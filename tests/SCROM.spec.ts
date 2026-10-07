@@ -29,6 +29,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 // The shared matcher that maps an on-screen question to its answer-key entry.
 import { findMatchingQuestion } from './helpers/questionMatch';
+import { SEARCH_PLACEHOLDER, hiAlso } from './helpers/i18n';
 
 // Which environment to test.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
@@ -127,7 +128,7 @@ async function login(page: Page) {
   // Then the password.
   await page.locator('input[type="password"]').first().fill(PASSWORD);
   // Submit. Anchored, so it can't match "Login with OTP".
-  await page.getByRole('button', { name: /^login$/i }).click();
+  await page.getByRole('button', { name: hiAlso(/^login$/i) }).click();
 
   // Wait for the redirect into the app.
   await page.waitForLoadState('networkidle').catch(() => {});
@@ -142,7 +143,7 @@ async function login(page: Page) {
 async function searchAndOpenCourse(page: Page, courseName: string): Promise<boolean> {
   console.log(`\n🔎 Searching: "${courseName}"`);
   // The search box, matched by its placeholder.
-  const search = page.getByPlaceholder(/what do you want to learn today/i);
+  const search = page.getByPlaceholder(SEARCH_PLACEHOLDER);
   await search.waitFor({ state: 'visible', timeout: 10_000 });
   // Type the course name.
   await search.fill(courseName);
@@ -190,11 +191,11 @@ async function startOrResume(page: Page): Promise<boolean> {
 
   // Five ways to find the control, ordered most to least reliable.
   const candidates: Locator[] = [
-    page.getByRole('button', { name: /^(resume|start)$/i }).first(),
-    page.getByRole('link',   { name: /^(resume|start)$/i }).first(),
+    page.getByRole('button', { name: hiAlso(/^(resume|start)$/i) }).first(),
+    page.getByRole('link',   { name: hiAlso(/^(resume|start)$/i) }).first(),
     page.locator('.resumeButton, [class*="resumeButton"]').first(),
     page.locator('.banner-btn').first(),
-    page.getByText(/^(resume|start)$/i).first(),
+    page.getByText(hiAlso(/^(resume|start)$/i)).first(),
   ];
 
   // Try each in turn.
@@ -644,7 +645,7 @@ async function handleAssessment(page: Page) {
   // Wait for either "Start Now!" or an answer input to appear
   console.log(`   ⏳ Waiting for assessment to render`);
   // The intro button…
-  const startBtn = page.getByRole('button', { name: /start\s*now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start\s*now/i) }).first();
   // …or the first answer control, in any of its three shapes.
   const firstInput = page.locator('mat-radio-button, mat-checkbox, mat-list-option').first();
 
@@ -844,7 +845,7 @@ async function answerWithGeminiBatch(page: Page, total: number) {
 
   // Phase 3: re-attempt and apply real answers
   // Three accepted labels for the retry control.
-  const reattemptBtn = page.getByRole('button', { name: /re.?attempt|try again|retake/i }).first();
+  const reattemptBtn = page.getByRole('button', { name: hiAlso(/re.?attempt|try again|retake/i) }).first();
   // Present?
   if (await reattemptBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     console.log(`   ▶️  Clicking Re-attempt`);
@@ -1407,10 +1408,10 @@ async function selectCheckboxOption(page: Page, idx: number): Promise<void> {
 /** Click the Next/Submit button between questions. */
 async function clickNextQuestion(page: Page, isLast: boolean): Promise<void> {
   // Prefer Next…
-  let btn = page.getByRole('button', { name: /^next$/i }).first();
+  let btn = page.getByRole('button', { name: hiAlso(/^next$/i) }).first();
   // …and fall back to Submit on the last question.
   if (!(await btn.isVisible().catch(() => false))) {
-    btn = page.getByRole('button', { name: /^submit$/i }).first();
+    btn = page.getByRole('button', { name: hiAlso(/^submit$/i) }).first();
   }
   // Neither on screen — nothing to do.
   if (!(await btn.isVisible().catch(() => false))) return;

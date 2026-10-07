@@ -94,7 +94,7 @@ async function goToCreateAccount(page: Page) {
   // Did the app redirect us to the login page instead of showing signup?
   if (/\/public\/login/i.test(page.url())) {
     // If so, click the "create an account" link on that login page to get back on course.
-    await page.getByText(/create an account/i).first().click();
+    await page.getByText(hiAlso(/create an account/i)).first().click();
     // Wait for the signup page to load.
     await page.waitForLoadState('networkidle');
     // And settle for a moment.
@@ -252,6 +252,7 @@ async function isAlreadyExistsToast(page: Page): Promise<boolean> {
 // ══════════════════════════════════════════════════════════════════════
 // Third-party library that reads yopmail inboxes over HTTP — no browser needed.
 import yopmail from 'easy-yopmail';
+import { hiAlso } from './helpers/i18n';
 
 // Optional backend endpoint that can hand us an OTP directly (Layer 3 fallback).
 const OTP_API_URL        = process.env.OTP_API_URL        ?? '';
@@ -648,7 +649,7 @@ test.describe.serial('Step 1: Select Language', () => {
   // TEST 2 — is the page branded and titled, not a blank shell?
   test('Heading + logo visible', async () => {
     // The "Select language" heading must be on screen.
-    await expect(sharedPage.getByText(/select language/i).first()).toBeVisible();
+    await expect(sharedPage.getByText(hiAlso(/select language/i)).first()).toBeVisible();
     // Find the logo by its alt text, either spelling.
     const logo = sharedPage.locator('img[alt*="logo" i], img[alt*="aastrika" i]').first();
     // It must be visible too.
@@ -660,7 +661,7 @@ test.describe.serial('Step 1: Select Language', () => {
   // TEST 3 — the Next button must be locked until a language is chosen.
   test('Next button disabled before any language is selected', async () => {
     // Grab the Next button by its accessible name.
-    const next = sharedPage.getByRole('button', { name: /^next$/i });
+    const next = sharedPage.getByRole('button', { name: hiAlso(/^next$/i) });
     // It should report as disabled right now.
     expect(await next.isDisabled()).toBe(true);
     // Log success.
@@ -706,7 +707,7 @@ test.describe.serial('Step 1: Select Language', () => {
   // TEST 7 — with a language chosen, Next must unlock. Leaves English selected for Section 2.
   test('Next button enables after selecting a language', async () => {
     // Grab the Next button.
-    const next = sharedPage.getByRole('button', { name: /^next$/i });
+    const next = sharedPage.getByRole('button', { name: hiAlso(/^next$/i) });
     // Poll for up to 5 seconds while Angular updates the form state.
     await expect(next).toBeEnabled({ timeout: 5000 });
     // Log success.
@@ -723,13 +724,13 @@ test.describe.serial('Step 2: Form Validation (shared tab)', () => {
   // TEST 1 — click the Next that Section 1 just unlocked, landing on the details form.
   test('Advance to form screen', async () => {
     // Click Next.
-    await sharedPage.getByRole('button', { name: /^next$/i }).click();
+    await sharedPage.getByRole('button', { name: hiAlso(/^next$/i) }).click();
     // Wait for the transition; ignore if the network never fully idles.
     await sharedPage.waitForLoadState('networkidle').catch(() => {});
     // Give the new screen time to render.
     await sharedPage.waitForTimeout(1200);
     // Confirm we're on the form by its heading.
-    await expect(sharedPage.getByText(/create your account/i).first()).toBeVisible({ timeout: 8000 });
+    await expect(sharedPage.getByText(hiAlso(/create your account/i)).first()).toBeVisible({ timeout: 8000 });
     // Log success.
     console.log(`✅ On Create Account form`);
   });
@@ -737,17 +738,17 @@ test.describe.serial('Step 2: Form Validation (shared tab)', () => {
   // TEST 2 — six checks in one: the three field labels plus the login-method block.
   test('All form fields and login-method options visible', async () => {
     // First name label.
-    await expect(sharedPage.getByText(/first name/i).first()).toBeVisible();
+    await expect(sharedPage.getByText(hiAlso(/first name/i)).first()).toBeVisible();
     // Last name label.
-    await expect(sharedPage.getByText(/last name/i).first()).toBeVisible();
+    await expect(sharedPage.getByText(hiAlso(/last name/i)).first()).toBeVisible();
     // The combined label — this is what documents that one field takes a phone OR an email.
     await expect(sharedPage.getByText(/phone number.*email/i).first()).toBeVisible();
     // The login-method prompt.
-    await expect(sharedPage.getByText(/choose your login method/i).first()).toBeVisible();
+    await expect(sharedPage.getByText(hiAlso(/choose your login method/i)).first()).toBeVisible();
     // The OTP option.
-    await expect(sharedPage.getByText(/by otp/i).first()).toBeVisible();
+    await expect(sharedPage.getByText(hiAlso(/by otp/i)).first()).toBeVisible();
     // The password option.
-    await expect(sharedPage.getByText(/by password/i).first()).toBeVisible();
+    await expect(sharedPage.getByText(hiAlso(/by password/i)).first()).toBeVisible();
     // Log success.
     console.log(`✅ All field labels visible`);
   });
@@ -759,7 +760,7 @@ test.describe.serial('Step 2: Form Validation (shared tab)', () => {
     // Let validation run.
     await sharedPage.waitForTimeout(400);
     // Grab Next.
-    const next = sharedPage.getByRole('button', { name: /^next$/i });
+    const next = sharedPage.getByRole('button', { name: hiAlso(/^next$/i) });
     // It must report disabled.
     expect(await next.isDisabled().catch(() => false)).toBe(true);
     // Log success.
@@ -828,7 +829,7 @@ test.describe.serial('Step 3: Full Signup — OTP Path', () => {
     }
 
     // Are we actually on the form screen right now?
-    const onForm = await sharedPage.getByText(/create your account/i).first()
+    const onForm = await sharedPage.getByText(hiAlso(/create your account/i)).first()
       .isVisible({ timeout: 3000 }).catch(() => false);
     // If not — e.g. this section was run alone with --grep — navigate there from scratch.
     if (!onForm) {
@@ -853,12 +854,12 @@ test.describe.serial('Step 3: Full Signup — OTP Path', () => {
     await inputs.nth(2).fill(signupEmail);
 
     // Choose the "By OTP" login method.
-    await sharedPage.getByText(/by otp/i).first().click();
+    await sharedPage.getByText(hiAlso(/by otp/i)).first().click();
     // Let the choice register.
     await sharedPage.waitForTimeout(400);
 
     // Submit the form.
-    await sharedPage.getByRole('button', { name: /^next$/i }).click();
+    await sharedPage.getByRole('button', { name: hiAlso(/^next$/i) }).click();
     // Wait for the confirm-name modal to mount.
     await sharedPage.waitForTimeout(2500);
     // Log which address we used.
@@ -872,7 +873,7 @@ test.describe.serial('Step 3: Full Signup — OTP Path', () => {
 
     // Look for any of four wordings the modal might use.
     const modalShown = await sharedPage.getByText(
-      /confirm your name|will be displayed on the certificate|edit name|confirm name/i
+      hiAlso(/confirm your name|will be displayed on the certificate|edit name|confirm name/i)
     ).first().isVisible({ timeout: 5000 }).catch(() => false);
     // The modal must have appeared.
     expect(modalShown).toBe(true);
@@ -880,8 +881,8 @@ test.describe.serial('Step 3: Full Signup — OTP Path', () => {
     console.log(`✅ Name confirmation modal shown`);
 
     // Find the confirm button — as a real button if possible, else as plain text.
-    const confirmBtn = sharedPage.getByRole('button', { name: /confirm name/i })
-      .or(sharedPage.getByText(/confirm name/i)).first();
+    const confirmBtn = sharedPage.getByRole('button', { name: hiAlso(/confirm name/i) })
+      .or(sharedPage.getByText(hiAlso(/confirm name/i))).first();
     // Click it.
     await confirmBtn.click();
     // Wait for the OTP request to fire and the next screen to render.
@@ -996,7 +997,7 @@ test.describe.serial('Step 3: Full Signup — OTP Path', () => {
     // Let the form settle before submitting.
     await sharedPage.waitForTimeout(1000);
     // Find the submit button under any of its three likely labels.
-    const verifyBtn = sharedPage.getByRole('button', { name: /verify|submit|next/i }).first();
+    const verifyBtn = sharedPage.getByRole('button', { name: hiAlso(/verify|submit|next/i) }).first();
     // Only click if it's actually there.
     if (await verifyBtn.isVisible().catch(() => false)) {
       // Submitting OTP shows a loading `.overlay` that intercepts pointer
@@ -1038,7 +1039,7 @@ test.describe.serial('Step 3: Full Signup — OTP Path', () => {
     // Where did we end up?
     const url = sharedPage.url();
     // Are we on the terms page — by URL, or by its heading?
-    const onTerms = /terms/i.test(url) || await sharedPage.getByText(/terms of use|terms and conditions/i)
+    const onTerms = /terms/i.test(url) || await sharedPage.getByText(hiAlso(/terms of use|terms and conditions/i))
       .first().isVisible({ timeout: 3000 }).catch(() => false);
     // Or straight on the logged-in home?
     const onHome  = /\/(page|app)\/home/i.test(url);
@@ -1057,7 +1058,7 @@ test.describe.serial('Step 3: Full Signup — OTP Path', () => {
         await sharedPage.waitForTimeout(400);
       }
       // Find the Accept button under any of its three likely labels.
-      const acceptBtn = sharedPage.getByRole('button', { name: /accept|agree|continue/i }).first();
+      const acceptBtn = sharedPage.getByRole('button', { name: hiAlso(/accept|agree|continue/i) }).first();
       // Click it if present.
       if (await acceptBtn.isVisible().catch(() => false)) {
         await acceptBtn.click();
@@ -1094,7 +1095,7 @@ test.describe.serial('Step 4: Full Signup — Phone + Password Path', () => {
     // Pick the first language option.
     await selectLanguageByIndex(page, 0);
     // Move to the form.
-    await page.getByRole('button', { name: /^next$/i }).click();
+    await page.getByRole('button', { name: hiAlso(/^next$/i) }).click();
     // Wait for the transition.
     await page.waitForLoadState('networkidle').catch(() => {});
     // Let the form render.
@@ -1118,12 +1119,12 @@ test.describe.serial('Step 4: Full Signup — Phone + Password Path', () => {
       await inputs.nth(2).fill(phone);
 
       // Choose the password login method.
-      await page.getByText(/by password/i).first().click();
+      await page.getByText(hiAlso(/by password/i)).first().click();
       // Let the choice register.
       await page.waitForTimeout(400);
 
       // Submit.
-      await page.getByRole('button', { name: /^next$/i }).click();
+      await page.getByRole('button', { name: hiAlso(/^next$/i) }).click();
       // Wait for the server's answer.
       await page.waitForTimeout(2500);
 
@@ -1146,8 +1147,8 @@ test.describe.serial('Step 4: Full Signup — Phone + Password Path', () => {
     expect(phoneAccepted).toBe(true);
 
     // The same confirm-name modal as the OTP path.
-    const confirmBtn = page.getByRole('button', { name: /confirm name/i })
-      .or(page.getByText(/confirm name/i)).first();
+    const confirmBtn = page.getByRole('button', { name: hiAlso(/confirm name/i) })
+      .or(page.getByText(hiAlso(/confirm name/i))).first();
     // Click it only if it appeared — it's optional on this path.
     if (await confirmBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
       await confirmBtn.click();
@@ -1169,7 +1170,7 @@ test.describe.serial('Step 4: Full Signup — Phone + Password Path', () => {
     console.log(`✅ Password set`);
 
     // Submit the password.
-    await page.getByRole('button', { name: /^next$/i }).click();
+    await page.getByRole('button', { name: hiAlso(/^next$/i) }).click();
     // Wait for the account to be created and the redirect to happen.
     await page.waitForTimeout(4000);
 
@@ -1217,7 +1218,7 @@ test.describe.serial('Step 5: New user signs up and ACCEPTS the T&C', () => {
   // submitted, so a vanished button counts as done).
   async function submitOtp(page: Page) {
     // Find the submit button under any of its three labels.
-    const verify = page.getByRole('button', { name: /verify|submit|next/i }).first();
+    const verify = page.getByRole('button', { name: hiAlso(/verify|submit|next/i) }).first();
     // No button on screen? Then Enter already submitted — just wait and return.
     if (!(await verify.isVisible({ timeout: 3000 }).catch(() => false))) { await page.waitForTimeout(3000); return; }
     // Otherwise try up to four times to get the click through.
@@ -1263,18 +1264,18 @@ test.describe.serial('Step 5: New user signs up and ACCEPTS the T&C', () => {
     // The new address.
     await inputs.nth(2).fill(tcEmail);
     // Choose the OTP login method.
-    await tcPage.getByText(/by otp/i).first().click();
+    await tcPage.getByText(hiAlso(/by otp/i)).first().click();
     // Let the choice register.
     await tcPage.waitForTimeout(400);
     // Submit the form.
-    await tcPage.getByRole('button', { name: /^next$/i }).click();
+    await tcPage.getByRole('button', { name: hiAlso(/^next$/i) }).click();
     // Wait for the confirm-name modal.
     await tcPage.waitForTimeout(2500);
 
     // Confirm-name modal
     // Find the confirm button, as a button or as plain text.
-    const confirmBtn = tcPage.getByRole('button', { name: /confirm name/i })
-      .or(tcPage.getByText(/confirm name/i)).first();
+    const confirmBtn = tcPage.getByRole('button', { name: hiAlso(/confirm name/i) })
+      .or(tcPage.getByText(hiAlso(/confirm name/i))).first();
     // Click it if it appeared.
     if (await confirmBtn.isVisible({ timeout: 6000 }).catch(() => false)) {
       await confirmBtn.click();
@@ -1406,13 +1407,13 @@ test.describe('Responsive Layout', () => {
       // Pick the first language.
       await selectLanguageByIndex(page, 0);
       // Move to the form.
-      await page.getByRole('button', { name: /^next$/i }).click();
+      await page.getByRole('button', { name: hiAlso(/^next$/i) }).click();
       // Wait for the transition.
       await page.waitForLoadState('networkidle').catch(() => {});
       // Let the form render.
       await page.waitForTimeout(1200);
       // The form must be reachable and visible at this width.
-      await expect(page.getByText(/create your account/i).first()).toBeVisible();
+      await expect(page.getByText(hiAlso(/create your account/i)).first()).toBeVisible();
       // Log success.
       console.log(`✅ ${vp.name}: form renders correctly`);
       // Dispose of the context and its page together.

@@ -1,5 +1,6 @@
 // The test runner, the assertion library, and the Page type.
 import { test, expect, Page } from '@playwright/test';
+import { hiAlso } from './helpers/i18n';
 
 // Login can't run on the localhost mirror, so this flow targets staging
 // Runs against the shared BASE_URL (production).
@@ -109,7 +110,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
       await page.waitForTimeout(600);
 
       // This is one of only two places in the file where a click's CONSEQUENCE is asserted.
-      const modalHeading = page.getByText(/aastrika sphere chat support/i);
+      const modalHeading = page.getByText(hiAlso(/aastrika sphere chat support/i));
       await expect(modalHeading).toBeVisible();
       console.log('✅ Help modal opened with heading "Aastrika Sphere chat support"');
     });
@@ -123,14 +124,14 @@ test.describe('Public Page - Complete Element Coverage', () => {
     test('"Welcome!" heading is visible', async ({ page }) => {
       // Anchored at both ends with an optional "!", so it can't match "Welcome back"
       // or any paragraph merely containing the word.
-      const heading = page.getByText(/^welcome!?$/i).first();
+      const heading = page.getByText(hiAlso(/^welcome!?$/i)).first();
       await expect(heading).toBeVisible();
       console.log('✅ "Welcome!" heading is visible');
     });
 
     test('Sub-heading "Login with your Aastrika account" is visible', async ({ page }) => {
       // The explanatory line under the heading.
-      const sub = page.getByText(/login with your aastrika account/i).first();
+      const sub = page.getByText(hiAlso(/login with your aastrika account/i)).first();
       await expect(sub).toBeVisible();
       console.log('✅ Sub-heading is visible');
     });
@@ -144,14 +145,14 @@ test.describe('Public Page - Complete Element Coverage', () => {
     test('"Login with OTP" radio is selected by default', async ({ page }) => {
       // NOTE: the test's NAME says "selected by default", but the body only checks
       // that the label is on screen — the radio's checked state is never read.
-      const otpLabel = page.getByText(/login with otp/i).first();
+      const otpLabel = page.getByText(hiAlso(/login with otp/i)).first();
       await expect(otpLabel).toBeVisible();
       console.log('✅ "Login with OTP" option visible');
     });
 
     test('"Login with Password" radio is visible and clickable', async ({ page }) => {
       // The other mode's label.
-      const pwdLabel = page.getByText(/login with password/i).first();
+      const pwdLabel = page.getByText(hiAlso(/login with password/i)).first();
       await expect(pwdLabel).toBeVisible();
       console.log('✅ "Login with Password" option visible');
 
@@ -160,7 +161,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
       await page.waitForTimeout(400);
 
       // Prefer the accessible label; fall back to the input type.
-      const pwdField = page.getByLabel(/enter password/i).or(page.locator('input[type="password"]')).first();
+      const pwdField = page.getByLabel(hiAlso(/enter password/i)).or(page.locator('input[type="password"]')).first();
       // The real assertion: switching modes must REVEAL the password field.
       await expect(pwdField).toBeVisible();
       console.log('✅ Switching to Password mode reveals the password field');
@@ -168,10 +169,10 @@ test.describe('Public Page - Complete Element Coverage', () => {
 
     test('Toggling back to OTP hides the password field', async ({ page }) => {
       // Go to password mode…
-      await scrollAndClick(page, page.getByText(/login with password/i).first());
+      await scrollAndClick(page, page.getByText(hiAlso(/login with password/i)).first());
       await page.waitForTimeout(300);
       // …then back to OTP.
-      await scrollAndClick(page, page.getByText(/login with otp/i).first());
+      await scrollAndClick(page, page.getByText(hiAlso(/login with otp/i)).first());
       await page.waitForTimeout(300);
 
       // Count the password fields left on the page.
@@ -212,7 +213,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
 
     test('"Get OTP" button is visible', async ({ page }) => {
       // The submit button for the OTP path.
-      const getOtpBtn = page.getByRole('button', { name: /get otp/i });
+      const getOtpBtn = page.getByRole('button', { name: hiAlso(/get otp/i) });
       await expect(getOtpBtn).toBeVisible();
       console.log('✅ "Get OTP" button is visible');
     });
@@ -222,7 +223,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
       const input = identifierInput(page);
       await input.fill('');
       // Read the button's state.
-      const getOtpBtn = page.getByRole('button', { name: /get otp/i });
+      const getOtpBtn = page.getByRole('button', { name: hiAlso(/get otp/i) });
       const disabled = await getOtpBtn.isDisabled().catch(() => false);
       // NO expect() — the gate is recorded, not required. The ✅ prints either way,
       // so read the value after the colon rather than the tick.
@@ -236,7 +237,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
       await page.waitForTimeout(300);
 
       // Submit it.
-      const getOtpBtn = page.getByRole('button', { name: /get otp/i });
+      const getOtpBtn = page.getByRole('button', { name: hiAlso(/get otp/i) });
       // safeClick: a failed click only logs.
       await safeClick(page, getOtpBtn, 'Get OTP');
       await page.waitForTimeout(1500);
@@ -253,7 +254,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
     // Nested hook: puts the page into password mode before EVERY test in this group.
     // It's unguarded, so if the toggle breaks all five tests fail together with one error.
     test.beforeEach(async ({ page }) => {
-      await scrollAndClick(page, page.getByText(/login with password/i).first());
+      await scrollAndClick(page, page.getByText(hiAlso(/login with password/i)).first());
       await page.waitForTimeout(400);
     });
 
@@ -304,7 +305,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
 
     test('"Forgot Password?" link is visible and clickable', async ({ page }) => {
       // The `\??` makes the question mark optional.
-      const link = page.getByText(/forgot password\??/i).first();
+      const link = page.getByText(hiAlso(/forgot password\??/i)).first();
       await expect(link).toBeVisible();
       console.log('✅ "Forgot Password?" link visible');
 
@@ -328,7 +329,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
       await page.waitForTimeout(300);
 
       // Anchored, so it can't match "Login with OTP".
-      const loginBtn = page.getByRole('button', { name: /^login$/i });
+      const loginBtn = page.getByRole('button', { name: hiAlso(/^login$/i) });
       await expect(loginBtn).toBeVisible();
       console.log('✅ "Login" button visible');
 
@@ -356,7 +357,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
 
     test('"or" separator is visible', async ({ page }) => {
       // Anchored — an unanchored /or/i would match almost every word on the page.
-      const sep = page.getByText(/^or$/i).first();
+      const sep = page.getByText(hiAlso(/^or$/i)).first();
       await expect(sep).toBeVisible();
       console.log('✅ "or" separator visible');
     });
@@ -364,8 +365,8 @@ test.describe('Public Page - Complete Element Coverage', () => {
     test('"Create an Account" button is visible and clickable', async ({ page }) => {
       // As a real button if there is one, else as a text node — the same hedge
       // used for the Help control.
-      const btn = page.getByRole('button', { name: /create an account/i })
-        .or(page.getByText(/create an account/i))
+      const btn = page.getByRole('button', { name: hiAlso(/create an account/i) })
+        .or(page.getByText(hiAlso(/create an account/i)))
         .first();
       await expect(btn).toBeVisible();
       console.log('✅ "Create an Account" button visible');
@@ -392,14 +393,14 @@ test.describe('Public Page - Complete Element Coverage', () => {
 
     test('Modal heading "Aastrika Sphere chat support" is visible', async ({ page }) => {
       // Confirms the hook's click actually landed.
-      const heading = page.getByText(/aastrika sphere chat support/i);
+      const heading = page.getByText(hiAlso(/aastrika sphere chat support/i));
       await expect(heading).toBeVisible();
       console.log('✅ Modal heading visible');
     });
 
     test('"Chat with us on WhatsApp" button is visible and clickable', async ({ page }) => {
       // The WhatsApp option.
-      const waBtn = page.getByText(/chat with us on whatsapp/i).first();
+      const waBtn = page.getByText(hiAlso(/chat with us on whatsapp/i)).first();
       await expect(waBtn).toBeVisible();
       console.log('✅ WhatsApp chat button visible');
 
@@ -423,9 +424,9 @@ test.describe('Public Page - Complete Element Coverage', () => {
       // Use the button role (skips the hidden third-party "Open chat"
       // widget whose text also contains "chat with us") and keep only the
       // visible one inside the modal.
-      const chatBtn = page.getByRole('button', { name: /^chat with us$/i })
+      const chatBtn = page.getByRole('button', { name: hiAlso(/^chat with us$/i) })
         // Anchored, so it can't match the longer WhatsApp label from the test above.
-        .or(page.getByText(/^chat with us$/i))
+        .or(page.getByText(hiAlso(/^chat with us$/i)))
         // This filter is load-bearing: without it .first() could resolve to the hidden widget.
         .filter({ visible: true })
         .first();
@@ -456,7 +457,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
       await page.waitForTimeout(500);
 
       // Is the modal still there?
-      const stillOpen = await page.getByText(/aastrika sphere chat support/i).isVisible().catch(() => false);
+      const stillOpen = await page.getByText(hiAlso(/aastrika sphere chat support/i)).isVisible().catch(() => false);
       console.log(`   Modal still visible after close: ${stillOpen}`);
       // The second of only two asserted click-consequences in this file. A modal that
       // can't be dismissed traps a user on the page they were trying to log in from.
@@ -489,7 +490,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
       // The field under test…
       const input = identifierInput(page);
       // …and the button whose enabled-state we're measuring.
-      const getOtpBtn = page.getByRole('button', { name: /get otp/i });
+      const getOtpBtn = page.getByRole('button', { name: hiAlso(/get otp/i) });
 
       // Try each payload in turn.
       for (const c of cases) {
@@ -536,8 +537,8 @@ test.describe('Public Page - Complete Element Coverage', () => {
         await page.waitForTimeout(400);
 
         // A reachability check: the copy must not be clipped or collapsed away.
-        await expect(page.getByText(/^welcome!?$/i).first()).toBeVisible();
-        await expect(page.getByText(/login with your aastrika account/i).first()).toBeVisible();
+        await expect(page.getByText(hiAlso(/^welcome!?$/i)).first()).toBeVisible();
+        await expect(page.getByText(hiAlso(/login with your aastrika account/i)).first()).toBeVisible();
         // Note this says nothing about the form CONTROLS at this width.
         console.log(`✅ Welcome + sub-heading visible at ${vp.name} (${vp.w}x${vp.h})`);
       });

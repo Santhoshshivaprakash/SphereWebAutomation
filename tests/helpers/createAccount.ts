@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 // The yopmail OTP reader and the random-address generator.
 import { fetchOtpFromYopmail, generateRandomYopmail } from './yopmail';
+import { hiAlso } from './i18n';
 
 // Which environment to sign up on.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
@@ -114,14 +115,14 @@ export async function createSphereAccount(input: CreateAccountInput): Promise<Cr
   // Let the selection register.
   await page.waitForTimeout(2000);
   // Move on to the signup wizard.
-  await page.getByRole('button', { name: 'Create Account' }).click();
+  await page.getByRole('button', { name: hiAlso(/Create Account/i) }).click();
   // Wait for the language screen.
   await page.waitForTimeout(3000);
 
   // Step 3: pick English
   await page.locator('input#mat-radio-2-input').click();
   // Advance to the registration form.
-  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: hiAlso(/Next/i) }).click();
 
   // Step 4: registration form
   await page.locator('input#firstname').fill(firstName);
@@ -133,17 +134,17 @@ export async function createSphereAccount(input: CreateAccountInput): Promise<Cr
   await expect(emailField).toHaveValue(email);
   await page.locator('input#mat-radio-6-input').click(); // By password
   // Submit the form.
-  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: hiAlso(/Next/i) }).click();
 
   // Step 5: confirm name
   // Sphere prints this name on certificates, so it asks the user to confirm it.
-  await page.getByRole('button', { name: 'Confirm name' }).click();
+  await page.getByRole('button', { name: hiAlso(/Confirm name/i) }).click();
 
   // Step 6: password
   await page.locator('input#password-field').fill(password);
   // The confirmation box must match.
   await page.locator('input#confpassword-field').fill(password);
-  await page.getByRole('button', { name: 'Next' }).click();
+  await page.getByRole('button', { name: hiAlso(/Next/i) }).click();
   // Give the backend time to create the account and send the verification mail.
   await page.waitForTimeout(5000);
 
@@ -163,7 +164,7 @@ export async function createSphereAccount(input: CreateAccountInput): Promise<Cr
   // Let the button enable.
   await page.waitForTimeout(2000);
   // Accept the terms.
-  await page.getByRole('button', { name: 'Accept' }).click();
+  await page.getByRole('button', { name: hiAlso(/Accept/i) }).click();
   // Wait for the redirect into the app.
   await page.waitForTimeout(5000);
 
@@ -174,7 +175,7 @@ export async function createSphereAccount(input: CreateAccountInput): Promise<Cr
   if (await menuIcon.isVisible()) {
     await menuIcon.click();
   } else {
-    await page.getByText('Account').click();
+    await page.getByText(hiAlso(/Account/i)).click();
   }
   // Wait for the profile screen.
   await page.waitForTimeout(3000);

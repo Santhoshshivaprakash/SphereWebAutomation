@@ -148,6 +148,7 @@ function extractOtp(text: string): string | null {
 /** Open yopmail in a tab and pull the OTP for the given email. */
 // The shared, hardened OTP reader (throttling, captcha detection, retries).
 import { getOtpFromYopmail } from '../helpers/otp';
+import { bi, hiAlso } from '../helpers/i18n';
 
 // Thin wrapper kept so the call sites below read unchanged.
 async function fetchOtpFromYopmail(context: BrowserContext, email: string): Promise<string> {
@@ -170,20 +171,22 @@ async function signup(page: Page, context: BrowserContext, email: string) {
 
   // If redirected to /public/login, click "Create an account"
   if (/\/public\/login/i.test(page.url())) {
-    const createBtn = page.getByRole('button', { name: /create an account/i })
-      .or(page.getByText(/create an account/i)).first();
+    const createBtn = page.getByRole('button', { name: hiAlso(/create an account/i) })
+      .or(page.getByText(hiAlso(/create an account/i))).first();
     await scrollAndClick(page, createBtn);
     await page.waitForTimeout(800);
   }
 
   // Step 1: language
   // Match English by LABEL, not by position — the screen may render in Hindi.
-  const englishRadio = page.locator('mat-radio-button, [role="radio"]')
-    .filter({ hasText: /english/i }).first();
+  const englishRadio = page.locator('mat-radio-button[value="en"]')
+    // by VALUE, so it works whether the label reads "English" or "अंग्रेजी"
+    .or(page.locator('mat-radio-button, [role="radio"]').filter({ hasText: bi('English', { exact: false }) }))
+    .first();
   await scrollAndClick(page, englishRadio);
   await page.waitForTimeout(400);
   // Advance to the details form.
-  await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+  await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
   await page.waitForTimeout(1500);
 
   // Step 2: name + email + "By OTP"
@@ -193,16 +196,16 @@ async function signup(page: Page, context: BrowserContext, email: string) {
   await inputs.nth(1).fill('Automation');
   await inputs.nth(2).fill(email);
   // Choose the OTP login method.
-  await scrollAndClick(page, page.getByText(/by otp/i).first());
+  await scrollAndClick(page, page.getByText(hiAlso(/by otp/i)).first());
   await page.waitForTimeout(400);
   // Submit the form.
-  await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+  await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
   await page.waitForTimeout(1500);
 
   // Step 3: confirm name
   // Sphere prints this name on certificates, so it asks the user to confirm it.
-  await scrollAndClick(page, page.getByRole('button', { name: /confirm name/i })
-    .or(page.getByText(/confirm name/i)).first());
+  await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/confirm name/i) })
+    .or(page.getByText(hiAlso(/confirm name/i))).first());
   await page.waitForTimeout(2500);
 
   // Step 4: OTP
@@ -212,7 +215,7 @@ async function signup(page: Page, context: BrowserContext, email: string) {
   await page.locator('input').first().fill(otp);
   await page.waitForTimeout(400);
   // Submit it.
-  await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+  await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
   await page.waitForTimeout(3000);
 
   // Step 5: Terms of Use
@@ -262,9 +265,9 @@ async function signup(page: Page, context: BrowserContext, email: string) {
 async function openProfileForm(page: Page) {
   console.log(`👆 Clicking Account button`);
   // Three shapes: it is a <button> on this SPA, not a link.
-  const accountBtn = page.getByRole('button', { name: /^account$/i })
-    .or(page.getByRole('link', { name: /^account$/i }))
-    .or(page.getByText(/^account$/i))
+  const accountBtn = page.getByRole('button', { name: hiAlso(/^account$/i) })
+    .or(page.getByRole('link', { name: hiAlso(/^account$/i) }))
+    .or(page.getByText(hiAlso(/^account$/i)))
     .first();
   // hard — if the header never renders, fail here rather than deeper in.
   await expect(accountBtn).toBeVisible({ timeout: 10000 });
@@ -307,13 +310,13 @@ async function detectFlowState(page: Page): Promise<FlowState> {
 
   // Checked in REVERSE flow order — furthest-along screen first, so a resumed
   // run continues from where it stopped rather than redoing earlier steps.
-  if (await page.getByText(/almost done!?/i).isVisible({ timeout: 1500 }).catch(() => false)) {
+  if (await page.getByText(hiAlso(/almost done!?/i)).isVisible({ timeout: 1500 }).catch(() => false)) {
     return 'almost-done';
   }
-  if (await page.getByText(/choose your background/i).isVisible({ timeout: 1500 }).catch(() => false)) {
+  if (await page.getByText(hiAlso(/choose your background/i)).isVisible({ timeout: 1500 }).catch(() => false)) {
     return 'choose-bg';
   }
-  if (await page.getByText(/tell us more about you/i).isVisible({ timeout: 1500 }).catch(() => false)) {
+  if (await page.getByText(hiAlso(/tell us more about you/i)).isVisible({ timeout: 1500 }).catch(() => false)) {
     return 'tell-us-more';
   }
   // Not on any onboarding screen, but logged in → we're on home.
@@ -342,7 +345,7 @@ async function loginExistingAccount(page: Page, context: BrowserContext, email: 
   await page.waitForTimeout(1500);
 
   // Step 1: Click the "Login with OTP" tab/toggle at the top
-  const otpTab = page.getByText(/login with otp/i).first();
+  const otpTab = page.getByText(hiAlso(/login with otp/i)).first();
   // Only click it if it's there.
   if (await otpTab.isVisible({ timeout: 3000 }).catch(() => false)) {
     console.log(`   👆 Clicking "Login with OTP" tab`);
@@ -355,14 +358,14 @@ async function loginExistingAccount(page: Page, context: BrowserContext, email: 
 
   // Step 2: Fill email
   // Prefer the accessible name; fall back to "the first input that isn't a
-  const emailInput = page.getByRole('textbox', { name: /phone.*email|email|phone/i }).first()
+  const emailInput = page.getByRole('textbox', { name: hiAlso(/phone.*email|email|phone/i) }).first()
     // radio, password, hidden or checkbox" — which leaves the identifier field.
     .or(page.locator('input:not([type="radio"]):not([type="password"]):not([type="hidden"]):not([type="checkbox"])').first());
   await emailInput.fill(email);
   await page.waitForTimeout(400);
 
   // Step 3: Click "Get OTP" button
-  const getOtpBtn = page.getByRole('button', { name: /get\s*otp/i }).first();
+  const getOtpBtn = page.getByRole('button', { name: hiAlso(/get\s*otp/i) }).first();
   // Not there — give up cleanly and let the caller decide.
   if (!(await getOtpBtn.isVisible({ timeout: 3000 }).catch(() => false))) {
     console.log(`   ⚠️  "Get OTP" button not visible`);
@@ -411,7 +414,7 @@ async function loginExistingAccount(page: Page, context: BrowserContext, email: 
 
   // Click the final submit button (could be "Login", "Submit", "Verify", "Next")
   // Five accepted labels, anchored.
-  const submitBtn = page.getByRole('button', { name: /^(login|submit|verify|next|sign\s*in)$/i }).first();
+  const submitBtn = page.getByRole('button', { name: hiAlso(/^(login|submit|verify|next|sign\s*in)$/i) }).first();
   if (await submitBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     console.log(`   👆 Clicking submit`);
     await scrollAndClick(page, submitBtn);
@@ -450,7 +453,7 @@ async function acceptTnCIfPresent(page: Page): Promise<void> {
   const url = page.url();
   // Two signals: the route, or the heading text.
   const isOnTnC = /\/new-tnc|\/terms|\/tnc/i.test(url) ||
-                  await page.getByText(/terms\s+of\s+use|terms\s*&\s*conditions/i).first()
+                  await page.getByText(hiAlso(/terms\s+of\s+use|terms\s*&\s*conditions/i)).first()
                     .isVisible({ timeout: 1500 }).catch(() => false);
 
   // Not on the gate — nothing to do.
@@ -470,7 +473,7 @@ async function acceptTnCIfPresent(page: Page): Promise<void> {
       // If clicking the input didn't tick it, click the associated label text
       const stillUnchecked = !(await checkbox.isChecked().catch(() => false));
       if (stillUnchecked) {
-        const agreeLabel = page.getByText(/i\s+have\s+read\s+and\s+agree/i).first();
+        const agreeLabel = page.getByText(hiAlso(/i\s+have\s+read\s+and\s+agree/i)).first();
         if (await agreeLabel.isVisible({ timeout: 1000 }).catch(() => false)) {
           await scrollAndClick(page, agreeLabel);
         }
@@ -482,7 +485,7 @@ async function acceptTnCIfPresent(page: Page): Promise<void> {
 
   // Click Accept (Accept / Agree / Continue / Submit)
   // The Accept button, under six accepted labels.
-  const acceptBtn = page.getByRole('button', { name: /^(accept|agree|continue|submit|i\s+agree|i\s+accept)$/i }).first();
+  const acceptBtn = page.getByRole('button', { name: hiAlso(/^(accept|agree|continue|submit|i\s+agree|i\s+accept)$/i) }).first();
   if (await acceptBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     // Disabled means the checkbox didn't register — say so rather than click blindly.
     if (await acceptBtn.isDisabled().catch(() => false)) {
@@ -598,8 +601,8 @@ test('Profile Completion — Positive Flow (Healthcare Worker)', async ({ page, 
   // Sanity check: the profile form should NOT be visible anymore
   // Either of the two form screens still showing means onboarding didn't finish.
   const stillOnForm =
-    (await page.getByText(/tell us more about you/i).isVisible({ timeout: 1500 }).catch(() => false)) ||
-    (await page.getByText(/almost done!?/i).isVisible({ timeout: 1500 }).catch(() => false));
+    (await page.getByText(hiAlso(/tell us more about you/i)).isVisible({ timeout: 1500 }).catch(() => false)) ||
+    (await page.getByText(hiAlso(/almost done!?/i)).isVisible({ timeout: 1500 }).catch(() => false));
 
   // Success: off the form AND inside the app.
   if (!stillOnForm && onPrivate) {

@@ -21,6 +21,7 @@
  */
 // The assertion library, the page type, and the Locator type these helpers return.
 import { expect, Page, Locator } from '@playwright/test';
+import { hiAlso } from './i18n';
 
 // The three date-of-birth dropdowns. A union type, so a typo is a compile error.
 export type DobField = 'Year' | 'Month' | 'Date';
@@ -108,7 +109,7 @@ export async function selectMatOption(page: Page, formControl: string, value: st
 export function designationSelect(page: Page): Locator {
   return page
     // `\*?` makes the required-field asterisk optional, so "Designation" and "Designation*" both match.
-    .getByRole('combobox', { name: /^designation\*?$/i })
+    .getByRole('combobox', { name: hiAlso(/^designation\*?$/i) })
     // Fallback to the old id.
     .or(page.locator('#profession'))
     .first();

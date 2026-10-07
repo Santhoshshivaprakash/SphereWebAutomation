@@ -3,6 +3,7 @@ import { generateTestEmail, recordCreatedEmail } from './helpers/yopmail';
 import { test, expect, Page, BrowserContext, Locator } from '@playwright/test';
 // The shared, hardened OTP reader (throttling, captcha detection, retries).
 import { getOtpFromYopmail } from './helpers/otp';
+import { hiAlso } from './helpers/i18n';
 
 // OTP/signup can't run on the localhost mirror, so this targets staging
 // Runs against the shared BASE_URL (production).
@@ -48,7 +49,7 @@ function uniqueEmail(): string {
 // Find a language radio by name rather than position.
 function languageOption(page: Page, name: 'english' | 'hindi'): Locator {
   // Hindi is matched in both scripts, since the screen may render in either language.
-  const matcher = name === 'english' ? /english/i : /हिंदी|hindi/i;
+  const matcher = name === 'english' ? /english|अंग्रेज़?ी/i : /हिंदी|hindi/i;
   // Three selector shapes, covering the Material versions this app has shipped.
   return page.locator('mat-radio-button, .mat-mdc-radio-button, [role="radio"]')
     .filter({ hasText: matcher })
@@ -112,8 +113,8 @@ async function completeSignup(page: Page, email: string, password = 'Sunbird@123
   // Handle case where app redirects to /public/login first
   if (/\/public\/login/i.test(page.url())) {
     // Click the "create an account" link to get back on course — as a button or as text.
-    const createBtn = page.getByRole('button', { name: /create an account/i })
-      .or(page.getByText(/create an account/i)).first();
+    const createBtn = page.getByRole('button', { name: hiAlso(/create an account/i) })
+      .or(page.getByText(hiAlso(/create an account/i))).first();
     await scrollAndClick(page, createBtn);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(800);
@@ -122,7 +123,7 @@ async function completeSignup(page: Page, email: string, password = 'Sunbird@123
   // Step 1: Language
   await selectLanguage(page, 'english');
   // The Next button.
-  const nextBtn = page.getByRole('button', { name: /^next$/i });
+  const nextBtn = page.getByRole('button', { name: hiAlso(/^next$/i) });
   // It only enables once a language is chosen, so this also confirms the selection worked.
   await expect(nextBtn).toBeEnabled({ timeout: 5000 });
   // Advance.
@@ -139,18 +140,18 @@ async function completeSignup(page: Page, email: string, password = 'Sunbird@123
   await inputs.nth(2).fill(email);
 
   // Select "By OTP" (so we land on the OTP screen)
-  await scrollAndClick(page, page.getByText(/by otp/i).first());
+  await scrollAndClick(page, page.getByText(hiAlso(/by otp/i)).first());
   await page.waitForTimeout(400);
 
   // Submit the form.
-  await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+  await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
   await page.waitForTimeout(1500);
   console.log('   ✅ Step 2 done — form submitted');
 
   // Step 3: Confirm name modal
   // Sphere prints this name on certificates, so it asks the user to confirm it.
-  const confirmBtn = page.getByRole('button', { name: /confirm name/i })
-    .or(page.getByText(/confirm name/i))
+  const confirmBtn = page.getByRole('button', { name: hiAlso(/confirm name/i) })
+    .or(page.getByText(hiAlso(/confirm name/i)))
     .first();
   await scrollAndClick(page, confirmBtn);
   // Wait for the OTP request to fire and the OTP screen to render.
@@ -186,7 +187,7 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
 
     test('"Check your Email!" heading is visible', async ({ page }) => {
       // The OTP screen's heading.
-      const heading = page.getByText(/check your email/i).first();
+      const heading = page.getByText(hiAlso(/check your email/i)).first();
       // It must appear — proof that the signup POST succeeded.
       await expect(heading).toBeVisible({ timeout: 10000 });
       console.log('✅ "Check your Email!" heading visible');
@@ -194,7 +195,7 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
 
     test('Sub-heading shows the registered email address', async ({ page }) => {
       // The explanatory line.
-      const sub = page.getByText(/we have sent an otp to/i);
+      const sub = page.getByText(hiAlso(/we have sent an otp to/i));
       await expect(sub).toBeVisible();
       console.log('✅ "We have sent an OTP to" text visible');
 
@@ -233,7 +234,7 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
 
     test('OTP code input field is visible and accepts numeric input', async ({ page }) => {
       // Prefer the placeholder; fall back to any text/tel/number input.
-      const codeInput = page.getByPlaceholder(/code/i)
+      const codeInput = page.getByPlaceholder(hiAlso(/code/i))
         .or(page.locator('input[type="text"], input[type="tel"], input[type="number"]'))
         .first();
       await expect(codeInput).toBeVisible();
@@ -253,14 +254,14 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
       console.log('✅ "Did not receive a OTP?" text visible');
 
       // And the resend link beside it.
-      const resendLink = page.getByText(/click here to resend/i).first();
+      const resendLink = page.getByText(hiAlso(/click here to resend/i)).first();
       await expect(resendLink).toBeVisible();
       console.log('✅ "Click Here to resend" link visible');
     });
 
     test('Resend link is clickable', async ({ page }) => {
       // The resend link.
-      const resendLink = page.getByText(/click here to resend/i).first();
+      const resendLink = page.getByText(hiAlso(/click here to resend/i)).first();
       // safeClick: the click is attempted but a failure only logs.
       await safeClick(page, resendLink, 'Click Here to resend');
       await page.waitForTimeout(1500);
@@ -276,7 +277,7 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
 
     test('Next button is visible and disabled when code field is empty', async ({ page }) => {
       // The submit button.
-      const nextBtn = page.getByRole('button', { name: /^next$/i });
+      const nextBtn = page.getByRole('button', { name: hiAlso(/^next$/i) });
       await expect(nextBtn).toBeVisible();
       console.log('✅ Next button visible on OTP screen');
 
@@ -297,7 +298,7 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
       await page.waitForTimeout(300);
 
       // Will the form even let us submit it?
-      const nextBtn = page.getByRole('button', { name: /^next$/i });
+      const nextBtn = page.getByRole('button', { name: hiAlso(/^next$/i) });
       const enabled = await nextBtn.isEnabled().catch(() => false);
       console.log(`   Next enabled with invalid code: ${enabled}`);
 
@@ -329,12 +330,12 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
       console.log(`✅ OTP fetched: ${otp}`);
 
       // 2. Type the OTP and submit
-      const codeInput = page.getByPlaceholder(/code/i).or(page.locator('input').first()).first();
+      const codeInput = page.getByPlaceholder(hiAlso(/code/i)).or(page.locator('input').first()).first();
       await codeInput.fill(otp);
       await page.waitForTimeout(400);
 
       // The submit button.
-      const nextBtn = page.getByRole('button', { name: /^next$/i });
+      const nextBtn = page.getByRole('button', { name: hiAlso(/^next$/i) });
       // A valid code must unlock it.
       await expect(nextBtn).toBeEnabled({ timeout: 5000 });
       console.log('✅ Next button enabled after OTP entry');
@@ -347,7 +348,7 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
 
       // 3. Terms of Use screen should appear
       // Anchored, so it can't match the footer link of the same name.
-      const tosHeading = page.getByText(/^terms of use$/i).first();
+      const tosHeading = page.getByText(hiAlso(/^terms of use$/i)).first();
       await expect(tosHeading).toBeVisible({ timeout: 10000 });
       console.log('✅ Terms of Use screen visible');
 
@@ -357,17 +358,17 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
       console.log('✅ Acknowledgement text visible');
 
       // The link to the actual policy documents.
-      const tosLink = page.getByText(/terms of use and privacy policy/i).first();
+      const tosLink = page.getByText(hiAlso(/terms of use and privacy policy/i)).first();
       await expect(tosLink).toBeVisible();
       console.log('✅ "Terms of use and Privacy Policy" link visible');
 
       // The consent checkbox's label.
-      const checkboxLabel = page.getByText(/i have read and agree to the terms of use & privacy policy/i);
+      const checkboxLabel = page.getByText(hiAlso(/i have read and agree to the terms of use & privacy policy/i));
       await expect(checkboxLabel.first()).toBeVisible();
       console.log('✅ Checkbox label visible');
 
       // 5. Verify Accept button is disabled before checking the box
-      const acceptBtn = page.getByRole('button', { name: /^accept$/i });
+      const acceptBtn = page.getByRole('button', { name: hiAlso(/^accept$/i) });
       await expect(acceptBtn).toBeVisible();
       // Recorded rather than asserted — the gate is observed here, then proven at step 8.
       const acceptDisabledBefore = await acceptBtn.isDisabled().catch(() => false);
@@ -394,7 +395,7 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
 
       if (!isChecked) {
         // Fallback — Material checkboxes sometimes need the label clicked
-        await scrollAndClick(page, page.getByText(/i have read and agree/i).first());
+        await scrollAndClick(page, page.getByText(hiAlso(/i have read and agree/i)).first());
         await page.waitForTimeout(500);
       }
 
@@ -439,11 +440,11 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
       // Fetch and submit a real OTP to reach the terms screen.
       const otp = await fetchOtpFromYopmail(context, signupEmail);
       await page.locator('input').first().fill(otp);
-      await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+      await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
       await page.waitForTimeout(3000);
 
       // Anchored, so it can't match the footer link of the same name.
-      const heading = page.getByText(/^terms of use$/i).first();
+      const heading = page.getByText(hiAlso(/^terms of use$/i)).first();
       await expect(heading).toBeVisible({ timeout: 10000 });
       console.log('✅ "Terms of Use" heading visible');
     });
@@ -452,7 +453,7 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
       // Same setup: real OTP, real terms screen.
       const otp = await fetchOtpFromYopmail(context, signupEmail);
       await page.locator('input').first().fill(otp);
-      await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+      await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
       await page.waitForTimeout(3000);
 
       // Just "the first image on the page" — loose, but the screen has only one.
@@ -465,7 +466,7 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
       // Same setup.
       const otp = await fetchOtpFromYopmail(context, signupEmail);
       await page.locator('input').first().fill(otp);
-      await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+      await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
       await page.waitForTimeout(3000);
 
       // By class as well as label — staging serves this screen in Hindi ("मना करें").
@@ -486,12 +487,12 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
       // Same setup.
       const otp = await fetchOtpFromYopmail(context, signupEmail);
       await page.locator('input').first().fill(otp);
-      await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+      await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
       await page.waitForTimeout(3000);
 
       // The consent checkbox and the button it gates.
       const checkbox = page.locator('input[type="checkbox"]').first();
-      const acceptBtn = page.getByRole('button', { name: /^accept$/i });
+      const acceptBtn = page.getByRole('button', { name: hiAlso(/^accept$/i) });
 
       // Check
       await scrollAndClick(page, checkbox);
@@ -517,11 +518,11 @@ test.describe('Post-Signup Flow - Complete Element Coverage', () => {
       // Same setup.
       const otp = await fetchOtpFromYopmail(context, signupEmail);
       await page.locator('input').first().fill(otp);
-      await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+      await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
       await page.waitForTimeout(3000);
 
       // The link to the policy documents.
-      const link = page.getByText(/terms of use and privacy policy/i).first();
+      const link = page.getByText(hiAlso(/terms of use and privacy policy/i)).first();
       await expect(link).toBeVisible();
       console.log('✅ Terms of use & Privacy Policy link visible');
       // Note: we don't click the link here — it likely opens external content

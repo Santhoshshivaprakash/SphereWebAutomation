@@ -38,6 +38,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 // The shared matcher that maps an on-screen question to its answer-key entry.
 import { findMatchingQuestion } from './helpers/questionMatch';
+import { SEARCH_PLACEHOLDER, hiAlso } from './helpers/i18n';
 
 // Which environment to test.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
@@ -127,7 +128,7 @@ function normalizeTitle(s: string): string {
 async function searchAndOpenCourse(page: Page, courseName: string): Promise<boolean> {
   console.log(`\n🔎 Searching: "${courseName}"`);
   // The search box, matched by its placeholder.
-  const search = page.getByPlaceholder(/what do you want to learn today/i);
+  const search = page.getByPlaceholder(SEARCH_PLACEHOLDER);
   await search.waitFor({ state: 'visible', timeout: 10_000 });
   // Type the course name.
   await search.fill(courseName);
@@ -217,11 +218,11 @@ async function startOrResume(page: Page): Promise<boolean> {
 
   // Five ways to find the control, ordered most to least reliable.
   const candidates: Locator[] = [
-    page.getByRole('button', { name: /^(resume|start)$/i }).first(),
-    page.getByRole('link',   { name: /^(resume|start)$/i }).first(),
+    page.getByRole('button', { name: hiAlso(/^(resume|start)$/i) }).first(),
+    page.getByRole('link',   { name: hiAlso(/^(resume|start)$/i) }).first(),
     page.locator('.resumeButton, [class*="resumeButton"]').first(),
     page.locator('.banner-btn').first(),
-    page.getByText(/^(resume|start)$/i).first(),
+    page.getByText(hiAlso(/^(resume|start)$/i)).first(),
   ];
 
   // Try each in turn.
@@ -698,7 +699,7 @@ async function handleAssessment(page: Page) {
   // Wait for either "Start Now!" or an answer input to appear
   console.log(`   ⏳ Waiting for assessment to render`);
   // The intro button…
-  const startBtn = page.getByRole('button', { name: /start\s*now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start\s*now/i) }).first();
   // …or the first answer control, in any of its three shapes.
   const firstInput = page.locator('mat-radio-button, mat-checkbox, mat-list-option').first();
 
@@ -817,7 +818,7 @@ async function readAssessmentVerdict(page: Page): Promise<'passed' | 'failed' | 
   // With both, we can decide for ourselves.
   if (score && required) return Number(score[1]) >= Number(required[1]) ? 'passed' : 'failed';
   // A visible Re-attempt button on the results screen means the pass mark was missed.
-  const reattempt = page.getByRole('button', { name: /re.?attempt|try again|retake/i }).first();
+  const reattempt = page.getByRole('button', { name: hiAlso(/re.?attempt|try again|retake/i) }).first();
   if (await reattempt.isVisible({ timeout: 1000 }).catch(() => false)) return 'failed';
   // None of the four signals fired — say so rather than guessing.
   return 'unknown';
@@ -826,14 +827,14 @@ async function readAssessmentVerdict(page: Page): Promise<'passed' | 'failed' | 
 // Click the Re-attempt button, and clear any intro gate behind it.
 async function clickReattempt(page: Page): Promise<boolean> {
   // Three accepted labels for the retry control.
-  const btn = page.getByRole('button', { name: /re.?attempt|try again|retake/i }).first();
+  const btn = page.getByRole('button', { name: hiAlso(/re.?attempt|try again|retake/i) }).first();
   // Not there — report failure so the caller stops retrying.
   if (!(await btn.isVisible({ timeout: 3000 }).catch(() => false))) return false;
   // Click it.
   await btn.click().catch(() => {});
   await page.waitForTimeout(2500);
   // Some assessments drop back to the "Start Now!" gate after a re-attempt.
-  const startBtn = page.getByRole('button', { name: /start\s*now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start\s*now/i) }).first();
   // So clear that too, otherwise the next answer pass would find no questions.
   if (await startBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
     await startBtn.click().catch(() => {});
@@ -1714,7 +1715,7 @@ async function clickNextQuestion(page: Page, isLast: boolean): Promise<void> {
   }
 
   // Step 2: Next — advance to the next question (now enabled after the reveal).
-  const next = page.getByRole('button', { name: /^next$/i }).first();
+  const next = page.getByRole('button', { name: hiAlso(/^next$/i) }).first();
   // Only if it exists.
   if (await next.isVisible().catch(() => false)) {
     // Still disabled after the submit — on the last question that means we're done.
@@ -2273,7 +2274,7 @@ async function closeAnyPopup(page: Page): Promise<void> {
 async function hasCertificate(page: Page): Promise<boolean> {
   // Two signals: the word itself, or a certificate-classed element or image.
   const indicators = [
-    page.getByText(/certificate/i),
+    page.getByText(hiAlso(/certificate/i)),
     page.locator('[class*="certificate"], img[alt*="certificate" i], img[src*="certificate" i]'),
   ];
   // Either one is enough.
@@ -2342,12 +2343,12 @@ async function exploreCourseOverview(page: Page): Promise<OverviewInfo> {
 
   // Click every interactive element on the overview page
   // Each softClick names the control, so the log reads as a checklist.
-  await softClick(page.getByRole('button', { name: /^details$/i }).or(page.getByText(/^details$/i)), 'Details');
-  await softClick(page.getByRole('button', { name: /share/i }).or(page.locator('[class*="share"]')), 'Share');
-  await softClick(page.getByText(/license\s*terms?/i), 'License Terms');
-  await softClick(page.getByText(/^about/i).or(page.getByText(/description/i)), 'About / Description');
-  await softClick(page.getByText(/^contents?$|curriculum|table of contents/i), 'Contents / Curriculum');
-  await softClick(page.getByRole('button', { name: /certificate/i }).or(page.locator('[class*="certificate"]')), 'Certificate (preview)');
+  await softClick(page.getByRole('button', { name: hiAlso(/^details$/i) }).or(page.getByText(hiAlso(/^details$/i))), 'Details');
+  await softClick(page.getByRole('button', { name: hiAlso(/share/i) }).or(page.locator('[class*="share"]')), 'Share');
+  await softClick(page.getByText(hiAlso(/license\s*terms?/i)), 'License Terms');
+  await softClick(page.getByText(hiAlso(/^about/i)).or(page.getByText(hiAlso(/description/i))), 'About / Description');
+  await softClick(page.getByText(hiAlso(/^contents?$|curriculum|table of contents/i)), 'Contents / Curriculum');
+  await softClick(page.getByRole('button', { name: hiAlso(/certificate/i) }).or(page.locator('[class*="certificate"]')), 'Certificate (preview)');
 
   // Expand every collapsible section / accordion so the whole TOC is visible
   // Four shapes of expander.
@@ -2462,8 +2463,8 @@ async function generateCertificate(
       // + a download icon) — NOT a <button>.
       // Three shapes, most specific first — the div, then a button, then the bare text.
       const certBtn = page
-        .locator('.toc-icon-action, [class*="toc-icon-action"]').filter({ hasText: /certificate/i })
-        .or(page.getByRole('button', { name: /certificate/i }))
+        .locator('.toc-icon-action, [class*="toc-icon-action"]').filter({ hasText: hiAlso(/certificate/i) })
+        .or(page.getByRole('button', { name: hiAlso(/certificate/i) }))
         .or(page.getByText('Certificate', { exact: true }))
         .first();
 
@@ -2492,7 +2493,7 @@ async function generateCertificate(
       // Three shapes for it, plus the accessible name as a fallback.
       const dlBtn = page
         .locator('button.download-btn, .mat-mdc-dialog-panel .download-btn, [role="dialog"] [class*="download"]')
-        .or(page.getByRole('button', { name: /download/i }))
+        .or(page.getByRole('button', { name: hiAlso(/download/i) }))
         .first();
       // A 10s window — the dialog itself takes a while to appear.
       if (await dlBtn.isVisible({ timeout: 10_000 }).catch(() => false)) {

@@ -56,6 +56,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 // The shared matcher that maps an on-screen question to its answer-key entry.
 import { findMatchingQuestion } from './helpers/questionMatch';
+import { hiAlso } from './helpers/i18n';
 
 // Mutable: in CDP mode we adopt the origin of the tab we attach to, so the run
 // always targets the env you are actually logged into (see setBaseUrl below).
@@ -281,13 +282,10 @@ async function fetchRealAnswerKey(page: Page): Promise<QuizKey | null> {
 // ══════════════════════════════════════════════════════════════════════
 // Click a dashboard tab by name. Five selector shapes in one.
 async function clickTab(page: Page, name: 'Job Description' | 'Passbook' | 'Required') {
-  const tab = page.locator([
-    `[role="tab"]:has-text("${name}")`,
-    `mat-tab-label:has-text("${name}")`,
-    `.mat-mdc-tab:has-text("${name}")`,
-    `button:has-text("${name}")`,
-    `a:has-text("${name}")`,
-  ].join(', ')).first();
+  // English or Hindi label ("Started" / "शुरू किया") — the tabs follow the account's language.
+  const tab = page.locator('[role="tab"], mat-tab-label, .mat-mdc-tab, button, a')
+    .filter({ hasText: hiAlso(new RegExp(name, 'i')) })
+    .first();
   // Click it.
   await tab.click();
   // Let the tab panel re-render.
@@ -754,10 +752,10 @@ async function selectRadioOption(page: Page, idx: number): Promise<boolean> {
 // Advance to the next question, or submit on the last one.
 async function clickNextOrSubmit(page: Page) {
   // Prefer Next…
-  let btn = page.getByRole('button', { name: /^next$/i }).first();
+  let btn = page.getByRole('button', { name: hiAlso(/^next$/i) }).first();
   // …and fall back to Submit when Next is gone.
   if (!(await btn.isVisible().catch(() => false))) {
-    btn = page.getByRole('button', { name: /^submit$/i }).first();
+    btn = page.getByRole('button', { name: hiAlso(/^submit$/i) }).first();
   }
   // Neither on screen — nothing to do.
   if (!(await btn.isVisible().catch(() => false))) return;
@@ -815,7 +813,7 @@ async function runQuizOnce(
 
   // The quiz viewer usually opens on an intro with a "Start Now!" button, but
   // depending on how we arrived it may drop us straight onto Q1. Handle both.
-  const startBtn = page.getByRole('button', { name: /start now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start now/i) }).first();
   // A 15s window, because the viewer can be slow to paint.
   const hasStart = await startBtn.waitFor({ state: 'visible', timeout: 15_000 }).then(() => true, () => false).catch(() => false);
 
@@ -967,7 +965,7 @@ async function detectQuizPassed(page: Page): Promise<boolean> {
 // Return to the dashboard after a quiz.
 async function goBackToDashboard(page: Page) {
   // The results screen offers a button back.
-  const btn = page.getByRole('button', { name: /go to competency dashboard/i }).first();
+  const btn = page.getByRole('button', { name: hiAlso(/go to competency dashboard/i) }).first();
   // Use it if it's there.
   if (await btn.isVisible().catch(() => false)) {
     await btn.click();
@@ -1100,11 +1098,11 @@ async function openLevel(
   // Take the tagged one.
   const card = cards.first();
   // Its Re-Assess button — for a competency already started.
-  let reAssessBtn = card.getByRole('button', { name: /re-?assess/i }).first();
+  let reAssessBtn = card.getByRole('button', { name: hiAlso(/re-?assess/i) }).first();
   // Not there? Then this is a FRESH competency…
   if (!(await reAssessBtn.waitFor({ state: 'visible', timeout: 3_000 }).then(() => true, () => false).catch(() => false))) {
     // …so look for "Assess" instead. Anchored, so it can't match "Re-Assess".
-    reAssessBtn = card.getByRole('button', { name: /^assess$/i }).first();
+    reAssessBtn = card.getByRole('button', { name: hiAlso(/^assess$/i) }).first();
   }
 
   // Neither button on the card — give up cleanly.
@@ -1122,7 +1120,7 @@ async function openLevel(
   //   (A) prod: a "Start Now!" intro modal appears directly.
   //   (B) this env: it navigates to a competency TOC page that lists every
   //       level as a link (href → /viewer/quiz/...). We must click the level.
-  const startBtn = page.getByRole('button', { name: /start now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start now/i) }).first();
   // Flow (A): the modal appeared.
   if (await startBtn.waitFor({ state: 'visible', timeout: 6_000 }).then(() => true, () => false).catch(() => false)) {
     // Read its heading inside the browser.
@@ -1223,7 +1221,7 @@ function competencyIdOf(url: string): string {
  */
 async function waitForCompetencyId(page: Page, timeoutMs = 25_000): Promise<string> {
   // The intro's Start button.
-  const startBtn = page.getByRole('button', { name: /start now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start now/i) }).first();
   // Click it if it's there — that's what triggers the navigation.
   if (await startBtn.waitFor({ state: 'visible', timeout: 3_000 }).then(() => true, () => false).catch(() => false)) {
     await startBtn.click().catch(() => {});
@@ -1336,7 +1334,7 @@ async function openViaJobDescription(page: Page, competencyName: string, targetL
   const titles = page.getByText(new RegExp(`^\\s*${escaped}\\s*$`, 'i'));
   const nearestAssess = (i: number) => titles.nth(i)
     .locator('xpath=ancestor::*[.//button[normalize-space()="Assess" or normalize-space()="Re-Assess" or normalize-space()="Reassess"]][1]')
-    .getByRole('button', { name: /^(re-?assess|assess)$/i }).first();
+    .getByRole('button', { name: hiAlso(/^(re-?assess|assess)$/i) }).first();
   let assessBtn = nearestAssess(0);
   // The same competency can sit under several roles — use the first visible copy.
   for (let i = 0; i < (await titles.count()); i++) {
@@ -1354,7 +1352,7 @@ async function openViaJobDescription(page: Page, competencyName: string, targetL
   await page.waitForTimeout(2500);
 
   // Same two flows as the Required path: a "Start Now!" modal, or a TOC list.
-  const startBtn = page.getByRole('button', { name: /start now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start now/i) }).first();
   // Flow (A): the modal appeared.
   if (await startBtn.waitFor({ state: 'visible', timeout: 6_000 }).then(() => true, () => false).catch(() => false)) {
     // Read its heading inside the browser.
@@ -1428,8 +1426,8 @@ async function openCompetencyDashboard(page: Page) {
  */
 async function assertLoggedIn(page: Page) {
   // A "Log in" control, as a button or a link.
-  const loginCta = page.getByRole('button', { name: /^log\s?in$/i })
-    .or(page.getByRole('link', { name: /^log\s?in$/i })).first();
+  const loginCta = page.getByRole('button', { name: hiAlso(/^log\s?in$/i) })
+    .or(page.getByRole('link', { name: hiAlso(/^log\s?in$/i) })).first();
   // Signal 1: the login CTA is on screen.
   const showsLogin = await loginCta.waitFor({ state: 'visible', timeout: 3_000 }).then(() => true, () => false).catch(() => false);
   // Signal 2: we're on a public route.
@@ -1451,8 +1449,8 @@ async function assertLoggedIn(page: Page) {
 
 // Are we on the competency dashboard? Two markers.
 async function onCompetencyDashboard(page: Page): Promise<boolean> {
-  return await page.getByRole('tab', { name: /required/i })
-    .or(page.getByText(/competency dashboard/i)).first()
+  return await page.getByRole('tab', { name: hiAlso(/required/i) })
+    .or(page.getByText(hiAlso(/competency dashboard/i))).first()
     .waitFor({ state: 'visible', timeout: 2500 }).then(() => true, () => false).catch(() => false);
 }
 
@@ -1599,7 +1597,7 @@ test.describe('Complete a single named competency', () => {
     await assertLoggedIn(page);
     await ensureCompetencyDashboard(page);
     // hard — a 30s window, because the dashboard is slow to paint.
-    await expect(page.getByText(/competency dashboard/i).first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(hiAlso(/competency dashboard/i)).first()).toBeVisible({ timeout: 30_000 });
 
     // ── Climb every level of the named competency ────────────────
     // One entry per level attempted.

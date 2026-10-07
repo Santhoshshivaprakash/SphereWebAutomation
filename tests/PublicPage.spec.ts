@@ -11,6 +11,7 @@
 
 // The test runner, the assertion library, and the Page type.
 import { test, expect, Page } from '@playwright/test';
+import { hiAlso } from './helpers/i18n';
 
 // Origin only — PUBLIC_URL appends the path. (Strip any trailing /public/home
 // so we never end up with /public/home/public/home.)
@@ -750,7 +751,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
       // Stays English even in Hindi mode.
       // Note: NO tr() here. The portal does not translate this label, so matching the
       // literal string is what the page actually does — adding it to HI would misrepresent it.
-      const label = page.getByText('An initiative of').first();
+      const label = page.getByText(hiAlso(/An initiative of/i)).first();
       await label.scrollIntoViewIfNeeded();
       await expect(label).toBeVisible();
       console.log('✅ An initiative of visible');
@@ -771,7 +772,7 @@ test.describe('Public Page - Complete Element Coverage', () => {
     test('"A collaboration with" section is visible', async ({ page }) => {
       // Stays English even in Hindi mode.
       // Literal match again, for the same reason as line 577.
-      const label = page.getByText('A collaboration with').first();
+      const label = page.getByText(hiAlso(/A collaboration with/i)).first();
       await label.scrollIntoViewIfNeeded();
       await expect(label).toBeVisible();
       console.log('✅ A collaboration with visible');

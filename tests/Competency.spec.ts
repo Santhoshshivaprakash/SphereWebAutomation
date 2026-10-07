@@ -34,6 +34,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 // The shared matcher that maps an on-screen question to its answer-key entry.
 import { findMatchingQuestion } from './helpers/questionMatch';
+import { hiAlso } from './helpers/i18n';
 
 // Which environment to test.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
@@ -153,13 +154,10 @@ function isAnswerKeyPoisoned(key: QuizKey): boolean {
 // ══════════════════════════════════════════════════════════════════════
 // Click a dashboard tab by name. Five selector shapes in one.
 async function clickTab(page: Page, name: 'Job Description' | 'Passbook' | 'Required') {
-  const tab = page.locator([
-    `[role="tab"]:has-text("${name}")`,
-    `mat-tab-label:has-text("${name}")`,
-    `.mat-mdc-tab:has-text("${name}")`,
-    `button:has-text("${name}")`,
-    `a:has-text("${name}")`,
-  ].join(', ')).first();
+  // English or Hindi label ("Started" / "शुरू किया") — the tabs follow the account's language.
+  const tab = page.locator('[role="tab"], mat-tab-label, .mat-mdc-tab, button, a')
+    .filter({ hasText: hiAlso(new RegExp(name, 'i')) })
+    .first();
   // Click it.
   await tab.click();
   // Let the tab panel re-render.
@@ -536,10 +534,10 @@ async function selectRadioOption(page: Page, idx: number): Promise<void> {
 // Advance to the next question, or submit on the last one.
 async function clickNextOrSubmit(page: Page) {
   // Prefer Next…
-  let btn = page.getByRole('button', { name: /^next$/i }).first();
+  let btn = page.getByRole('button', { name: hiAlso(/^next$/i) }).first();
   // …and fall back to Submit when Next is gone.
   if (!(await btn.isVisible().catch(() => false))) {
-    btn = page.getByRole('button', { name: /^submit$/i }).first();
+    btn = page.getByRole('button', { name: hiAlso(/^submit$/i) }).first();
   }
   // Neither on screen — nothing to do.
   if (!(await btn.isVisible().catch(() => false))) return;
@@ -589,7 +587,7 @@ async function runQuizOnce(
   }
 
   // Wait for "Start Now!" intro
-  const startBtn = page.getByRole('button', { name: /start now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start now/i) }).first();
   // hard-ish: a 15s wait, so a quiz that never loads fails here with a clear cause.
   await startBtn.waitFor({ state: 'visible', timeout: 15_000 });
 
@@ -811,7 +809,7 @@ async function detectQuizPassed(page: Page): Promise<boolean> {
 // Return to the dashboard after a quiz.
 async function goBackToDashboard(page: Page) {
   // The results screen offers a button back.
-  const btn = page.getByRole('button', { name: /go to competency dashboard/i }).first();
+  const btn = page.getByRole('button', { name: hiAlso(/go to competency dashboard/i) }).first();
   // Use it if it's there.
   if (await btn.isVisible().catch(() => false)) {
     await btn.click();
@@ -894,20 +892,20 @@ async function openLevel(
     // Take the first match.
     const card = cards.first();
     // Its Re-Assess button — for a competency already started.
-    reAssessBtn = card.getByRole('button', { name: /re-?assess/i }).first();
+    reAssessBtn = card.getByRole('button', { name: hiAlso(/re-?assess/i) }).first();
     // Not there? Then this is a FRESH competency…
     if (!(await reAssessBtn.isVisible({ timeout: 3_000 }).catch(() => false))) {
       // …so look for "Assess" instead. Anchored, so it can't match "Re-Assess".
-      reAssessBtn = card.getByRole('button', { name: /^assess$/i }).first();
+      reAssessBtn = card.getByRole('button', { name: hiAlso(/^assess$/i) }).first();
     }
   // No name given — auto-select the first available competency: Re-Assess if one
   // has been started, else Assess for a fresh one.
   } else {
     // Auto-select the first available competency: click "Re-Assess" if it's
     // already been started, else "Assess" if it's a fresh competency.
-    reAssessBtn = page.getByRole('button', { name: /re-?assess/i }).first();
+    reAssessBtn = page.getByRole('button', { name: hiAlso(/re-?assess/i) }).first();
     if (!(await reAssessBtn.isVisible({ timeout: 3_000 }).catch(() => false))) {
-      reAssessBtn = page.getByRole('button', { name: /^assess$/i }).first();
+      reAssessBtn = page.getByRole('button', { name: hiAlso(/^assess$/i) }).first();
     }
   }
 
@@ -924,7 +922,7 @@ async function openLevel(
   await page.waitForTimeout(2500);
 
   // ── Confirm the modal opened (Start Now! visible) ──────────────
-  const startBtn = page.getByRole('button', { name: /start now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start now/i) }).first();
   // No Start Now means the modal never appeared — report and return.
   if (!(await startBtn.isVisible({ timeout: 8_000 }).catch(() => false))) {
     console.log(`   ❌ Level intro modal did not appear (no "Start Now!" button)`);
@@ -972,7 +970,7 @@ async function openViaJobDescription(page: Page): Promise<{ ok: boolean; actualL
 
   // Expand role panels until an Assess/Re-Assess button is revealed.
   // Maybe one is already on screen — check before expanding anything.
-  const alreadyVisible = await page.getByRole('button', { name: /^(assess|re-?assess)$/i })
+  const alreadyVisible = await page.getByRole('button', { name: hiAlso(/^(assess|re-?assess)$/i) })
     .first().isVisible({ timeout: 1500 }).catch(() => false);
   // Not visible, so start opening the role accordions.
   if (!alreadyVisible) {
@@ -985,13 +983,13 @@ async function openViaJobDescription(page: Page): Promise<{ ok: boolean; actualL
       await headers.nth(i).click().catch(() => {});
       await page.waitForTimeout(500);
       // Stop as soon as a button appears — no need to open the rest.
-      if (await page.getByRole('button', { name: /^(assess|re-?assess)$/i })
+      if (await page.getByRole('button', { name: hiAlso(/^(assess|re-?assess)$/i) })
         .first().isVisible({ timeout: 800 }).catch(() => false)) break;
     }
   }
 
   // Now grab whichever button surfaced.
-  const assessBtn = page.getByRole('button', { name: /^(re-?assess|assess)$/i }).first();
+  const assessBtn = page.getByRole('button', { name: hiAlso(/^(re-?assess|assess)$/i) }).first();
   // Still nothing — give up cleanly.
   if (!(await assessBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
     console.log('   ❌ No Assess/Re-Assess button under Job Description → Roles');
@@ -1003,7 +1001,7 @@ async function openViaJobDescription(page: Page): Promise<{ ok: boolean; actualL
   await page.waitForTimeout(2500);
 
   // The intro modal's Start Now button.
-  const startBtn = page.getByRole('button', { name: /start now/i }).first();
+  const startBtn = page.getByRole('button', { name: hiAlso(/start now/i) }).first();
   // No modal means the click didn't open an assessment.
   if (!(await startBtn.isVisible({ timeout: 8_000 }).catch(() => false))) {
     console.log('   ❌ Assessment intro ("Start Now!") did not appear after Assess');
@@ -1036,7 +1034,7 @@ async function openNextAssessment(page: Page): Promise<{ ok: boolean; actualLeve
 async function competenciesExist(page: Page): Promise<boolean> {
   await ensureCompetencyDashboard(page);
   // A small helper so the same count can be taken at three points below.
-  const assessBtn = page.getByRole('button', { name: /re-?assess|^assess$/i });
+  const assessBtn = page.getByRole('button', { name: hiAlso(/re-?assess|^assess$/i) });
   const anyAssess = () => assessBtn.count().catch(() => 0);
   // After a tab switch, WAIT for the list to load instead of counting once after a
   // fixed pause — on slower CI machines the buttons arrive after 1.2s and a single
@@ -1084,7 +1082,7 @@ async function requiredTabHasNoResult(page: Page): Promise<boolean> {
   // Explicit empty message — definitely empty.
   if (emptyState) return true;
   // No Re-Assess / Assess cards at all → treat as empty.
-  const cards = await page.getByRole('button', { name: /re-?assess|^assess$/i }).count().catch(() => 0);
+  const cards = await page.getByRole('button', { name: hiAlso(/re-?assess|^assess$/i) }).count().catch(() => 0);
   return cards === 0;
 }
 
@@ -1178,8 +1176,8 @@ async function openCompetencyDashboard(page: Page) {
 // bounces back home; clicking the header "Competency" button is reliable.
 async function onCompetencyDashboard(page: Page): Promise<boolean> {
   // Two markers: the Required tab, or the dashboard heading.
-  return await page.getByRole('tab', { name: /required/i })
-    .or(page.getByText(/competency dashboard/i)).first()
+  return await page.getByRole('tab', { name: hiAlso(/required/i) })
+    .or(page.getByText(hiAlso(/competency dashboard/i))).first()
     .isVisible({ timeout: 2500 }).catch(() => false);
 }
 
@@ -1290,7 +1288,7 @@ test.describe('Competency Dashboard — full flow', () => {
     await page.waitForTimeout(2000);
     await ensureCompetencyDashboard(page); // click the "Competency" nav (goto redirects to home)
     // hard — the dashboard heading proves we arrived.
-    await expect(page.getByText(/competency dashboard/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/competency dashboard/i)).first()).toBeVisible();
   });
 
   // ── Step 2: detect whether the role blocks the Required tab ────
@@ -1380,7 +1378,7 @@ test.describe('Competency Dashboard — full flow', () => {
     // Make sure we're on the dashboard.
     await ensureCompetencyDashboard(page);
     // hard — the tab exists.
-    await expect(page.getByText(/job description/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/job description/i)).first()).toBeVisible();
     // Open it.
     await clickTab(page, 'Job Description');
     await page.waitForTimeout(1200);
@@ -1391,7 +1389,7 @@ test.describe('Competency Dashboard — full flow', () => {
     // Open up to 15 of them, briefly, to reveal what's inside.
     for (let i = 0; i < Math.min(hc, 15); i++) { await headers.nth(i).click().catch(() => {}); await page.waitForTimeout(250); }
     // Count the assess buttons that surfaced…
-    const assess = await page.getByRole('button', { name: /^(assess|re-?assess)$/i }).count().catch(() => 0);
+    const assess = await page.getByRole('button', { name: hiAlso(/^(assess|re-?assess)$/i) }).count().catch(() => 0);
     // …and read the competency names. They render as "3 Newborn Care" — a number
     // then the title — which is what the /^d+s+w/ pattern matches.
     const comps = await page.getByRole('button', { name: /^\d+\s+\w/ }).allInnerTexts().catch(() => []);
@@ -1404,7 +1402,7 @@ test.describe('Competency Dashboard — full flow', () => {
   test('Explore tab — Passbook', async () => {
     await ensureCompetencyDashboard(page);
     // hard — the tab exists.
-    await expect(page.getByText(/passbook/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/passbook/i)).first()).toBeVisible();
     await clickTab(page, 'Passbook');
     await page.waitForTimeout(1200);
     // The card count is printed, not asserted.
@@ -1416,7 +1414,7 @@ test.describe('Competency Dashboard — full flow', () => {
     // Competencies live under the Required tab OR Job Description → Roles.
     const exists = await competenciesExist(page);
     // Count the assess buttons…
-    const assessBtns = await page.getByRole('button', { name: /re-?assess|^assess$/i }).count().catch(() => 0);
+    const assessBtns = await page.getByRole('button', { name: hiAlso(/re-?assess|^assess$/i) }).count().catch(() => 0);
     // …and list the competency names.
     const titles = await page.getByRole('button', { name: /^\d+\s+\w/ }).allInnerTexts().catch(() => []);
     console.log(`Assess/Re-Assess buttons visible: ${assessBtns}`);

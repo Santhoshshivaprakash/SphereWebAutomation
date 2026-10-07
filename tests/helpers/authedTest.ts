@@ -27,6 +27,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 // The shared UI-login helper.
 import { loginWithPassword } from './login';
+// English/Hindi labels from the portal's own translation file.
+import { SEARCH_PLACEHOLDER, LOGIN_LABEL } from './i18n';
 // Builds a context pre-seeded with a session cookie.
 import { newCookieAuthedContext } from './auth';
 // The API client class.
@@ -107,16 +109,19 @@ async function isAuthenticated(ctx: BrowserContext): Promise<boolean> {
     // WAIT for the signed-in search box rather than looking once after a fixed
     // pause — on a slow load the header wasn't there yet at 2s and a perfectly
     // good session was reported as signed out.
-    await page.locator('input[placeholder*="learn today" i]').first()
+    // English OR Hindi — the header is in the ACCOUNT's language, and a Hindi
+    // header used to make a perfectly good session look signed out.
+    await page.getByPlaceholder(SEARCH_PLACEHOLDER).first()
       .waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
-    return await page.evaluate(() => {
+    return await page.evaluate(([searchRe, loginRe]) => {
       const vis = (e: Element) => (e as HTMLElement).offsetParent !== null;
       const clean = (s: string | null) => (s || '').replace(/\s+/g, ' ').trim();
-      const search = document.querySelector('input[placeholder*="learn today" i]');
+      const search = Array.from(document.querySelectorAll('input[placeholder]'))
+        .find((i) => new RegExp(searchRe, 'i').test((i as HTMLInputElement).placeholder));
       const loginBtn = Array.from(document.querySelectorAll('button, a'))
-        .filter(vis).find((b) => /^log\s*in$/i.test(clean(b.textContent)));
+        .filter(vis).find((b) => new RegExp(loginRe, 'i').test(clean(b.textContent)));
       return Boolean(search && vis(search)) && !loginBtn;
-    });
+    }, [SEARCH_PLACEHOLDER.source, LOGIN_LABEL.source]);
   } catch {
     return false;
   } finally {
@@ -219,14 +224,15 @@ async function verifyAuthenticated(ctx: BrowserContext, label: string): Promise<
     await page.waitForLoadState('networkidle').catch(() => {});
     await page.waitForTimeout(2_000);
 
-    const state = await page.evaluate(() => {
+    const state = await page.evaluate(([searchRe, loginRe]) => {
       const vis = (e: Element) => (e as HTMLElement).offsetParent !== null;
       const clean = (s: string | null) => (s || '').replace(/\s+/g, ' ').trim();
-      const search = document.querySelector('input[placeholder*="learn today" i]');
+      const search = Array.from(document.querySelectorAll('input[placeholder]'))
+        .find((i) => new RegExp(searchRe, 'i').test((i as HTMLInputElement).placeholder));
       const loginBtn = Array.from(document.querySelectorAll('button, a'))
-        .filter(vis).find((b) => /^log\s*in$/i.test(clean(b.textContent)));
+        .filter(vis).find((b) => new RegExp(loginRe, 'i').test(clean(b.textContent)));
       return { url: location.href, hasSearch: Boolean(search && vis(search)), hasLogin: Boolean(loginBtn) };
-    });
+    }, [SEARCH_PLACEHOLDER.source, LOGIN_LABEL.source]);
 
     if (state.hasSearch && !state.hasLogin) return;   // signed in
 

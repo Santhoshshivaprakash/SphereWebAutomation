@@ -172,6 +172,7 @@ function extractOtp(text: string): string | null {
 
 // The shared, hardened OTP reader (throttling, captcha detection, retries).
 import { getOtpFromYopmail } from '../helpers/otp';
+import { bi, hiAlso } from '../helpers/i18n';
 
 // Thin wrapper kept so the call sites below read unchanged.
 async function fetchOtpFromYopmail(context: BrowserContext, email: string): Promise<string> {
@@ -192,19 +193,21 @@ async function signup(page: Page, context: BrowserContext, email: string) {
 
   // If the app bounced us to login, click through to signup.
   if (/\/public\/login/i.test(page.url())) {
-    await scrollAndClick(page, page.getByRole('button', { name: /create an account/i })
-      .or(page.getByText(/create an account/i)).first());
+    await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/create an account/i) })
+      .or(page.getByText(hiAlso(/create an account/i))).first());
     await page.waitForTimeout(800);
   }
 
   // Language
   // Match English by LABEL, not by position — the screen may render in Hindi.
-  const englishRadio = page.locator('mat-radio-button, [role="radio"]')
-    .filter({ hasText: /english/i }).first();
+  const englishRadio = page.locator('mat-radio-button[value="en"]')
+    // by VALUE, so it works whether the label reads "English" or "अंग्रेजी"
+    .or(page.locator('mat-radio-button, [role="radio"]').filter({ hasText: bi('English', { exact: false }) }))
+    .first();
   await scrollAndClick(page, englishRadio);
   await page.waitForTimeout(400);
   // Advance to the details form.
-  await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+  await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
   await page.waitForTimeout(1500);
 
   // Name + email + "By OTP"
@@ -214,16 +217,16 @@ async function signup(page: Page, context: BrowserContext, email: string) {
   await inputs.nth(1).fill('Automation');
   await inputs.nth(2).fill(email);
   // Choose the OTP login method.
-  await scrollAndClick(page, page.getByText(/by otp/i).first());
+  await scrollAndClick(page, page.getByText(hiAlso(/by otp/i)).first());
   await page.waitForTimeout(400);
   // Submit the form.
-  await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+  await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
   await page.waitForTimeout(1500);
 
   // Confirm name
   // Sphere prints this name on certificates, so it asks the user to confirm it.
-  await scrollAndClick(page, page.getByRole('button', { name: /confirm name/i })
-    .or(page.getByText(/confirm name/i)).first());
+  await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/confirm name/i) })
+    .or(page.getByText(hiAlso(/confirm name/i))).first());
   await page.waitForTimeout(2500);
 
   // OTP
@@ -232,7 +235,7 @@ async function signup(page: Page, context: BrowserContext, email: string) {
   await page.locator('input').first().fill(otp);
   await page.waitForTimeout(400);
   // Submit it.
-  await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+  await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
   await page.waitForTimeout(3000);
 
   // Terms
@@ -275,14 +278,14 @@ async function signup(page: Page, context: BrowserContext, email: string) {
 // Open the onboarding form, unless it opened itself.
 async function openProfileForm(page: Page) {
   // Check if it auto-opened first
-  if (await page.getByText(/tell us more about you/i).isVisible({ timeout: 2000 }).catch(() => false)) {
+  if (await page.getByText(hiAlso(/tell us more about you/i)).isVisible({ timeout: 2000 }).catch(() => false)) {
     console.log(`   ℹ️  Profile form auto-opened`);
     return;
   }
   console.log(`👆 Clicking Account button`);
   // Otherwise click the header's Account control.
-  const accountBtn = page.getByRole('button', { name: /^account$/i })
-    .or(page.getByText(/^account$/i)).first();
+  const accountBtn = page.getByRole('button', { name: hiAlso(/^account$/i) })
+    .or(page.getByText(hiAlso(/^account$/i))).first();
   // hard — if the header never renders, fail here rather than deeper in.
   await expect(accountBtn).toBeVisible({ timeout: 10000 });
   await scrollAndClick(page, accountBtn);
@@ -307,7 +310,7 @@ async function clickAction(page: Page, label: 'Next' | 'Done') {
 // Pick a background card.
 async function pickBackground(page: Page, bg: Background) {
   // hard — confirm we're on the right screen first.
-  await expect(page.getByText(/choose your background/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(hiAlso(/choose your background/i))).toBeVisible({ timeout: 10000 });
   // Anchored so "Student" can't match "Students". Index 1, not 0 — index 0 is
   // an outer wrapper that isn't clickable.
   const card = page.locator('div').filter({ hasText: new RegExp(`^${bg}$`, 'i') }).nth(1);
@@ -321,7 +324,7 @@ async function pickBackground(page: Page, bg: Background) {
 // This is what lets ONE signup inspect all six role forms.
 async function clickChange(page: Page) {
   // Anchored, so it can't match "Change password" or similar.
-  const changeLink = page.getByText(/^change$/i).first();
+  const changeLink = page.getByText(hiAlso(/^change$/i)).first();
   await scrollAndClick(page, changeLink);
   await page.waitForTimeout(1500);
 }
@@ -337,15 +340,15 @@ async function verifyTellUsMoreScreen(page: Page) {
 
   // Headings
   // hard.
-  await expect(page.getByText(/tell us more about you/i)).toBeVisible();
+  await expect(page.getByText(hiAlso(/tell us more about you/i))).toBeVisible();
   console.log(`   ✅ Heading visible`);
   // hard — the sub-heading too.
-  await expect(page.getByText(/and unlock access to multiple courses/i)).toBeVisible();
+  await expect(page.getByText(hiAlso(/and unlock access to multiple courses/i))).toBeVisible();
   console.log(`   ✅ Sub-heading visible`);
 
   // DOB section
   // hard. Anchored, so it can't match "Date of Birth is required".
-  await expect(page.getByText(/^date of birth$/i)).toBeVisible();
+  await expect(page.getByText(hiAlso(/^date of birth$/i))).toBeVisible();
   console.log(`   ✅ "Date of Birth" label visible`);
 
   // The 3 DOB dropdowns — addressed by accessible name; the old #year/#month/
@@ -374,16 +377,16 @@ async function verifyTellUsMoreScreen(page: Page) {
 
   // Location section
   // hard. Anchored.
-  await expect(page.getByText(/^your location$/i)).toBeVisible();
+  await expect(page.getByText(hiAlso(/^your location$/i))).toBeVisible();
   console.log(`   ✅ "Your Location" label visible`);
   // hard ×3 — the three location labels.
-  await expect(page.getByText(/country/i).first()).toBeVisible();
-  await expect(page.getByText(/state/i).first()).toBeVisible();
+  await expect(page.getByText(hiAlso(/country/i)).first()).toBeVisible();
+  await expect(page.getByText(hiAlso(/state/i)).first()).toBeVisible();
   await expect(page.getByText(/city/i).first()).toBeVisible();
   console.log(`   ✅ Country / State / City labels visible`);
 
   // Next button should be DISABLED when nothing is filled
-  const nextBtn = page.getByRole('button', { name: /^next$/i });
+  const nextBtn = page.getByRole('button', { name: hiAlso(/^next$/i) });
   // observe — the gate is measured…
   const disabled = await nextBtn.isDisabled().catch(() => false);
   // …and the log's ✅/⚠️ reflects the VALUE, which is better than a bare tick.
@@ -395,7 +398,7 @@ async function verifyTellUsMoreScreen(page: Page) {
 async function verifyChooseBackgroundScreen(page: Page) {
   console.log(`\n🔍 Verifying "Choose your background" screen`);
   // hard — the heading.
-  await expect(page.getByText(/choose your background/i)).toBeVisible();
+  await expect(page.getByText(hiAlso(/choose your background/i))).toBeVisible();
   console.log(`   ✅ Heading visible`);
 
   // Then check all six cards…
@@ -414,7 +417,7 @@ async function verifyChooseBackgroundScreen(page: Page) {
 async function verifyAlmostDoneScreen(page: Page, bg: Background) {
   console.log(`\n🔍 Verifying "Almost done!" for: ${bg}`);
   // hard — the heading.
-  await expect(page.getByText(/almost done!?/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(hiAlso(/almost done!?/i))).toBeVisible({ timeout: 10000 });
   console.log(`   ✅ "Almost done!" heading visible`);
 
   // Background label
@@ -424,11 +427,11 @@ async function verifyAlmostDoneScreen(page: Page, bg: Background) {
 
   // Change link
   // hard — without it this test could not cycle through the other roles.
-  await expect(page.getByText(/^change$/i)).toBeVisible();
+  await expect(page.getByText(hiAlso(/^change$/i))).toBeVisible();
   console.log(`   ✅ "Change" link visible`);
 
   // Done button (should be disabled until form is filled)
-  const doneBtn = page.getByRole('button', { name: /^done$/i });
+  const doneBtn = page.getByRole('button', { name: hiAlso(/^done$/i) });
   // observe.
   const initiallyDisabled = await doneBtn.isDisabled().catch(() => false);
   console.log(`   ${initiallyDisabled ? '✅' : '⚠️ '} Done button initially disabled: ${initiallyDisabled}`);
@@ -482,37 +485,37 @@ async function verifyAlmostDoneScreen(page: Page, bg: Background) {
   // Each of these seven blocks follows the same shape: if the spec says this
   // role should have the field, look for it and PRINT whether it was there.
   if (expected.hasRnNumber) {
-    const visible = await page.getByRole('textbox', { name: /RN\/RM Number/i }).isVisible({ timeout: 2000 }).catch(() => false);
+    const visible = await page.getByRole('textbox', { name: hiAlso(/RN\/RM Number/i) }).isVisible({ timeout: 2000 }).catch(() => false);
     console.log(`   ${visible ? '✅' : '⚠️ '} RN/RM Number field: ${visible}`);
   }
   // Organization Name.
   if (expected.hasOrgName) {
-    const visible = await page.getByRole('textbox', { name: /Organization Name/i }).isVisible({ timeout: 2000 }).catch(() => false);
+    const visible = await page.getByRole('textbox', { name: hiAlso(/Organization Name/i) }).isVisible({ timeout: 2000 }).catch(() => false);
     console.log(`   ${visible ? '✅' : '⚠️ '} Organization Name field: ${visible}`);
   }
   // District (ASHA only).
   if (expected.hasDistrict) {
-    const visible = await page.getByText(/district/i).first().isVisible({ timeout: 2000 }).catch(() => false);
+    const visible = await page.getByText(hiAlso(/district/i)).first().isVisible({ timeout: 2000 }).catch(() => false);
     console.log(`   ${visible ? '✅' : '⚠️ '} District field: ${visible}`);
   }
   // Block (ASHA only).
   if (expected.hasBlock) {
-    const visible = await page.getByRole('textbox', { name: /Block/i }).isVisible({ timeout: 2000 }).catch(() => false);
+    const visible = await page.getByRole('textbox', { name: hiAlso(/Block/i) }).isVisible({ timeout: 2000 }).catch(() => false);
     console.log(`   ${visible ? '✅' : '⚠️ '} Block field: ${visible}`);
   }
   // Sub Centre (ASHA only).
   if (expected.hasSubCentre) {
-    const visible = await page.getByRole('textbox', { name: /Sub Centre/i }).isVisible({ timeout: 2000 }).catch(() => false);
+    const visible = await page.getByRole('textbox', { name: hiAlso(/Sub Centre/i) }).isVisible({ timeout: 2000 }).catch(() => false);
     console.log(`   ${visible ? '✅' : '⚠️ '} Sub Centre field: ${visible}`);
   }
   // Institution Name (Student and Faculty).
   if (expected.hasInstitutionName) {
-    const visible = await page.getByRole('textbox', { name: /Institution Name/i }).isVisible({ timeout: 2000 }).catch(() => false);
+    const visible = await page.getByRole('textbox', { name: hiAlso(/Institution Name/i) }).isVisible({ timeout: 2000 }).catch(() => false);
     console.log(`   ${visible ? '✅' : '⚠️ '} Institution Name field: ${visible}`);
   }
   // Qualification (Student only).
   if (expected.hasQualification) {
-    const visible = await page.getByRole('textbox', { name: /Qualification/i }).isVisible({ timeout: 2000 }).catch(() => false);
+    const visible = await page.getByRole('textbox', { name: hiAlso(/Qualification/i) }).isVisible({ timeout: 2000 }).catch(() => false);
     console.log(`   ${visible ? '✅' : '⚠️ '} Qualification field: ${visible}`);
   }
   // Sub-background dropdown (Others only).
@@ -538,13 +541,13 @@ async function fillHealthcareWorkerForm(page: Page) {
   await designationSelect(page).selectOption({ label: 'ANM/MPW' });
   console.log(`   ✅ Designation: ANM/MPW`);
   // The nursing registration number.
-  await page.getByRole('textbox', { name: /RN\/RM Number/i }).fill('1234');
+  await page.getByRole('textbox', { name: hiAlso(/RN\/RM Number/i) }).fill('1234');
   console.log(`   ✅ RN/RM Number: 1234`);
   // The organisation type.
   await orgTypeSelect(page).selectOption({ label: 'Private Sector' });
   console.log(`   ✅ Org Type: Private Sector`);
   // And its name.
-  await page.getByRole('textbox', { name: /Organization Name/i }).fill('Aastrika');
+  await page.getByRole('textbox', { name: hiAlso(/Organization Name/i) }).fill('Aastrika');
   console.log(`   ✅ Org Name: Aastrika`);
   // Let Angular's validation run so Done enables.
   await page.waitForTimeout(500);
@@ -584,7 +587,7 @@ test('Profile Completion — Element Coverage (single signup, all backgrounds)',
   console.log(`   ✅ Date dropdown has ${datesFound.size} numeric options (expected 28-31)`);
 
   // After filling, Next should be ENABLED
-  const nextBtn = page.getByRole('button', { name: /^next$/i });
+  const nextBtn = page.getByRole('button', { name: hiAlso(/^next$/i) });
   // observe — measured and printed rather than asserted here…
   const enabledNow = await nextBtn.isEnabled().catch(() => false);
   console.log(`   ${enabledNow ? '✅' : '⚠️ '} Next button enabled after fill: ${enabledNow}`);
@@ -618,7 +621,7 @@ test('Profile Completion — Element Coverage (single signup, all backgrounds)',
     // Back to the picker for the next role.
     await clickChange(page);
     // hard — confirm the Change link actually returned us.
-    await expect(page.getByText(/choose your background/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(hiAlso(/choose your background/i))).toBeVisible({ timeout: 5000 });
     console.log(`   ↩️  Returned to "Choose your background"`);
   }
 
@@ -631,7 +634,7 @@ test('Profile Completion — Element Coverage (single signup, all backgrounds)',
   // …and fill it for real this time.
   await fillHealthcareWorkerForm(page);
 
-  const doneBtn = page.getByRole('button', { name: /^done$/i });
+  const doneBtn = page.getByRole('button', { name: hiAlso(/^done$/i) });
   // observe on the gate…
   const enabledNowDone = await doneBtn.isEnabled().catch(() => false);
   console.log(`   ${enabledNowDone ? '✅' : '⚠️ '} Done button enabled after fill: ${enabledNowDone}`);
@@ -646,8 +649,8 @@ test('Profile Completion — Element Coverage (single signup, all backgrounds)',
                     !/(create-account|signup|public\/login|terms|new-tnc)/i.test(finalUrl);
   // Neither onboarding screen may still be showing.
   const stillOnForm =
-    (await page.getByText(/tell us more about you/i).isVisible({ timeout: 1500 }).catch(() => false)) ||
-    (await page.getByText(/almost done!?/i).isVisible({ timeout: 1500 }).catch(() => false));
+    (await page.getByText(hiAlso(/tell us more about you/i)).isVisible({ timeout: 1500 }).catch(() => false)) ||
+    (await page.getByText(hiAlso(/almost done!?/i)).isVisible({ timeout: 1500 }).catch(() => false));
 
   // hard ×2 — the only two assertions about the FINAL outcome.
   expect(onPrivate).toBe(true);

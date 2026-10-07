@@ -19,6 +19,7 @@ import { Page, Locator, BrowserContext } from '@playwright/test';
 // See tests/helpers/authedTest.ts.
 // `test` here is the AUTHENTICATED one: every test gets a logged-in context.
 import { test, expect } from './helpers/authedTest';
+import { hiAlso } from './helpers/i18n';
 
 // Which environment to test.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
@@ -401,16 +402,16 @@ test.describe('Account — Personal Details', () => {
   test('First name field is visible with value', async () => {
     // Field placeholders stay English in both languages — language-proof.
     // hard on presence…
-    await expect(page.getByPlaceholder(/first name/i).first()).toBeVisible();
+    await expect(page.getByPlaceholder(hiAlso(/first name/i)).first()).toBeVisible();
     // …then the value is read…
-    const val = await page.getByPlaceholder(/first name/i).first().inputValue().catch(() => '');
+    const val = await page.getByPlaceholder(hiAlso(/first name/i)).first().inputValue().catch(() => '');
     // …and printed. observe on the content.
     console.log(`✅ First name value: "${val}"`);
   });
 
   // TEST 3 — last name. hard on presence only.
   test('Last name field is visible with value', async () => {
-    await expect(page.getByPlaceholder(/last name/i).first()).toBeVisible();
+    await expect(page.getByPlaceholder(hiAlso(/last name/i)).first()).toBeVisible();
     console.log('✅ Last name field visible');
   });
 
@@ -423,7 +424,7 @@ test.describe('Account — Personal Details', () => {
   // TEST 5 — the email field, and whether it is masked.
   test('Email ID field is visible and masked', async () => {
     // hard on presence.
-    await expect(page.getByPlaceholder(/email/i).first()).toBeVisible();
+    await expect(page.getByPlaceholder(hiAlso(/email/i)).first()).toBeVisible();
     // Find an input containing @ symbol
     // Every input except the radios.
     const emailInput = page.locator('input').filter({ hasNot: page.locator('[type="radio"]') });
@@ -467,7 +468,7 @@ test.describe('Account — Personal Details', () => {
   // TEST 8 — the pincode field.
   test('Pincode field is visible', async () => {
     // hard, by placeholder.
-    await expect(page.getByPlaceholder(/pincode/i).first()).toBeVisible();
+    await expect(page.getByPlaceholder(hiAlso(/pincode/i)).first()).toBeVisible();
     console.log('✅ Pincode input visible');
   });
 
@@ -605,7 +606,7 @@ test.describe('Account — Organization Details', () => {
   // TEST 3 — which background this user chose.
   test('Background dropdown shows current value (e.g. Healthcare Worker)', async () => {
     // Any of the six background options.
-    const bgValue = page.getByText(/healthcare worker|volunteer|asha|student|faculty|others/i).first();
+    const bgValue = page.getByText(hiAlso(/healthcare worker|volunteer|asha|student|faculty|others/i)).first();
     // observe…
     const visible = await bgValue.isVisible().catch(() => false);
     // …read the text only if it's there…
@@ -628,7 +629,7 @@ test.describe('Account — Organization Details', () => {
   // TEST 5 — the registration-number field.
   test('"RN/RM Number" label and field are visible', async () => {
     // Its label.
-    const label = page.getByText(/rn\/rm number/i).first();
+    const label = page.getByText(hiAlso(/rn\/rm number/i)).first();
     // observe.
     const visible = await label.isVisible().catch(() => false);
     console.log(`✅ RN/RM Number label visible: ${visible}`);
@@ -900,7 +901,7 @@ test.describe('Account — My Certificates', () => {
   // TEST 2 — the empty state.
   test('Empty state "No Certificates" is visible for new users', async () => {
     // The message a user with no certificates sees.
-    const emptyMsg = page.getByText(/no certificates/i).first();
+    const emptyMsg = page.getByText(hiAlso(/no certificates/i)).first();
     // observe — correct to be soft here, since the account MAY have certificates.
     const visible = await emptyMsg.isVisible({ timeout: 5_000 }).catch(() => false);
     console.log(`✅ "No Certificates" empty state visible: ${visible}`);

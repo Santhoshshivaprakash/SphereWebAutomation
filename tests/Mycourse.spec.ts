@@ -13,6 +13,7 @@ import { Page, Locator } from '@playwright/test';
 // See tests/helpers/authedTest.ts.
 // Renamed to `authedBase` so we can extend it and export the result as `test`.
 import { test as authedBase, expect } from './helpers/authedTest';
+import { SEARCH_PLACEHOLDER, hiAlso, withCount } from './helpers/i18n';
 
 // ── Single shared tab for the whole file ────────────────────────────────────
 // The CDP harness opens (and closes) a fresh tab per test by default, so every
@@ -62,13 +63,10 @@ async function scrollAndClick(page: Page, locator: Locator) {
 // Click a tab by name — handles mat-tab, anchor, button
 // Five selector shapes in one, so a markup change in any single one doesn't break it.
 async function clickTab(page: Page, name: 'Started' | 'For You' | 'Completed') {
-  const tab = page.locator([
-    `[role="tab"]:has-text("${name}")`,
-    `mat-tab-label:has-text("${name}")`,
-    `.mat-mdc-tab:has-text("${name}")`,
-    `button:has-text("${name}")`,
-    `a:has-text("${name}")`,
-  ].join(', ')).first();
+  // English or Hindi label ("Started" / "शुरू किया") — the tabs follow the account's language.
+  const tab = page.locator('[role="tab"], mat-tab-label, .mat-mdc-tab, button, a')
+    .filter({ hasText: hiAlso(new RegExp(name, 'i')) })
+    .first();
   // The tab bar renders only after the course lists load, which can take well
   // over 15s on a slow CI machine — wait for it explicitly before clicking.
   // If the page is still stuck after 30s (a slow or dropped data call), reload
@@ -115,7 +113,7 @@ test.beforeEach(async ({ page }) => {
 test.describe('My Courses — Page Heading & Tabs', () => {
   test('Page heading "My Courses" is visible', async ({ page }) => {
     // Anchored, so it can't match the nav link of the same name.
-    await expect(page.getByText(/^my courses$/i).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^my courses$/i)).filter({ visible: true }).first()).toBeVisible();
     console.log('✅ "My Courses" heading visible');
   });
 
@@ -127,7 +125,7 @@ test.describe('My Courses — Page Heading & Tabs', () => {
 
   test('"Started" tab is visible with count', async ({ page }) => {
     // The `\(\d+\)` requires the count to actually be there, not just the word.
-    const tab = page.getByText(/^started\s*\(\d+\)$/i).first();
+    const tab = page.getByText(withCount('Started')).first();
     await expect(tab).toBeVisible();
     // Log what it says, e.g. "Started (5)".
     const text = await tab.textContent();
@@ -136,7 +134,7 @@ test.describe('My Courses — Page Heading & Tabs', () => {
 
   test('"For You" tab is visible with count', async ({ page }) => {
     // Same shape for the recommendations tab.
-    const tab = page.getByText(/^for you\s*\(\d+\)$/i).first();
+    const tab = page.getByText(withCount('For You')).first();
     await expect(tab).toBeVisible();
     const text = await tab.textContent();
     console.log(`✅ For You tab text: "${text?.trim()}"`);
@@ -144,7 +142,7 @@ test.describe('My Courses — Page Heading & Tabs', () => {
 
   test('"Completed" tab is visible with count', async ({ page }) => {
     // And for the completed tab.
-    const tab = page.getByText(/^completed\s*\(\d+\)$/i).first();
+    const tab = page.getByText(withCount('Completed')).first();
     await expect(tab).toBeVisible();
     const text = await tab.textContent();
     console.log(`✅ Completed tab text: "${text?.trim()}"`);
@@ -169,7 +167,7 @@ test.describe('My Courses — Page Heading & Tabs', () => {
     const labels = ['Started', 'For You', 'Completed'];
     for (const name of labels) {
       // Build the anchored regex for this tab name.
-      const txt = await page.getByText(new RegExp(`^${name}\\s*\\(\\d+\\)$`, 'i')).first().textContent();
+      const txt = await page.getByText(withCount(name)).first().textContent();
       // Pull the number out of the parentheses.
       const match = txt?.match(/\((\d+)\)/);
       // -1 (not 0) when unparseable — that's what makes the assertion below meaningful.
@@ -252,7 +250,7 @@ test.describe('My Courses — Started Tab', () => {
     const rows = page.locator('[class*="course-row"], [class*="course-item"], mat-card');
     const startedCount = await rows.count();
     // …and the Resume buttons.
-    const resumeBtns = page.getByRole('button', { name: /^resume$/i });
+    const resumeBtns = page.getByRole('button', { name: hiAlso(/^resume$/i) });
     const count = await resumeBtns.count();
     console.log(`✅ Resume buttons visible: ${count} (started rows: ${startedCount})`);
     // A "Resume" appears per in-progress course. An account with no started
@@ -269,7 +267,7 @@ test.describe('My Courses — Started Tab', () => {
 
   test('Clicking "Resume" navigates to the course player', async ({ page }) => {
     // The first Resume button.
-    const resumeBtn = page.getByRole('button', { name: /^resume$/i }).first();
+    const resumeBtn = page.getByRole('button', { name: hiAlso(/^resume$/i) }).first();
     // Nothing to click on an account with no started courses.
     if (!(await resumeBtn.isVisible().catch(() => false))) {
       console.log('ℹ️  No Resume button — skipping');
@@ -305,7 +303,7 @@ test.describe('My Courses — Started Tab', () => {
 
   test('Started tab count matches actual course rows visible', async ({ page }) => {
     // Read the number the tab label declares…
-    const tabText = await page.getByText(/^started\s*\(\d+\)$/i).first().textContent();
+    const tabText = await page.getByText(withCount('Started')).first().textContent();
     const declaredCount = parseInt(tabText?.match(/\((\d+)\)/)?.[1] ?? '0');
     // …and count the rows actually rendered.
     const rows = page.locator('[class*="course-row"], [class*="course-item"], mat-card');
@@ -337,7 +335,7 @@ test.describe('My Courses — For You Tab', () => {
 
   test('For You section displays course cards in a grid', async ({ page }) => {
     // Narrow to cards that carry a Certificate badge.
-    const cards = page.locator('[class*="course-card"], mat-card').filter({ hasText: /Certificate|certificate/i });
+    const cards = page.locator('[class*="course-card"], mat-card').filter({ hasText: hiAlso(/Certificate|certificate/i) });
     const count = await cards.count();
     console.log(`✅ Certificate-tagged cards: ${count}`);
   });
@@ -358,7 +356,7 @@ test.describe('My Courses — For You Tab', () => {
 
   test('"Certificate" badge is visible on cards (top-left)', async ({ page }) => {
     // Anchored, so it matches the badge and not a sentence mentioning certificates.
-    const badge = page.getByText(/^Certificate$/i).first();
+    const badge = page.getByText(hiAlso(/^Certificate$/i)).first();
     const visible = await badge.isVisible().catch(() => false);
     console.log(`✅ Certificate badge visible: ${visible}`);
   });
@@ -418,7 +416,7 @@ test.describe('My Courses — For You Tab', () => {
 
   test('For You tab count matches displayed card count', async ({ page }) => {
     // The declared count from the tab label…
-    const tabText = await page.getByText(/^for you\s*\(\d+\)$/i).first().textContent();
+    const tabText = await page.getByText(withCount('For You')).first().textContent();
     const declared = parseInt(tabText?.match(/\((\d+)\)/)?.[1] ?? '0');
     // …and the rendered card count.
     const cards = page.locator('[class*="course-card"], mat-card');
@@ -474,7 +472,7 @@ test.describe('My Courses — Completed Tab', () => {
 
   test('Completed tab count is 0 for new user', async ({ page }) => {
     // Read the count from the tab label.
-    const tabText = await page.getByText(/^completed\s*\(\d+\)$/i).first().textContent();
+    const tabText = await page.getByText(withCount('Completed')).first().textContent();
     const count = parseInt(tabText?.match(/\((\d+)\)/)?.[1] ?? '-1');
     console.log(`✅ Completed count: ${count}`);
     // Don't assert == 0 strictly — user may have completed courses elsewhere
@@ -483,7 +481,7 @@ test.describe('My Courses — Completed Tab', () => {
 
   test('Empty-state message is visible when no courses completed', async ({ page }) => {
     // The empty-state copy.
-    const emptyMsg = page.getByText(/you have not completed any courses/i).first();
+    const emptyMsg = page.getByText(hiAlso(/you have not completed any courses/i)).first();
     const visible = await emptyMsg.isVisible().catch(() => false);
     console.log(`✅ Empty-state message visible: ${visible}`);
   });
@@ -505,7 +503,7 @@ test.describe('My Courses — Completed Tab', () => {
 
   test('No course cards are visible when Completed tab is empty', async ({ page }) => {
     // Cards carrying either a Certificate badge or a Resume button.
-    const cards = page.locator('[class*="course-card"], mat-card').filter({ hasText: /Certificate|Resume/i });
+    const cards = page.locator('[class*="course-card"], mat-card').filter({ hasText: hiAlso(/Certificate|Resume/i) });
     const count = await cards.count();
     // Printed, never required to be zero — even though "empty tab ⇒ no cards" is
     // internal consistency that could be asserted whenever the count is 0.
@@ -514,7 +512,7 @@ test.describe('My Courses — Completed Tab', () => {
 
   test('No "Resume" buttons appear in Completed tab', async ({ page }) => {
     // Resume belongs to the Started tab and should never appear here.
-    const resume = page.getByRole('button', { name: /^resume$/i });
+    const resume = page.getByRole('button', { name: hiAlso(/^resume$/i) });
     const count = await resume.count();
     // Printed, not asserted — so a Resume button offering to re-do a FINISHED
     // course (a real defect) would be reported as a pass.
@@ -546,10 +544,10 @@ test.describe('My Courses — Tab Switching', () => {
   test('For You → Completed switch shows empty state', async ({ page }) => {
     // On For You, the empty-state message should NOT be present…
     await clickTab(page, 'For You');
-    const beforeEmpty = await page.getByText(/you have not completed any courses/i).isVisible().catch(() => false);
+    const beforeEmpty = await page.getByText(hiAlso(/you have not completed any courses/i)).isVisible().catch(() => false);
     // …and on Completed it should be.
     await clickTab(page, 'Completed');
-    const afterEmpty = await page.getByText(/you have not completed any courses/i).isVisible().catch(() => false);
+    const afterEmpty = await page.getByText(hiAlso(/you have not completed any courses/i)).isVisible().catch(() => false);
     // Both values gathered — exactly what an assertion would need — then printed.
     console.log(`✅ Empty msg before switch: ${beforeEmpty}, after: ${afterEmpty}`);
   });
@@ -561,7 +559,7 @@ test.describe('My Courses — Tab Switching', () => {
     // …and back.
     await clickTab(page, 'Started');
     // A Resume button is the marker that Started's content came back.
-    const resume = page.getByRole('button', { name: /^resume$/i }).first();
+    const resume = page.getByRole('button', { name: hiAlso(/^resume$/i) }).first();
     const visible = await resume.isVisible().catch(() => false);
     // Printed only.
     console.log(`✅ Started content restored — Resume button visible: ${visible}`);
@@ -594,14 +592,14 @@ test.describe('My Courses — Header (same as Home)', () => {
 
   test('Search bar is visible on My Courses', async ({ page }) => {
     // Matched by placeholder — the most stable handle for a search input.
-    await expect(page.getByPlaceholder(/what do you want to learn today/i)).toBeVisible();
+    await expect(page.getByPlaceholder(SEARCH_PLACEHOLDER)).toBeVisible();
     console.log('✅ Search bar visible');
   });
 
   test('"My Courses" nav link is marked active', async ({ page }) => {
     // As a link if possible, else as text.
-    const link = page.getByRole('link', { name: /my courses/i })
-      .or(page.getByText(/my courses/i)).first();
+    const link = page.getByRole('link', { name: hiAlso(/my courses/i) })
+      .or(page.getByText(hiAlso(/my courses/i))).first();
     // Read the class list…
     const klass = await link.getAttribute('class').catch(() => '');
     // …and print the first 100 chars. Whether it contains an "active" marker is left
@@ -611,8 +609,8 @@ test.describe('My Courses — Header (same as Home)', () => {
 
   test('Clicking "Home" from My Courses navigates to Home', async ({ page }) => {
     // Anchored, so it can't match "Home page" or similar.
-    const homeLink = page.getByRole('link', { name: /^home$/i })
-      .or(page.getByText(/^home$/i)).first();
+    const homeLink = page.getByRole('link', { name: hiAlso(/^home$/i) })
+      .or(page.getByText(hiAlso(/^home$/i))).first();
     await scrollAndClick(page, homeLink);
     await page.waitForTimeout(2000);
     // The ONLY navigation in this file whose destination is actually asserted.
@@ -672,7 +670,7 @@ test.describe('My Courses — Page Health', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(500);
     // A reachability check: the heading must survive the narrow layout.
-    await expect(page.getByText(/^my courses$/i).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^my courses$/i)).filter({ visible: true }).first()).toBeVisible();
     console.log('✅ Mobile viewport — heading visible');
   });
 
@@ -680,7 +678,7 @@ test.describe('My Courses — Page Health', () => {
     // The breakpoint where most responsive grids switch layout.
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(500);
-    await expect(page.getByText(/^my courses$/i).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^my courses$/i)).filter({ visible: true }).first()).toBeVisible();
     console.log('✅ Tablet viewport — heading visible');
   });
 
@@ -688,7 +686,7 @@ test.describe('My Courses — Page Health', () => {
     // The design reference width.
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.waitForTimeout(500);
-    await expect(page.getByText(/^my courses$/i).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/^my courses$/i)).filter({ visible: true }).first()).toBeVisible();
     console.log('✅ Desktop viewport — heading visible');
   });
 
@@ -730,9 +728,9 @@ test.describe('My Courses — Page Health', () => {
     // it keeps the URL but renders the public shell: a "Log in" button, no
     // signed-in nav, and no course lists. Both are fine; showing data is not.
     if (!/login|public/i.test(url)) {
-      await expect(page.getByRole('button', { name: /^log ?in$/i }).first(), 'logged-out view should offer Log in').toBeVisible();
-      await expect(page.getByRole('button', { name: 'Account' }), 'signed-in nav must not render').toHaveCount(0);
-      await expect(page.getByText(/started \(\d+\)|you have not started/i), 'course lists must not render').toHaveCount(0);
+      await expect(page.getByRole('button', { name: hiAlso(/^log ?in$/i) }).first(), 'logged-out view should offer Log in').toBeVisible();
+      await expect(page.getByRole('button', { name: hiAlso(/Account/i) }), 'signed-in nav must not render').toHaveCount(0);
+      await expect(page.getByText(withCount('Started')).or(page.getByText(hiAlso(/you have not started any courses/i))), 'course lists must not render').toHaveCount(0);
       console.log('✅ No redirect, but the logged-out shell is shown (Log in button, no user data)');
     }
     // Clean up our own context so it doesn't leak into the rest of the run.

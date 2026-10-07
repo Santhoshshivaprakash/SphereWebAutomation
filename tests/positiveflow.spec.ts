@@ -39,7 +39,7 @@ async function scrollAndClick(page: Page, locator: Locator) {
 // Find a language radio by name rather than position.
 function languageOption(page: Page, name: 'english' | 'hindi'): Locator {
   // Hindi is matched in both scripts, since the screen may render in either language.
-  const matcher = name === 'english' ? /english/i : /हिंदी|hindi/i;
+  const matcher = name === 'english' ? /english|अंग्रेज़?ी/i : /हिंदी|hindi/i;
   // Three selector shapes, covering the Material versions this app has shipped.
   return page.locator('mat-radio-button, .mat-mdc-radio-button, [role="radio"]')
     .filter({ hasText: matcher })
@@ -113,6 +113,7 @@ const YOPMAIL_URL = 'https://yopmail.com/en/';
 import { getOtpFromYopmail } from './helpers/otp';
 // Appends each signup address to the account ledger (generated-emails.txt).
 import { recordCreatedEmail } from './helpers/yopmail';
+import { hiAlso } from './helpers/i18n';
 
 // Thin wrapper kept so the call sites below read the same as they did before
 // the shared helper was extracted.
@@ -291,7 +292,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
     await page.waitForLoadState('networkidle').catch(() => {});
     // Proof of arrival: either the Next button or a language radio must be on screen.
     await expect(
-      page.getByRole('button', { name: /^next$/i })
+      page.getByRole('button', { name: hiAlso(/^next$/i) })
         .or(page.locator('mat-radio-button').first()).first(),
     ).toBeVisible({ timeout: 15_000 });
     console.log('   ✅ Create Account page loaded');
@@ -301,7 +302,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
     // Pick English and verify the radio really checked.
     await selectLanguage(page, 'english');
     // Advance to the details form.
-    await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+    await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
     // Let the form render.
     await page.waitForTimeout(1500);
     console.log('   ✅ Language selected, advanced to the details form');
@@ -321,7 +322,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
 
   test('Step 04 — Choose the "By OTP" login method', async () => {
     // Click the OTP option.
-    await scrollAndClick(page, page.getByText(/by otp/i).first());
+    await scrollAndClick(page, page.getByText(hiAlso(/by otp/i)).first());
     // Let the choice register.
     await page.waitForTimeout(400);
     console.log('   ✅ "By OTP" selected');
@@ -329,7 +330,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
 
   test('Step 05 — Submit the signup form (Next)', async () => {
     // Submit.
-    await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+    await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
     // Wait for the confirm-name modal to mount.
     await page.waitForTimeout(2500);
     console.log('   ✅ Signup form submitted');
@@ -337,8 +338,8 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
 
   test('Step 06 — Confirm the name on the confirmation modal', async () => {
     // Find the confirm button as a real button, falling back to plain text.
-    const confirmBtn = page.getByRole('button', { name: /confirm name/i })
-      .or(page.getByText(/confirm name/i)).first();
+    const confirmBtn = page.getByRole('button', { name: hiAlso(/confirm name/i) })
+      .or(page.getByText(hiAlso(/confirm name/i))).first();
     // It must appear — Sphere prints this name on certificates.
     await expect(confirmBtn).toBeVisible({ timeout: 8_000 });
     // Click it.
@@ -364,7 +365,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
 
   test('Step 08 — Submit the OTP (Next)', async () => {
     // Submit the code.
-    await scrollAndClick(page, page.getByRole('button', { name: /^next$/i }));
+    await scrollAndClick(page, page.getByRole('button', { name: hiAlso(/^next$/i) }));
     // Give the server time to create the account.
     await page.waitForTimeout(3000);
     console.log('   ✅ OTP submitted');
@@ -373,7 +374,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
   // ─── TERMS OF USE ────────────────────────────────────────────────
   test('Step 09 — Terms of Use page is displayed', async () => {
     // A brand-new account is always shown the terms first.
-    await expect(page.getByText(/terms of use/i).first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(hiAlso(/terms of use/i)).first()).toBeVisible({ timeout: 10_000 });
     console.log('   ✅ Terms of Use page shown');
   });
 
@@ -384,7 +385,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
     await scrollAndClick(page, checkbox);
     // Material often hides the real input behind a label, so if that didn't take, click the label.
     if (!(await checkbox.isChecked().catch(() => false))) {
-      await scrollAndClick(page, page.getByText(/i have read and agree/i).first());
+      await scrollAndClick(page, page.getByText(hiAlso(/i have read and agree/i)).first());
     }
     // Let the state settle.
     await page.waitForTimeout(500);
@@ -406,15 +407,15 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
   // ─── PROFILE COMPLETION ──────────────────────────────────────────
   test('Step 12 — Open the profile form ("Tell us more about you")', async () => {
     // Some builds drop straight into onboarding; others land on home first.
-    if (!(await page.getByText(/tell us more about you/i).isVisible({ timeout: 2500 }).catch(() => false))) {
+    if (!(await page.getByText(hiAlso(/tell us more about you/i)).isVisible({ timeout: 2500 }).catch(() => false))) {
       // Not there — navigate via the Account control, as a button or as text.
-      const accountBtn = page.getByRole('button', { name: /^account$/i })
-        .or(page.getByText(/^account$/i)).first();
+      const accountBtn = page.getByRole('button', { name: hiAlso(/^account$/i) })
+        .or(page.getByText(hiAlso(/^account$/i))).first();
       await scrollAndClick(page, accountBtn);
       await page.waitForTimeout(1500);
     }
     // Either way, we must now be on the onboarding form.
-    await expect(page.getByText(/tell us more about you/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(hiAlso(/tell us more about you/i))).toBeVisible({ timeout: 10_000 });
     // Dump the form's structure, so the positional dropdown indices below can be verified.
     await inspectProfileFormDom(page);
     console.log('   ✅ Profile form opened');
@@ -461,27 +462,27 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
 
   test('Step 19 — Click Next to background selection', async () => {
     // The Next button.
-    const nextBtn = page.getByRole('button', { name: /^next$/i });
+    const nextBtn = page.getByRole('button', { name: hiAlso(/^next$/i) });
     // It only enables once every required field is filled — so this also validates steps 13–18.
     await expect(nextBtn).toBeEnabled({ timeout: 5_000 });
     // Advance.
     await scrollAndClick(page, nextBtn);
     await page.waitForTimeout(2000);
     // Confirm we reached the next stage.
-    await expect(page.getByText(/choose your background/i)).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText(hiAlso(/choose your background/i))).toBeVisible({ timeout: 8_000 });
     console.log('   ✅ Background selection screen shown');
   });
 
   test('Step 20 — Select background: Healthcare Worker', async () => {
     // Anchored, so it can't also match "Healthcare Worker Volunteer".
-    const hcw = page.getByText(/^healthcare worker$/i).first();
+    const hcw = page.getByText(hiAlso(/^healthcare worker$/i)).first();
     // It must be on screen.
     await expect(hcw).toBeVisible();
     // Click the card — this advances the flow on its own, with no Next button.
     await scrollAndClick(page, hcw);
     await page.waitForTimeout(1500);
     // Confirm we reached the final stage.
-    await expect(page.getByText(/almost done!?/i)).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText(hiAlso(/almost done!?/i))).toBeVisible({ timeout: 8_000 });
     console.log('   ✅ Healthcare Worker selected — "Almost done!" shown');
   });
 
@@ -510,7 +511,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
 
   test('Step 22 — Fill RN/RM Number (nursing roles only)', async () => {
     // The nursing registration number field, matched by its placeholder.
-    const rn = page.getByPlaceholder(/rn\/rm number/i);
+    const rn = page.getByPlaceholder(hiAlso(/rn\/rm number/i));
     // Only nursing designations ask for it — skip for roles like ANM/MPW.
     const needed = await rn.isVisible({ timeout: 3_000 }).catch(() => false);
     test.skip(!needed && !/nurse/i.test(DESIGNATION), `no RN/RM field for ${DESIGNATION}`);
@@ -534,7 +535,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
 
   test('Step 24 — Fill Organization Name', async () => {
     // The org name field, by placeholder.
-    const org = page.getByPlaceholder(/organization name/i);
+    const org = page.getByPlaceholder(hiAlso(/organization name/i));
     await org.waitFor({ state: 'visible', timeout: 5_000 });
     // Type a value.
     await org.fill('Aastrika');
@@ -546,7 +547,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
 
   test('Step 25 — Click Done to submit the profile', async () => {
     // The submit button.
-    const doneBtn = page.getByRole('button', { name: /^done$/i });
+    const doneBtn = page.getByRole('button', { name: hiAlso(/^done$/i) });
     // Enabled means the whole form validated.
     await expect(doneBtn).toBeEnabled({ timeout: 5_000 });
     // Submit.
@@ -559,7 +560,7 @@ test.describe.serial('Positive Flow — signup → T&C → profile completion (H
 
   test('Step 26 — Profile submitted (no longer on the profile form)', async () => {
     // Are any of the three onboarding screens still showing?
-    const stillOnForm = await page.getByText(/tell us more about you|almost done|choose your background/i)
+    const stillOnForm = await page.getByText(hiAlso(/tell us more about you|almost done|choose your background/i))
       .first().isVisible({ timeout: 3000 }).catch(() => false);
     // Log both readings before asserting, so a failure still shows where we ended up.
     console.log(`   Final URL: ${page.url()} | still on profile form: ${stillOnForm}`);

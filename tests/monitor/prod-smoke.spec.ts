@@ -23,6 +23,7 @@
 import { test, expect } from '@playwright/test';
 // The shared helper that drives the real login form.
 import { loginWithPassword } from '../helpers/login';
+import { hiAlso } from '../helpers/i18n';
 
 // Which environment to monitor. Defaults to production.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
@@ -45,7 +46,7 @@ test.describe('Prod synthetic monitor @monitor', () => {
     // Let the Angular shell finish loading; ignore if the network never fully idles.
     await page.waitForLoadState('networkidle').catch(() => {});
     // The "Welcome!" heading proves the app actually painted, not just that the server answered.
-    await expect(page.getByText(/^welcome!?$/i).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(hiAlso(/^welcome!?$/i)).first()).toBeVisible({ timeout: 15_000 });
     // Log success with the final URL.
     console.log(`✅ Public login shell up: ${page.url()}`);
   });
@@ -74,7 +75,7 @@ test.describe('Prod synthetic monitor @monitor', () => {
     await expect(page).toHaveURL(/\/(app|page)\//, { timeout: 20_000 });
     // The signed-in header only renders for a logged-in user — proof the app
     // itself loaded, whatever the landing route is called.
-    await expect(page.getByRole('button', { name: 'My Courses' })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('button', { name: hiAlso(/My Courses/i) })).toBeVisible({ timeout: 20_000 });
     // Read whatever text the page rendered.
     const body = await page.locator('body').innerText().catch(() => '');
     // A blank page would mean the shell loaded but the app failed — catch that here.

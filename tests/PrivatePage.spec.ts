@@ -14,6 +14,7 @@ import { Page, Locator } from '@playwright/test';
 // See tests/helpers/authedTest.ts.
 // `test` here is the AUTHENTICATED one: every test gets a logged-in context.
 import { test, expect } from './helpers/authedTest';
+import { SEARCH_PLACEHOLDER, hiAlso } from './helpers/i18n';
 
 // Which environment to test.
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
@@ -75,7 +76,7 @@ test.describe('Home Page — Header', () => {
   // TEST 3 — the search box takes input.
   test('Search bar is visible and accepts input', async ({ page }) => {
     // Matched by placeholder, the most stable handle for a search input.
-    const search = page.getByPlaceholder(/what do you want to learn today/i);
+    const search = page.getByPlaceholder(SEARCH_PLACEHOLDER);
     await expect(search).toBeVisible();
     // Type a query…
     await search.fill('maternal');
@@ -86,7 +87,7 @@ test.describe('Home Page — Header', () => {
 
   // TEST 4 — submitting the search does something.
   test('Search submission triggers search', async ({ page }) => {
-    const search = page.getByPlaceholder(/what do you want to learn today/i);
+    const search = page.getByPlaceholder(SEARCH_PLACEHOLDER);
     // Type a query.
     await search.fill('maternal');
     // Enter submits it.
@@ -207,8 +208,8 @@ test.describe('Home Page — Header', () => {
   // TEST 8 — the Home nav link.
   test('"Home" nav link is visible', async ({ page }) => {
     // As a link if possible, else as text. Anchored, so it can't match "Home page".
-    const homeLink = page.getByRole('link', { name: /^home$/i })
-      .or(page.getByText(/^home$/i)).first();
+    const homeLink = page.getByRole('link', { name: hiAlso(/^home$/i) })
+      .or(page.getByText(hiAlso(/^home$/i))).first();
     // hard — presence only; this test never clicks.
     await expect(homeLink).toBeVisible();
     console.log('✅ Home nav link visible');
@@ -217,8 +218,8 @@ test.describe('Home Page — Header', () => {
   // TEST 9 — My Courses navigates.
   test('"My Courses" nav link is visible and clickable', async ({ page }) => {
     // Link or text.
-    const link = page.getByRole('link', { name: /my courses/i })
-      .or(page.getByText(/my courses/i)).first();
+    const link = page.getByRole('link', { name: hiAlso(/my courses/i) })
+      .or(page.getByText(hiAlso(/my courses/i))).first();
     // Presence IS asserted…
     await expect(link).toBeVisible();
     // Keep the before-URL so the log shows a transition.
@@ -232,8 +233,8 @@ test.describe('Home Page — Header', () => {
   // TEST 10 — Competency navigates. Same shape as test 9.
   test('"Competency" nav link is visible and clickable', async ({ page }) => {
     // Unanchored, so it also matches "Competency Framework" or similar.
-    const link = page.getByRole('link', { name: /competency/i })
-      .or(page.getByText(/competency/i)).first();
+    const link = page.getByRole('link', { name: hiAlso(/competency/i) })
+      .or(page.getByText(hiAlso(/competency/i))).first();
     await expect(link).toBeVisible();
     // Before-URL for the log.
     const urlBefore = page.url();
@@ -246,8 +247,8 @@ test.describe('Home Page — Header', () => {
   // TEST 11 — Account navigates.
   test('"Account" nav link is visible and clickable', async ({ page }) => {
     // Anchored, so it can't match "Account settings".
-    const link = page.getByRole('link', { name: /^account$/i })
-      .or(page.getByText(/^account$/i)).first();
+    const link = page.getByRole('link', { name: hiAlso(/^account$/i) })
+      .or(page.getByText(hiAlso(/^account$/i))).first();
     // Presence asserted; destination logged only.
     await expect(link).toBeVisible();
     await scrollAndClick(page, link);
@@ -292,14 +293,14 @@ test.describe('Home Page — Welcome Section', () => {
   // TEST 1 — the personalised greeting.
   test('"Welcome !" greeting is visible', async ({ page }) => {
     // hard. `\s*!` tolerates "Welcome!" and "Welcome !" alike.
-    await expect(page.getByText(/welcome\s*!/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/welcome\s*!/i)).first()).toBeVisible();
     console.log('✅ Welcome greeting visible');
   });
 
   // TEST 2 — the user's name appears in that greeting.
   test('User\'s display name is shown', async ({ page }) => {
     // The same heading as test 1.
-    const heading = page.getByText(/welcome\s*!?/i).first();
+    const heading = page.getByText(hiAlso(/welcome\s*!?/i)).first();
     // hard on its presence…
     await expect(heading).toBeVisible();
     // …then the text is read…
@@ -312,7 +313,7 @@ test.describe('Home Page — Welcome Section', () => {
   // TEST 3 — the call-to-action subtitle.
   test('"Start Learning" subtitle is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/start learning/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/start learning/i)).first()).toBeVisible();
     console.log('✅ "Start Learning" subtitle visible');
   });
 
@@ -386,7 +387,7 @@ test.describe('Home Page — Continue Learning', () => {
   // TEST 1 — the in-progress section's heading.
   test('"CONTINUE LEARNING" section heading is visible', async ({ page }) => {
     // The heading.
-    const heading = page.getByText(/continue learning/i).first();
+    const heading = page.getByText(hiAlso(/continue learning/i)).first();
     // observe — deliberately soft, because a brand-new user has nothing in progress.
     const visible = await heading.isVisible().catch(() => false);
     console.log(`✅ "Continue Learning" heading visible: ${visible}`);
@@ -398,7 +399,7 @@ test.describe('Home Page — Continue Learning', () => {
   test('"View All" link visible for Continue Learning', async ({ page }) => {
     // `.first()` takes the FIRST View All on the page, which may belong to a
     // different section entirely — the locator is not scoped to Continue Learning.
-    const viewAll = page.getByText(/view all/i).first();
+    const viewAll = page.getByText(hiAlso(/view all/i)).first();
     // observe.
     const visible = await viewAll.isVisible().catch(() => false);
     console.log(`✅ View All visible: ${visible}`);
@@ -407,7 +408,7 @@ test.describe('Home Page — Continue Learning', () => {
   // TEST 3 — a course card opens.
   test('Continue Learning course cards are clickable', async ({ page }) => {
     // Check the section exists before looking for its cards.
-    const sectionHeading = page.getByText(/continue learning/i).first();
+    const sectionHeading = page.getByText(hiAlso(/continue learning/i)).first();
     // Absent — return early rather than click something from another section.
     if (!(await sectionHeading.isVisible().catch(() => false))) {
       console.log('ℹ️  Section absent — skipping card click');
@@ -434,14 +435,14 @@ test.describe('Home Page — CNE Courses', () => {
   // TEST 1 — the accredited-course section heading.
   test('"CNE COURSES" section heading is visible', async ({ page }) => {
     // hard — unlike Continue Learning, this section is always present.
-    await expect(page.getByText(/cne courses/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/cne courses/i)).first()).toBeVisible();
     console.log('✅ "CNE Courses" heading visible');
   });
 
   // TEST 2 — a View All link exists somewhere on the page.
   test('"View All" link visible for CNE Courses', async ({ page }) => {
     // Every View All.
-    const viewAllLinks = page.getByText(/view all/i);
+    const viewAllLinks = page.getByText(hiAlso(/view all/i));
     // Counted…
     const count = await viewAllLinks.count();
     console.log(`✅ View All link count on page: ${count}`);
@@ -529,7 +530,7 @@ test.describe('Home Page — CNE Courses', () => {
   // TEST 9 — View All navigates.
   test('"View All" CNE click navigates', async ({ page }) => {
     // Again the first one on the page, whichever section it belongs to.
-    const viewAll = page.getByText(/view all/i).first();
+    const viewAll = page.getByText(hiAlso(/view all/i)).first();
     // Only click if present.
     if (await viewAll.isVisible().catch(() => false)) {
       await scrollAndClick(page, viewAll);
@@ -562,49 +563,49 @@ test.describe('Home Page — Info Cards', () => {
   // TEST 1 — the first explainer card. All six text checks in this group are hard,
   // because this is fixed copy, identical for every account.
   test('"Register for a course" card is visible', async ({ page }) => {
-    await expect(page.getByText(/register for a course/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/register for a course/i)).first()).toBeVisible();
     console.log('✅ Register card visible');
   });
 
   // TEST 2 — its description.
   test('"Register for a course" subtitle is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/explore various courses and pick/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/explore various courses and pick/i)).first()).toBeVisible();
     console.log('✅ Register subtitle visible');
   });
 
   // TEST 3 — the second card's title.
   test('"Take the course" card is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/take the course/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/take the course/i)).first()).toBeVisible();
     console.log('✅ Take card visible');
   });
 
   // TEST 4 — its description.
   test('"Take the course" subtitle is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/access the course anytime/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/access the course anytime/i)).first()).toBeVisible();
     console.log('✅ Take subtitle visible');
   });
 
   // TEST 5 — the third card's title.
   test('"Get certified" card is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/get certified/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/get certified/i)).first()).toBeVisible();
     console.log('✅ Get certified card visible');
   });
 
   // TEST 6 — its description.
   test('"Get certified" subtitle is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/receive downloadable and shareable certificates/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/receive downloadable and shareable certificates/i)).first()).toBeVisible();
     console.log('✅ Get certified subtitle visible');
   });
 
   // TEST 7 — does the first card do anything when clicked?
   test('Register card click behavior', async ({ page }) => {
     // Find the card by the text it contains.
-    const card = page.locator('mat-card, [class*="card"]').filter({ hasText: /register for a course/i }).first();
+    const card = page.locator('mat-card, [class*="card"]').filter({ hasText: hiAlso(/register for a course/i) }).first();
     // Only click if present.
     if (await card.isVisible().catch(() => false)) {
       // Before-URL for the log.
@@ -618,7 +619,7 @@ test.describe('Home Page — Info Cards', () => {
 
   // TEST 8 — the second card. Same shape.
   test('Take card click behavior', async ({ page }) => {
-    const card = page.locator('mat-card, [class*="card"]').filter({ hasText: /take the course/i }).first();
+    const card = page.locator('mat-card, [class*="card"]').filter({ hasText: hiAlso(/take the course/i) }).first();
     if (await card.isVisible().catch(() => false)) {
       const urlBefore = page.url();
       await scrollAndClick(page, card);
@@ -629,7 +630,7 @@ test.describe('Home Page — Info Cards', () => {
 
   // TEST 9 — the third card. Same shape.
   test('Get certified card click behavior', async ({ page }) => {
-    const card = page.locator('mat-card, [class*="card"]').filter({ hasText: /get certified/i }).first();
+    const card = page.locator('mat-card, [class*="card"]').filter({ hasText: hiAlso(/get certified/i) }).first();
     if (await card.isVisible().catch(() => false)) {
       const urlBefore = page.url();
       await scrollAndClick(page, card);
@@ -657,14 +658,14 @@ test.describe('Home Page — Footer', () => {
   // TEST 2 — the legal-links column heading.
   test('"Quick Links" heading is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/quick links/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/quick links/i)).first()).toBeVisible();
     console.log('✅ Quick Links heading visible');
   });
 
   // TEST 3 — the privacy policy link.
   test('"Privacy policy" link is visible and clickable', async ({ page }) => {
     // The link.
-    const link = page.getByText(/privacy policy/i).first();
+    const link = page.getByText(hiAlso(/privacy policy/i)).first();
     // Presence IS asserted.
     await expect(link).toBeVisible();
 
@@ -689,7 +690,7 @@ test.describe('Home Page — Footer', () => {
 
   // TEST 4 — the terms link. Identical shape to test 3.
   test('"Terms of Use" link is visible and clickable', async ({ page }) => {
-    const link = page.getByText(/terms of use/i).first();
+    const link = page.getByText(hiAlso(/terms of use/i)).first();
     await expect(link).toBeVisible();
 
     // Same simultaneous listener-and-click pattern.
@@ -710,7 +711,7 @@ test.describe('Home Page — Footer', () => {
   // TEST 5 — the support column heading.
   test('"Help & Contact" heading is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/help & contact/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/help & contact/i)).first()).toBeVisible();
     console.log('✅ Help & Contact heading visible');
   });
 
@@ -729,13 +730,13 @@ test.describe('Home Page — Footer', () => {
   // TEST 7 — the WhatsApp button's presence.
   test('"Talk to us on WhatsApp" button is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/talk to us on whatsapp/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/talk to us on whatsapp/i)).first()).toBeVisible();
     console.log('✅ WhatsApp button visible');
   });
 
   // TEST 8 — clicking it.
   test('WhatsApp button click opens WhatsApp', async ({ page }) => {
-    const btn = page.getByText(/talk to us on whatsapp/i).first();
+    const btn = page.getByText(hiAlso(/talk to us on whatsapp/i)).first();
 
     // Same listener-and-click pattern.
     const [popup] = await Promise.all([
@@ -762,7 +763,7 @@ test.describe('Home Page — Footer', () => {
   // TEST 9 — the extra-links column heading.
   test('"Additional Links" heading is visible', async ({ page }) => {
     // hard.
-    await expect(page.getByText(/additional links/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/additional links/i)).first()).toBeVisible();
     console.log('✅ Additional Links heading visible');
   });
 
@@ -827,7 +828,7 @@ test.describe('Home Page — Footer', () => {
   // TEST 16 — the copyright line.
   test('Copyright notice is visible', async ({ page }) => {
     // hard. Two accepted spellings — the first carries the site's own typo.
-    await expect(page.getByText(/aastarurmika health systems|aastrika foundation/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/aastarurmika health systems|aastrika foundation/i)).first()).toBeVisible();
     console.log('✅ Copyright notice visible');
   });
 
@@ -887,7 +888,7 @@ test.describe('Home Page — Page Health', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(500);
     // hard — the greeting must survive the narrow layout.
-    await expect(page.getByText(/welcome/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/welcome/i)).first()).toBeVisible();
     console.log('✅ Mobile viewport — Welcome visible');
   });
 
@@ -896,7 +897,7 @@ test.describe('Home Page — Page Health', () => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(500);
     // hard.
-    await expect(page.getByText(/welcome/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/welcome/i)).first()).toBeVisible();
     console.log('✅ Tablet viewport — Welcome visible');
   });
 
@@ -905,7 +906,7 @@ test.describe('Home Page — Page Health', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.waitForTimeout(500);
     // hard.
-    await expect(page.getByText(/welcome/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/welcome/i)).first()).toBeVisible();
     console.log('✅ Desktop viewport — Welcome visible');
   });
 
@@ -927,7 +928,7 @@ test.describe('Home Page — Page Health', () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(800);
     // hard — the copyright line proves we got there.
-    await expect(page.getByText(/aastarurmika health systems|aastrika foundation/i).first()).toBeVisible();
+    await expect(page.getByText(hiAlso(/aastarurmika health systems|aastrika foundation/i)).first()).toBeVisible();
     console.log('✅ Footer visible after scroll to bottom');
   });
 });

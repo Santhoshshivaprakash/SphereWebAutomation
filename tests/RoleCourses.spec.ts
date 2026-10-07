@@ -26,6 +26,7 @@ import { test, expect } from './helpers/authedTest';
 import type { Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { hiAlso } from './helpers/i18n';
 
 const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
 
@@ -48,9 +49,9 @@ const exact = (s: string) => new RegExp(`^\\s*${s.replace(/[.*+?^${}()|[\]\\]/g,
 /** Account → Organization Details, via the header (a direct URL renders the Account route blank). */
 async function openOrgTab(page: Page) {
   await page.goto(`${BASE_URL}/page/home`, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: /^account$/i }).or(page.getByText(/^account$/i)).first()
+  await page.getByRole('button', { name: hiAlso(/^account$/i) }).or(page.getByText(hiAlso(/^account$/i))).first()
     .click({ timeout: 30_000 });
-  await page.getByText(/^organization details$/i).first().click({ timeout: 30_000 });
+  await page.getByText(hiAlso(/^organization details$/i)).first().click({ timeout: 30_000 });
   // The three dropdowns: Background, Designation, Organisation type.
   await page.locator('mat-select').nth(1).waitFor({ state: 'visible', timeout: 30_000 });
 }
@@ -76,7 +77,7 @@ async function saveDesignation(page: Page, role: string) {
       await box.fill(/number|rn|rm|reg/i.test(placeholder) ? '1234' : 'Aastrika');
     }
   }
-  const save = page.getByRole('button', { name: /^save$/i });
+  const save = page.getByRole('button', { name: hiAlso(/^save$/i) });
   await expect(save, `Save should be enabled for ${role}`).toBeEnabled({ timeout: 10_000 });
   // Wait for the server to answer the save itself, not a fixed pause — a slow
   // response used to be cut off by the reload, and the old role stayed saved.
@@ -99,7 +100,7 @@ async function cardTitles(page: Page): Promise<string[]> {
 
 async function readForYou(page: Page): Promise<{ count: number | null; titles: string[] }> {
   await page.goto(`${BASE_URL}/app/user/my_courses`, { waitUntil: 'domcontentloaded' });
-  const tab = page.getByText(/^for you/i).first();
+  const tab = page.getByText(hiAlso(/^for you/i)).first();
   await tab.waitFor({ state: 'visible', timeout: 30_000 });
   // "For You (10)" → 10
   const m = (await tab.innerText()).match(/\((\d+)\)/);

@@ -4,7 +4,7 @@
 **Stack:** Playwright Test (`@playwright/test` ^1.59.1) + TypeScript (no build step) + ExcelJS + Gemini AI fallback
 **Target app:** Sphere (Aastrika / Sunbird-iGOT) — an Angular Material SPA learning platform
 **Environment:** Windows 11, PowerShell 5.1
-**Date range:** covered through 2026-07-02.
+**Date range:** Part 1 covers through 2026-07-02; Part 2 continues to 2026-10-07.
 
 ---
 
@@ -216,3 +216,133 @@ $env:COURSE_NAME="Care of Sick Newborn"; npx playwright test tests/CourseComplet
 6. Added certificate generation/download with retry + filename normalisation + 100% progress gate.
 7. Applied Tarento branding to the course report; saved the brand guide to memory.
 8. Organised outputs into three folders and migrated existing files.
+
+---
+
+# Part 2 — 2026-07-02 → 2026-10-07
+
+The first part ends with a suite that one person ran by hand on localhost and production.
+This part covers what happened after: it moved into Git, learned two more environments and a
+second language, and now starts itself.
+
+## 13. What changed, at a glance
+
+| Theme | Where it got to |
+|---|---|
+| Source control | Three repos on GitHub (`SphereWebAutomation`, `E-Kshamata-Web-Automation`, `CBP-Automation`); `.env`, reports, sessions and `node_modules` stay out |
+| Runs itself | 5 GitHub workflows — synthetic monitor, daily prod-vs-staging, deploy-triggered (prod + staging), release regression |
+| Authentication | CDP-only → `tests/helpers/authedTest.ts`: one login per run, saved as storageState, **verified before it is trusted** |
+| Environments | Production + staging + **UAT** (`uat.aastrika.org`), each its own backend and token |
+| Coverage | Search, logged-out, unhappy paths, certificates, page timings, role-vs-courses, forgot-password; Firefox/WebKit projects |
+| Languages | Every label matched in **English *and* Hindi** (`tests/helpers/i18n.ts`) |
+| Reports | 90-day CI artifacts, `npm run reports:pull`, one combined daily report shared with e-Kshamata, GitHub annotations instead of SMTP |
+
+## 14. How the suite starts itself
+
+| Workflow | Fires | Runs |
+|---|---|---|
+| `prod-monitor.yml` | 3× daily (prod + UAT) | Login smoke; failure is visible in GitHub's own notification |
+| `env-compare-daily.yml` | Every morning | Prod vs staging (and UAT) side by side + a full journey per environment, then one combined report |
+| `prod-deploy-tests.yml` | `repository_dispatch: prod-deployed`, or manual | Public pages → credential gate → signed-in suite |
+| `staging-deploy-tests.yml` | `repository_dispatch: staging-deployed`, or manual | Same, plus a fresh signup and the whole new-user journey in a parallel job |
+| `regression.yml` | A published release | The full suite |
+
+The deploy pipeline (Jenkins) starts the last two with one `curl` per repo — see
+`docs/CI-ON-DEPLOY.md` for the snippet, the credential it needs, and the agent-network caveat.
+
+## 15. Which account signs in
+
+Decided automatically, in this order, so CI behaves exactly like a terminal:
+
+1. **The last signed-up learner's saved session** (`.auth/fresh-user.json`) — signup accounts are
+   OTP-only, so the session is the only way to run as one.
+2. **The account in `.env` / CI secrets** (`TEST_USER_EMAIL` / `TEST_USER_PASSWORD`).
+3. Otherwise the run **fails naming the account and the environment**.
+
+"Still works" means more than *logged in*: a brand-new signup user is signed in yet cannot open
+Account until onboarding is done, so the check walks the same route the specs do (home → header →
+Account). Overrides: `USE_FRESH_USER=1` (that session only), `SKIP_FRESH_USER=1` (go straight to
+`.env`).
+
+`npm run check:login` runs the same ladder on demand — interactive in a terminal, a silent 0/1 gate
+in CI, where it guards both deploy workflows. It exists because a bad credential used to surface
+twenty steps later as something unrelated: the portal accepts a bad login, returns an **anonymous**
+session, and the suite then fails on a missing search box.
+
+## 16. Coverage added (all verified live on production)
+
+| Spec | Checks | Pins down |
+|---|---|---|
+| `Search.spec.ts` | 9 | Results against the public search API; course language lives in `lang`, not `language` |
+| `LoggedOut.spec.ts` | 11 | Private pages leak nothing; private APIs answer 419 / redirect to auth |
+| `Unhappy.spec.ts` | 8 | Wrong password/OTP, unregistered email, duplicate signup, forgot-password negatives |
+| `Certificates.spec.ts` | 3 | The certificate list and each download (JPG) |
+| `Performance.spec.ts` | — | Page timings on a normal and a throttled connection → `test-reports/page-timings.csv` (`npm run run:perf`) |
+| `RoleCourses.spec.ts` | — | The courses offered follow the learner's designation, across every role |
+| `forgot-password.spec.ts` | — | Reset by live OTP, through the Keycloak hand-off (`npm run forgot`) |
+
+Login ids differ by environment — prod `#emailOrMobile`, staging/UAT `#emailOrMobile-lg-*` — so the
+specs match both.
+
+## 17. Two languages, not one
+
+An account sees the portal in **its own** language, and many orgs (and UAT users) default to Hindi.
+On 2026-10-07 a UAT run lost **110 tests** for that reason alone: the login check looked for the
+English placeholder "…learn today", so a perfectly valid Hindi session was judged signed-out.
+
+`tests/helpers/i18n.ts` + `tests/helpers/i18n/hi.json` (the portal's own translations, pulled from
+all three environments) fix it: `bi('Resume')` matches either language, `hiAlso(/^resume$/i)` adds
+Hindi to an existing pattern. A codemod wrapped ~450 matchers in one pass; `npm run i18n:update`
+refreshes the dictionary.
+
+**Rule going forward:** never check a bare English label — use `bi()` / `hiAlso()`.
+
+## 18. Real defects found
+
+These are portal problems, reported to dev — not tests to relax:
+
+- **My Certificates renders only 1 of N** certificates (9 earned, 1 shown).
+- **"[NA]" printed** on most certificates.
+- A course sitting at **86% with every module finished**, because the final assessment submitted
+  after one question.
+- A **badge shown on production and missing on staging** for the same learner.
+- `/assets/theme-igot.scss` **served as HTML**; Safari-only JS errors.
+- Public home ≈ **16 MB, ~48 s** to main content on a throttled connection.
+- **"anaemia/anemia" searches return nothing**; forgot-password messages are vague.
+
+## 19. Files that matter now
+
+| File | Purpose |
+|---|---|
+| `tests/helpers/authedTest.ts` | The account ladder, session verification, one login per run |
+| `tests/helpers/i18n.ts`, `tests/helpers/i18n/hi.json` | English + Hindi label matching |
+| `scripts/check-login.mjs` | Credential preflight — terminal prompt, CI gate |
+| `scripts/run.mjs` | Terminal menu: environment, then the journey in order |
+| `scripts/daily-summary.mjs` | One report for the whole daily run (shared with e-Kshamata) |
+| `.github/workflows/*.yml` | The five pipelines above |
+| `docs/CI-ON-DEPLOY.md` | How Jenkins triggers all of this |
+| `docs/Create-Account-Flow.html` | The signup flow as a diagram |
+| `GIT-GUIDE.html` | Git for this repo, in plain English |
+| `../AUTOMATION-STORY.html` | The achievement write-up, with the codegen workflow and a demo run sheet |
+
+## 20. Timeline
+
+- **28 Sep** — repo published to GitHub; account ledgers tracked.
+- **30 Sep** — the big CI day: daily prod-vs-staging comparison, monitor on prod + staging 3× daily,
+  signup running daily on both, deploy-triggered runs, 90-day artifacts + `reports:pull`,
+  session-first account ladder with verification, credential gate.
+- **1–2 Oct** — UAT added everywhere (menus, workflows, reports); combined daily report gains a
+  "differences to review" section; `go` runs every spec as one new user in journey order.
+- **6 Oct** — forgot-password flow with live OTP.
+- **7 Oct** — gap-analysis specs (search, logged-out, unhappy, certificates, timings, cross-browser);
+  English+Hindi matching across ~450 matchers; create-account flow diagram.
+
+## 21. Open items
+
+- **Jenkins dispatch** — the workflows accept it; the `curl` step still has to be added to the deploy
+  job by dev, with a token and network access to `api.github.com`.
+- **No absolute performance budget** — timings are compared between environments (flagged at 2×),
+  so a portal that slows down *everywhere* over several releases would not trip anything.
+- **No single cross-portal report** — Sphere and e-Kshamata each produce their own; `npm run both`
+  at `D:\Automation` runs them together but still leaves two reports.
+- **Certificates "one card per certificate" is expected to fail** until the dev fix lands. Leave it.

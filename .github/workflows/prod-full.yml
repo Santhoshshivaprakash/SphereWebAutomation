@@ -1,0 +1,72 @@
+name: Prod Full Suite (Sphere) — every spec on production
+
+# Runs the ENTIRE Sphere web suite against PRODUCTION only, on demand.
+#
+#   Actions tab → "Prod Full Suite (Sphere)" → Run workflow
+#
+# Unlike "regression" (a curated core journey + API, ~13 specs), this runs the
+# whole thing: npm run report:all = the Chrome project (every UI spec) + the api
+# project, against https://sphere.aastrika.org, merged into one branded report.
+#
+# Heads-up — this is a real production run:
+#   • The signup/account specs MINT real accounts (yopmail — excluded from prod
+#     reports). Tick "Skip signup specs" to leave them out.
+#   • forgot-password self-skips (no FORGOT_EMAIL) so no password is ever reset.
+#   • login-check / apiFastLogin self-skip without their credentials.
+on:
+  workflow_dispatch:
+    inputs:
+      skip_signup:
+        description: 'Skip the signup/account-minting specs (no new prod accounts)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: sphere-prod-full
+  cancel-in-progress: false
+
+jobs:
+  prod-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Run the full suite (Chrome + API) on production
+        run: npm run report:all
+        env:
+          BASE_URL: https://sphere.aastrika.org
+          STAGING_URL: https://sphere.aastrika.org
+          HEADLESS: 'true'
+          # CourseComplete needs a target course (same default as report:course)
+          COURSE_NAME: 'Care of Newborn & Newborn Resuscitation'
+          # Leave signup specs out when the toggle is on
+          SKIP_SIGNUP: ${{ inputs.skip_signup && '1' || '' }}
+          # Credentials the authenticated specs use
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Optional failure email (only used if these secrets are set)
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-full-reports-${{ github.run_number }}
+          path: |
+            brand-reports/
+            playwright-report/
+            test-reports/
+          retention-days: 90

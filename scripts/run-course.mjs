@@ -302,9 +302,14 @@ if (account.mintFresh && isLocal()) {
 
 // A brand-new user has to be signed up before the course run can reuse it.
 if (account.mintFresh && process.env.SKIP_MINT !== '1') {
-  console.log('👤 Minting a fresh signup (tests/create-account.spec.ts → Step 5) …\n');
+  // Full positive flow, not create-account Step 5: a course needs a FULLY
+  // ONBOARDED user. Step 5 stops after T&C, so that user lands on /app/about-you
+  // ("Tell us more about you") and authedTest rejects the session as
+  // "onboarding unfinished". positiveflow fills the background/DOB and saves the
+  // onboarded session (its Step 27).
+  console.log('👤 Minting a fully onboarded signup (tests/positiveflow.spec.ts) …\n');
   const code = await runPlaywright(
-    ['tests/create-account.spec.ts', '--grep', 'Step 5', '--project=Chrome'],
+    ['tests/positiveflow.spec.ts', '--project=Chrome'],
     { BASE_URL, ...(HEADLESS ? { HEADLESS: 'true' } : {}) },
   );
   if (code !== 0) {

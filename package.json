@@ -24,7 +24,7 @@
     "run:course:env": "cross-env BASE_URL=https://sphere.aastrika.org playwright test tests/CourseComplete.spec.ts --headed",
     "courses:list": "node scripts/run-course.mjs --list",
     "run:course-fresh": "npm run mint:fresh-user && cross-env BASE_URL=https://sphere.aastrika.org USE_FRESH_USER=1 playwright test tests/CourseComplete.spec.ts --headed",
-    "mint:fresh-user": "cross-env BASE_URL=https://sphere.aastrika.org playwright test tests/create-account.spec.ts --grep \"Step 5\"",
+    "mint:fresh-user": "cross-env BASE_URL=https://sphere.aastrika.org playwright test tests/positiveflow.spec.ts",
     "//feature-specs": "── Individual feature specs ──",
     "run:competency": "cross-env BASE_URL=https://sphere.aastrika.org playwright test tests/Competency.spec.ts --headed",
     "run:course-toc": "cross-env BASE_URL=https://sphere.aastrika.org playwright test tests/CourseTOC.spec.ts --headed",

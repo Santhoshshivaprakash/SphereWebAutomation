@@ -14,6 +14,8 @@ name: Prod Full Suite (Sphere) — every spec on production
 #   • forgot-password self-skips (no FORGOT_EMAIL) so no password is ever reset.
 #   • login-check / apiFastLogin self-skip without their credentials.
 on:
+  schedule:
+    - cron: '0 1 * * *'   # 01:00 UTC = 06:30 IST, daily — the whole suite on production
   workflow_dispatch:
     inputs:
       skip_signup:
@@ -28,7 +30,7 @@ concurrency:
 jobs:
   prod-full:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

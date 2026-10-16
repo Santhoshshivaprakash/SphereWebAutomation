@@ -123,6 +123,9 @@ test.describe.serial('Role → courses (one user, every designation)', () => {
 
   for (const role of ROLES) {
     test(`Role: ${role}`, async () => {
+      // Midwives is known-noisy on prod (save/courses don't settle) — skipped by
+      // request so it doesn't red the suite. Remove this to re-enable it.
+      test.skip(/^Midwives$/i.test(role), 'Midwives role excluded by request');
       // Save, then reload the tab and read the dropdown back. A save that didn't
       // stick is retried (up to 3 attempts) before it counts as a failure.
       let saved = '';

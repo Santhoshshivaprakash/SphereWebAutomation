@@ -21,6 +21,9 @@ on:
       competency:
         description: 'Competency to complete'
         default: 'सामान्य प्रसव'
+      toc_course:
+        description: 'Course for the CourseTOC checks (needs a CNE-hours badge)'
+        default: 'Normal Labour & Birth and AMTSL'
 
 concurrency:
   group: sphere-prod-journey
@@ -36,6 +39,9 @@ jobs:
       # Fixed targets (workflow_dispatch can override them).
       COURSE_NAME: ${{ inputs.course || 'Lactation management' }}
       COMPETENCY_NAME: ${{ inputs.competency || 'सामान्य प्रसव' }}
+      # CourseTOC verifies the CNE-hours badge, which only shows on CNE courses —
+      # so it targets a CNE course, not the one CourseComplete finishes.
+      TOC_COURSE_NAME: ${{ inputs.toc_course || 'Normal Labour & Birth and AMTSL' }}
       # सामान्य प्रसव (Normal delivery) is a maternal competency — the ANM/MPW
       # role is mapped to it, so the minted user signs up with this designation.
       PROFILE_DESIGNATION: 'ANM/MPW'

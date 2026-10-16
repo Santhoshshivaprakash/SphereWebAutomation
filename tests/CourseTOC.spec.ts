@@ -26,7 +26,11 @@ const BASE_URL = process.env.BASE_URL ?? 'https://sphere.aastrika.org';
 // The logged-in home page, where the course search box lives.
 const HOME_URL = `${BASE_URL}/page/home`;
 // Which course to open. Empty means every test skips.
-const COURSE_NAME = process.env.COURSE_NAME ?? '';
+// CourseTOC can target a DIFFERENT course than the one CourseComplete finishes:
+// the "CNE hours" badge only shows on CNE courses, so a journey that completes a
+// non-CNE course (e.g. Lactation management) still verifies the badge by pointing
+// TOC_COURSE_NAME at a CNE course. Falls back to COURSE_NAME when unset.
+const COURSE_NAME = process.env.TOC_COURSE_NAME ?? process.env.COURSE_NAME ?? '';
 
 // How long the TOC banner (Start/Resume) may take to render. Generous on
 // purpose: measured 1.6-2.8s on a clean load, but ~70s once the course has been

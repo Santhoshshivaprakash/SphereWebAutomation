@@ -1,0 +1,71 @@
+name: Prod Journey (Sphere) — daily full journey on production
+
+# Runs the WHOLE Sphere suite on PRODUCTION every day, in journey order, as ONE
+# freshly signed-up, fully-onboarded learner:
+#
+#   public page → sign up + onboarding (positiveflow) → My Courses →
+#   complete a course (+ certificate) → competency dashboard + complete a
+#   competency → Account → everything else → the standalone signup flows
+#
+# Driven by scripts/run.mjs with no spec arg = the ALL journey. The course and
+# competency are fixed below; the later steps run as the minted user via
+# USE_FRESH_USER=1 (run.mjs mints with positiveflow, which finishes onboarding).
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 01:00 UTC = 06:30 IST, daily
+  workflow_dispatch:
+    inputs:
+      course:
+        description: 'Course to complete (and collect its certificate)'
+        default: 'Lactation management'
+      competency:
+        description: 'Competency to complete'
+        default: 'सामान्य प्रसव'
+
+concurrency:
+  group: sphere-prod-journey
+  cancel-in-progress: false
+
+jobs:
+  journey:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      BASE_URL: https://sphere.aastrika.org
+      HEADLESS: 'true'
+      # Fixed targets (workflow_dispatch can override them).
+      COURSE_NAME: ${{ inputs.course || 'Lactation management' }}
+      COMPETENCY_NAME: ${{ inputs.competency || 'सामान्य प्रसव' }}
+      # सामान्य प्रसव (Normal delivery) is a maternal competency — the ANM/MPW
+      # role is mapped to it, so the minted user signs up with this designation.
+      PROFILE_DESIGNATION: 'ANM/MPW'
+      # Used by any spec that falls back to the standing account / AI quiz helper.
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Full journey on production (fresh onboarded user → course → competency → certificate)
+        # < /dev/null so the only remaining prompt (spec selection) takes its
+        # default — 0 = ALL. Env/course/competency prompts are already skipped
+        # because BASE_URL / COURSE_NAME / COMPETENCY_NAME are set.
+        run: node scripts/run.mjs < /dev/null
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-journey-reports-${{ github.run_number }}
+          path: |
+            brand-reports/
+            playwright-report/
+            test-reports/
+            registered-accounts.xlsx
+          retention-days: 90

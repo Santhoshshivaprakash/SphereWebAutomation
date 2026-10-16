@@ -14,8 +14,9 @@ name: Prod Full Suite (Sphere) — every spec on production
 #   • forgot-password self-skips (no FORGOT_EMAIL) so no password is ever reset.
 #   • login-check / apiFastLogin self-skip without their credentials.
 on:
-  schedule:
-    - cron: '0 1 * * *'   # 01:00 UTC = 06:30 IST, daily — the whole suite on production
+  # Daily full run is handled by prod-journey-daily.yml (journey order, fresh
+  # onboarded user → course → competency). This one is the on-demand button that
+  # runs every spec flat (report:all) when you want it.
   workflow_dispatch:
     inputs:
       skip_signup:

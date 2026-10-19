@@ -62,10 +62,11 @@ type Background =
   | 'Healthcare Worker' | 'Healthcare Volunteer' | 'ASHA'
   | 'Student' | 'Faculty' | 'Others';
 
-// The same six as an array, which is what the test loop iterates over.
+// Minimal set the test loop iterates over: Healthcare Worker (ANM/MPW), ASHA,
+// Student, Others. Healthcare Volunteer and Faculty are dropped to cut the number
+// of same-IP yopmail signups per run (which was rate-limiting the OTP reads).
 const ALL_BACKGROUNDS: Background[] = [
-  'Healthcare Worker', 'Healthcare Volunteer', 'ASHA',
-  'Student', 'Faculty', 'Others',
+  'Healthcare Worker', 'ASHA', 'Student', 'Others',
 ];
 
 // Per-role form data. Every field is optional because each role asks for a

@@ -352,6 +352,15 @@ const SIGNUP_ONLY = ['create-account.spec.ts', 'OTP.spec.ts', 'yopmail.spec.ts']
 // Performance: ~10 min (slow-3G half) — run it on its own: npm run run:perf.
 const NOT_IN_ALL = ['SCROM.spec.ts', 'Performance.spec.ts'];
 function journeySteps(competencyChosen) {
+  // JOURNEY_EXCLUDE drops specs from the journey (comma-separated names). Used by
+  // the daily CI to skip chronically-flaky-on-prod sweeps (e.g. the RoleCourses
+  // role sweep, or a duplicate BGV spec) without touching the specs themselves.
+  const EXCLUDE = new Set((process.env.JOURNEY_EXCLUDE || '')
+    .split(',').map((s) => s.trim().replace(/^tests\//, '')).filter(Boolean));
+  const excluded = (sp) => {
+    const rel = sp.replace(/^tests\//, '');
+    return EXCLUDE.has(rel) || EXCLUDE.has(rel.split('/').pop());
+  };
   const used = new Set(['PublicPage.spec.ts', 'public-login.spec.ts', 'positiveflow.spec.ts', 'Mycourse.spec.ts',
     'CourseComplete.spec.ts', 'Competency.spec.ts', 'CompleteCompetency.spec.ts', 'Account.spec.ts',
     'RoleCourses.spec.ts', ...SIGNUP_ONLY, ...NOT_IN_ALL]);
@@ -368,7 +377,8 @@ function journeySteps(competencyChosen) {
     // role), then the specs that sign up accounts of their own.
     { name: 'Everything else', specs: [...rest.map(t), t('RoleCourses.spec.ts')], fresh: true },
     { name: 'Other signup flows', specs: SIGNUP_ONLY.map(t) },
-  ].filter((s) => s.specs.length);
+  ].map((s) => ({ ...s, specs: s.specs.filter((sp) => !excluded(sp)) }))
+    .filter((s) => s.specs.length);
 }
 
 /** Run the journey on one environment; returns the worst exit code. */

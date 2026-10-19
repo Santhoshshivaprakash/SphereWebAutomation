@@ -45,6 +45,11 @@ jobs:
       # सामान्य प्रसव (Normal delivery) is a maternal competency — the ANM/MPW
       # role is mapped to it, so the minted user signs up with this designation.
       PROFILE_DESIGNATION: 'ANM/MPW'
+      # Drop chronically-flaky-on-prod extras from the DAILY journey (they still
+      # run on-demand / in prod-full): the RoleCourses role sweep (serial, fails a
+      # random role each run) and the duplicate ALL-BGV spec (ALL-Roles already
+      # covers the 4 backgrounds; running both doubles signups → yopmail throttle).
+      JOURNEY_EXCLUDE: 'RoleCourses.spec.ts,Profile/ALL-BGV.spec.ts'
       # Used by any spec that falls back to the standing account / AI quiz helper.
       TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
